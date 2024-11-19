@@ -1,6 +1,6 @@
-#' Taxonomic Multiplicity
+#' Hierarchical Multiplicity
 #'
-#' Taxonomic multiplicity directly from the factor of the true diversity
+#' Hierarchical multiplicity directly from the factor of the true diversity
 #' unclustered abundances and the clustered abundances.
 #'
 #' @param ab List or vector element of size n with the unit's abundances.
@@ -8,15 +8,15 @@
 #' cluster
 #' @param q q parameter for the Hill number
 #'
-#' @return ^qM
+#' @return \eqn{^qM}
 #' @export
 #'
 #' @examples
 #' ab <- rep(10,9)
 #' clust <- c(rep(1,3), rep(2,3), rep(3,3))
-#' multiplicity.taxonomic(ab, clust)
+#' multiplicity.hierarchical(ab, clust)
 #'
-multiplicity.taxonomic <- function(ab, clust, q = 1) {
+multiplicity.hierarchical <- function(ab, clust, q = 1) {
 
   # Pre clust
   p <- ab /sum(ab)

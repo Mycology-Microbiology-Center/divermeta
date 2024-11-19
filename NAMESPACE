@@ -2,6 +2,6 @@
 
 export(diversity.functional)
 export(diversity.functional.traditional)
-export(multiplicity.functional)
-export(multiplicity.taxonomic)
+export(multiplicity.distance)
+export(multiplicity.hierarchical)
 export(raoQuadratic)

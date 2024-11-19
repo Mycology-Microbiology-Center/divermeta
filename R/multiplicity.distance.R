@@ -1,6 +1,6 @@
-#' Functional Multiplicity
+#' Distance Multiplicity
 #'
-#' Functional Multiplicity defined as the ratio between the functional
+#' Distance Multiplicity defined as the ratio between the functional
 #' diversities of the unclustered set and the cluster set
 #'
 #' @param ab 1 x n vector of abundances before clustering.
@@ -10,9 +10,9 @@
 #' clustering
 #' @param sig float value determining that two units are different
 #'
-#' @return FM_sigma.
+#' @return \eqn{FM_{\sigma}}.
 #' @export
-multiplicity.functional <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
+multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
   diss_clust[diss_clust > sig] = sig
   diss[diss > sig] = sig
