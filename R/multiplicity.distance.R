@@ -52,6 +52,24 @@ diversity.functional <- function(ab, diss, sig = 1) {
 #' @return ^qFD
 #' @export
 diversity.functional.traditional <- function(ab, diss, q = 1 + 10e-8) {
+  
+  # Validate inputs
+  if (!is.numeric(ab)) {
+    stop("Abundance vector must be numeric")
+  }
+  if (!is.matrix(diss)) {
+    stop("Dissimilarity input must be a matrix")
+  }
+  if (length(ab) != nrow(diss)) {
+    stop("Abundance vector length must match dissimilarity matrix dimensions")
+  }
+  if (!is.numeric(q) || length(q) != 1) {
+    stop("q parameter must be a single numeric value")
+  }
+  if (q < 0) {
+    stop("q parameter must be positive")
+  }
+
   P <- as.matrix(ab / sum(ab))
   Q <- raoQuadratic(ab, diss)
   Pq <- P^q
