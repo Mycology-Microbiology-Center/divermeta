@@ -8,6 +8,20 @@
 #' @return Q.
 #' @export
 raoQuadratic <- function(ab, diss) {
-  P <- as.matrix(ab / sum(ab))
+
+  # Validate inputs
+  if (any(is.na(ab)) || any(is.na(diss))){
+    stop("Input contains NA values\n")
+  }
+  if (any(ab < 0)){
+    stop("Abundances must be non-negative\n")
+  } 
+  
+  total_ab <- sum(ab, na.rm = TRUE)
+  if (total_ab == 0){
+    stop("Total abundance cannot be zero")
+  }
+
+  P <- as.matrix(ab / total_ab)
   return(sum(P %*% diss %*% t(P)))
 }
