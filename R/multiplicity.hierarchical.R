@@ -1,6 +1,6 @@
-#' Hierarchical Multiplicity
+#' Inventory Multiplicity
 #'
-#' Hierarchical multiplicity directly from the factor of the true diversity
+#' Inventory multiplicity directly from the factor of the true diversity
 #' unclustered abundances and the clustered abundances.
 #'
 #' @param ab List or vector element of size n with the unit's abundances.
@@ -14,9 +14,9 @@
 #' @examples
 #' ab <- rep(10,9)
 #' clust <- c(rep(1,3), rep(2,3), rep(3,3))
-#' multiplicity.hierarchical(ab, clust)
+#' multiplicity.inventory(ab, clust)
 #'
-multiplicity.hierarchical <- function(ab, clust, q = 1) {
+multiplicity.inventory <- function(ab, clust, q = 1) {
 
   # Pre clust
   p <- ab /sum(ab)
