@@ -15,13 +15,15 @@ raoQuadratic <- function(ab, diss) {
   }
   if (any(ab < 0)){
     stop("Abundances must be non-negative\n")
-  } 
-  
+  }
+
   total_ab <- sum(ab, na.rm = TRUE)
   if (total_ab == 0){
     stop("Total abundance cannot be zero")
   }
 
-  P <- as.matrix(ab / total_ab)
-  return(sum(P %*% diss %*% t(P)))
+  P <- as.vector(ab / total_ab)
+
+
+  return(sum(t(P) %*% diss %*% P))
 }

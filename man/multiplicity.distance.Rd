@@ -2,7 +2,7 @@
 % Please edit documentation in R/multiplicity.distance.R
 \name{multiplicity.distance}
 \alias{multiplicity.distance}
-\title{Distance Multiplicity}
+\title{Distance based Multiplicity}
 \usage{
 multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 }
@@ -11,9 +11,9 @@ multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 
 \item{diss}{n x n matrix with dissimilarities / distances before clustering}
 
-\item{ab_clust}{1 x n vector of abundances after clustering.}
+\item{ab_clust}{1 x k vector of abundances after clustering.}
 
-\item{diss_clust}{n x n matrix with dissimilarities / distances before
+\item{diss_clust}{k x k matrix with dissimilarities / distances before
 clustering}
 
 \item{sig}{float value determining that two units are different}

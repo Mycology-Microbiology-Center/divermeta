@@ -17,6 +17,7 @@ diversity.functional(ab, diss, sig = 1)
 FD_sigma.
 }
 \description{
-Functional diversity derived from Chiu & Chao 2014, with q = 1 ans assuming
-no intra specific variation. FD_sigma in the manuscript.
+Functional diversity derived from Chiu & Chao 2014, with q = 1 and assuming
+no intra specific variation. FD_sigma in the manuscript. Function used for
+testing.
 }

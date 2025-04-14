@@ -3,5 +3,6 @@
 export(diversity.functional)
 export(diversity.functional.traditional)
 export(multiplicity.distance)
-export(multiplicity.hierarchical)
+export(multiplicity.distance.by_blocks)
+export(multiplicity.inventory)
 export(raoQuadratic)
