@@ -27,7 +27,7 @@ This is a basic example which shows you how to solve a common problem:
 library(divermeta)
 ## basic example code
 
-# Taxonomic
+# Inventory
 # --------
 
 # High Multiplicity
@@ -35,7 +35,7 @@ library(divermeta)
 # Multiplicity should be 10
 ab <- rep(10,30)
 clust <- c(rep(1,10), rep(2,10), rep(3,10))
-print(paste("Multiplicity: ",multiplicity.taxonomic(ab, clust)))
+print(paste("Multiplicity: ",multiplicity.inventory(ab, clust)))
 #> [1] "Multiplicity:  10"
 
 # Low Multiplicity
@@ -43,6 +43,6 @@ print(paste("Multiplicity: ",multiplicity.taxonomic(ab, clust)))
 # Multiplicity should be 1
 ab <- rep(10,3)
 clust <- c(1,2,3)
-print(paste("Multiplicity: ",multiplicity.taxonomic(ab, clust)))
+print(paste("Multiplicity: ",multiplicity.inventory(ab, clust)))
 #> [1] "Multiplicity:  1"
 ```
