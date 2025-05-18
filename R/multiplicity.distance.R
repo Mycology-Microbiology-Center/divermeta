@@ -1,16 +1,15 @@
 #' Distance Multiplicity
 #'
-#' Distance Multiplicity defined as the ratio between the functional
-#' diversities of the unclustered set and the cluster set
+#' Computes the distance-based multiplicity, 
+#' defined as the ratio between the functional diversities of the unclustered set and the clustered set.
 #'
-#' @param ab 1 x n vector of abundances before clustering.
-#' @param diss n x n matrix with dissimilarities / distances before clustering
-#' @param ab_clust 1 x n vector of abundances after clustering.
-#' @param diss_clust n x n matrix with dissimilarities / distances before
-#' clustering
-#' @param sig float value determining that two units are different
+#' @param ab A numeric vector of element abundances before clustering.
+#' @param diss A numeric matrix representing the dissimilarities or distances between elements before clustering.
+#' @param ab_clust A numeric vector of element abundances after clustering.
+#' @param diss_clust A numeric matrix representing the dissimilarities or distances between elements after clustering.
+#' @param sig A numeric value determining the threshold (sigma) at which two units are considered different.
 #'
-#' @return \eqn{FM_{\sigma}}.
+#' @return A numeric value representing the distance multiplicity, \eqn{FM_{\sigma}}.
 #' @export
 multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
@@ -22,14 +21,13 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
 #' Functional diversity
 #'
-#' Functional diversity derived from Chiu & Chao 2014, with q = 1 ans assuming
-#' no intra specific variation. FD_sigma in the manuscript.
+#' Computes the functional diversity, derived from Chiu & Chao (2014), assuming no intra-specific variation and using a default q value of 1.
 #'
-#' @param ab 1 x n vector of abundances.
-#' @param diss n x n matrix with dissimilarities / distances
-#' @param sig float value determining that two units are different
+#' @param ab A numeric vector of element abundances.
+#' @param diss A numeric matrix representing the dissimilarities or distances between elements.
+#' @param sig A numeric value determining the threshold (sigma) at which two units are considered different.
 #'
-#' @return FD_sigma.
+#' @return A numeric value representing the functional diversity, \eqn{FD_{\sigma}}.
 #' @export
 diversity.functional <- function(ab, diss, sig = 1) {
   diss[diss > sig] <- sig
@@ -38,18 +36,18 @@ diversity.functional <- function(ab, diss, sig = 1) {
   return(vals)
 }
 
-#' Functional diversity (From Chiu & Chao 2014 )
+#' Functional diversity (as per Chiu & Chao 2014 )
 #'
-#' Functional diversity derived from Chiu & Chao 2014. This corresponds to
-#' D(Q) in their paper and ^qFD in the manusctipt
+#' Computes the functional diversity, derived from Chiu & Chao (2014). 
+#' This corresponds to D(Q) in their paper and \eqn{^qFD} in the multiplicity manuscript.
 #'
-#' TODO: create the case for q = 1
+# TODO: create the case for q = 1
+#' 
+#' @param ab A numeric vector of element abundances.
+#' @param diss A numeric matrix representing the dissimilarities or distances between elements.
+#' @param q A numeric parameter for the Hill number, which determines the diversity order.
 #'
-#' @param ab 1 x n vector of abundances.
-#' @param diss n x n matrix with dissimilarities / distances
-#' @param q q parameter for the Hill number
-#'
-#' @return ^qFD
+#' @return A numeric value representing the functional diversity, \eqn{^qFD}.
 #' @export
 diversity.functional.traditional <- function(ab, diss, q = 1 + 10e-8) {
   
