@@ -1,10 +1,16 @@
 Package: divermeta
-Title: Multiplicity Index
-Version: 0.0.0.1
+Title: Multiplicity index
+Version: 0.0.2
 Authors@R: 
-    person("Felipe", "González-Casabianca", , "felipe.gonzalez.casabianca@ut.ee", role = c("aut", "cre"),
+    person(given = "Felipe", family = "González-Casabianca", 
+           email = "felipe.gonzalez.casabianca@ut.ee",
+           role = c("aut", "cre"),
            comment = c(ORCID = "0000-0001-9445-3809"))
-Description: Package for computing functional and taxonomic diversities.
+    person(given = "Vladimir", family = "Mikryukov", 
+           email = "vladimir.mikryukov@ut.ee",
+           role = "ctb",
+           comment = c(ORCID = "0000-0003-2786-2690"))
+Description: Package for computing multiplicity index.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
