@@ -1,0 +1,80 @@
+---
+title: "Introduction to divermeta"
+author: "Felipe González-Casabianca, Vladimir Mikryukov"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction to divermeta}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+## Introduction
+
+The `divermeta` package provides tools for calculating various biodiversity metrics with a focus on multiplicity index. 
+This index implements methods for quantifying diversity at different organizational levels, accounting for both abundance and dissimilarity between elements.
+
+The core indexes implemented in this package include:
+
+* **Inventory multiplicity**: The ratio of diversity before and after clustering elements.
+* **Distance multiplicity**: A measure based on the ratio of functional diversities.
+
+In addtion, there are several other functions for esimation of previously proposed diversity indexes 
+(e.g., Rao's quadratic entropy, Chiu & Chao 2014 functional diversity, etc.).
+
+## Installation
+
+You can install the development version of divermeta from GitHub with:
+
+```{r eval=FALSE}
+# install.packages("remotes")
+remotes::install_github("Mycology-Microbiology-Center/divermeta")
+```
+
+Let's load the package to explore its functionality:
+
+```{r setup}
+library(divermeta)
+```
+
+## Inventory multiplicity
+
+Inventory multiplicity is defined as the ratio between the true diversity of unclustered abundances and the clustered abundances. 
+It provides a way to quantify the diversity lost when grouping elements together.
+
+### Basic example
+
+Let's start with a simple example of calculating inventory multiplicity:
+
+```{r}
+# High multiplicity example
+# Three clusters of ten different units each
+# Expected multiplicity is close to 10
+ab_high <- rep(10, 30)
+clust_high <- c(rep(1, 10), rep(2, 10), rep(3, 10))
+multiplicity.inventory(ab_high, clust_high)
+
+# Low multiplicity example
+# Three clusters with one unit each
+# Expected multiplicity is close to 1
+ab_low <- rep(10, 3)
+clust_low <- c(1, 2, 3)
+multiplicity.inventory(ab_low, clust_low)
+```
+
+In the high multiplicity example, we have 30 units divided into 3 clusters of 10 units each. 
+The multiplicity is close to 10, indicating that each cluster contains approximately 10 distinct elements.
+
+In the low multiplicity example, we have 3 units in 3 separate clusters, 
+resulting in a multiplicity close to 1, indicating no information is lost when clustering.
+
+

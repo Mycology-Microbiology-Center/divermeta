@@ -1,14 +1,12 @@
 #' Inventory Multiplicity
 #'
-#' Inventory multiplicity directly from the factor of the true diversity
-#' unclustered abundances and the clustered abundances.
+#' Computes the inventory multiplicity, derived from the factor of the true diversity of unclustered abundances and the clustered abundances.
 #'
-#' @param ab List or vector element of size n with the unit's abundances.
-#' @param clust List or vector  element of size n with the unit's corresponding
-#' cluster
-#' @param q q parameter for the Hill number
+#' @param ab A numeric vector or list of element abundances.
+#' @param clust A numeric vector or list indicating the cluster assignment for each element.
+#' @param q A numeric parameter for the Hill number, which determines the diversity order.
 #'
-#' @return \eqn{^qM}
+#' @return A numeric value representing the inventory multiplicity, \eqn{^qM}.
 #' @export
 #'
 #' @examples
@@ -45,8 +43,3 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
   return( div / div_clust)
 
 }
-
-
-
-
-
