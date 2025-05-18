@@ -50,8 +50,6 @@ print("")
 print("")
 
 
-
-
 # Doubling property
 # ----------------------------
 # Builds an assemblage of three identical groups, inter Clustered distance are maximum.
@@ -183,4 +181,6 @@ print("")
 print("")
 print("")
 
+multiplicity.distance(ab,diss, ab_clust, diss_clust, sig)
+#
 

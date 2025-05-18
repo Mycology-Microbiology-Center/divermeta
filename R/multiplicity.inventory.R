@@ -16,6 +16,14 @@
 #'
 multiplicity.inventory <- function(ab, clust, q = 1) {
 
+  # Removes any elements with zeros abundance
+  zeros <- ab == 0
+  if(sum(zeros) > 0){
+    ab <- ab[!zeros]
+    clust <- clust[!zeros]
+
+  }
+
   # Pre clust
   p <- ab /sum(ab)
   if(q == 1)
@@ -23,9 +31,9 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
   else
     div <- (sum(p^q))^(1/(1-q))
 
-  # Post Clust
-  ab_clust = tapply(ab, clust, sum)
-  p_clust = ab_clust /sum(ab_clust)
+  # Post Clustering
+  ab_clust <- tapply(ab, clust, sum)
+  p_clust <- ab_clust /sum(ab_clust)
 
   if(q == 1)
     div_clust <- exp(-sum(p_clust*log(p_clust)))
@@ -35,8 +43,3 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
   return( div / div_clust)
 
 }
-
-
-
-
-

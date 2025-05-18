@@ -4,7 +4,7 @@
 \alias{diversity.functional.traditional}
 \title{Functional diversity (From Chiu & Chao 2014 )}
 \usage{
-diversity.functional.traditional(ab, diss, q = 1 + 1e-07)
+diversity.functional.traditional(ab, diss, q = 1)
 }
 \arguments{
 \item{ab}{1 x n vector of abundances.}
@@ -19,7 +19,4 @@ diversity.functional.traditional(ab, diss, q = 1 + 1e-07)
 \description{
 Functional diversity derived from Chiu & Chao 2014. This corresponds to
 D(Q) in their paper and ^qFD in the manusctipt
-}
-\details{
-TODO: create the case for q = 1
 }
