@@ -7,21 +7,20 @@
 multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 }
 \arguments{
-\item{ab}{1 x n vector of abundances before clustering.}
+\item{ab}{A numeric vector of element abundances before clustering.}
 
-\item{diss}{n x n matrix with dissimilarities / distances before clustering}
+\item{diss}{A numeric matrix representing the dissimilarities or distances between elements before clustering.}
 
-\item{ab_clust}{1 x k vector of abundances after clustering.}
+\item{ab_clust}{A numeric vector of element abundances after clustering.}
 
-\item{diss_clust}{k x k matrix with dissimilarities / distances before
-clustering}
+\item{diss_clust}{A numeric matrix representing the dissimilarities or distances between elements after clustering.}
 
-\item{sig}{float value determining that two units are different}
+\item{sig}{A numeric value determining the threshold (sigma) at which two units are considered different.}
 }
 \value{
-\eqn{FM_{\sigma}}.
+A numeric value representing the distance multiplicity, \eqn{FM_{\sigma}}.
 }
 \description{
-Distance Multiplicity defined as the ratio between the functional
-diversities of the unclustered set and the cluster set
+Computes the distance-based multiplicity,
+defined as the ratio between the functional diversities of the unclustered set and the clustered set.
 }
