@@ -216,8 +216,3 @@ test_that("Implementation equivalence",{
   }
 })
 
-
-
-
-
-
