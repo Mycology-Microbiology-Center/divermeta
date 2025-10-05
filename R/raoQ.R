@@ -8,8 +8,9 @@
 #'
 #' @return A numeric value representing Rao's Quadratic Entropy.
 #' @references
-#' Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach.
-#' Theoretical Population Biology, 21. DOI:10.1016/0040-5809(82)90004-1
+#' \itemize{
+#' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology, 21. \doi{10.1016/0040-5809(82)90004-1}.
+#' }
 #' @export
 raoQuadratic <- function(ab, diss) {
 

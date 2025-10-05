@@ -9,9 +9,9 @@
 #'
 #' @return A numeric value representing the functional diversity, \eqn{FD_{\sigma}}.
 #' @references
-#' Chiu CH, Chao A (2014) Distance-based functional diversity measures and their
-#' decomposition: A framework based on Hill numbers. PLOS ONE 9(7).
-#' DOI:10.1371/journal.pone.0100014. URL: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014
+#' \itemize{
+#' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
+#' }
 #' @export
 diversity.functional <- function(ab, diss, sig = 1) {
   diss[diss > sig] <- sig
@@ -35,9 +35,9 @@ diversity.functional <- function(ab, diss, sig = 1) {
 #'
 #' @return A numeric value representing the functional diversity, \eqn{^qFD}.
 #' @references
-#' Chiu CH, Chao A (2014) Distance-based functional diversity measures and their
-#' decomposition: A framework based on Hill numbers. PLOS ONE 9(7).
-#' DOI:10.1371/journal.pone.0100014. URL: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014
+#' \itemize{
+#' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
+#' }
 #' @export
 diversity.functional.traditional <- function(ab, diss, q = 1) {
 
