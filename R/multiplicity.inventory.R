@@ -21,8 +21,11 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
   if(sum(zeros) > 0){
     ab <- ab[!zeros]
     clust <- clust[!zeros]
-
   }
+
+  # Checks
+  if(length(ab) == 0 || length(clust) == 0)
+    return(0)
 
   # Pre clust
   p <- ab /sum(ab)

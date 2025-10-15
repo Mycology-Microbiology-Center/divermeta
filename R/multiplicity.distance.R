@@ -1,6 +1,6 @@
 #' Distance based Multiplicity
 #'
-#' Computes the distance-based multiplicity, 
+#' Computes the distance-based multiplicity,
 #' defined as the ratio between the functional diversities of the unclustered set and the clustered set.
 #'
 #' @param ab A numeric vector of element abundances before clustering.
@@ -41,6 +41,10 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 #' @export
 multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 1)
 {
+  # Checks
+  if(length(ids) == 0)
+     return(0)
+
   # Renames
   colnames(diss_frame) <- c("ID1","ID2","Distance")
 
@@ -90,11 +94,11 @@ diversity.functional <- function(ab, diss, sig = 1) {
 
 #' Functional diversity (as per Chiu & Chao 2014 )
 #'
-#' Computes the functional diversity, derived from Chiu & Chao (2014). 
+#' Computes the functional diversity, derived from Chiu & Chao (2014).
 #' This corresponds to D(Q) in their paper and \eqn{^qFD} in the multiplicity manuscript.
 #'
 # TODO: create the case for q = 1
-#' 
+#'
 #' @param ab A numeric vector of element abundances.
 #' @param diss A numeric matrix representing the dissimilarities or distances between elements.
 #' @param q A numeric parameter for the Hill number, which determines the diversity order.
