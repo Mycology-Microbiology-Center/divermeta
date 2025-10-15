@@ -7,19 +7,17 @@
 multiplicity.inventory(ab, clust, q = 1)
 }
 \arguments{
-\item{ab}{List or vector element of size n with the unit's abundances.}
+\item{ab}{A numeric vector or list of element abundances.}
 
-\item{clust}{List or vector  element of size n with the unit's corresponding
-cluster}
+\item{clust}{A numeric vector or list indicating the cluster assignment for each element.}
 
-\item{q}{q parameter for the Hill number}
+\item{q}{A numeric parameter for the Hill number, which determines the diversity order.}
 }
 \value{
-\eqn{^qM}
+A numeric value representing the inventory multiplicity, \eqn{^qM}.
 }
 \description{
-Inventory multiplicity directly from the factor of the true diversity
-unclustered abundances and the clustered abundances.
+Computes the inventory multiplicity, derived from the factor of the true diversity of unclustered abundances and the clustered abundances.
 }
 \examples{
 ab <- rep(10,9)
