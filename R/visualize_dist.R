@@ -14,8 +14,8 @@ visualize_dist <- function(
   clegend    = 1,     # show legends if > 0
   grid       = TRUE   # show panel grid
 ) {
-  
-  
+
+
   stopifnot("dist" %in% class(diss) || is.matrix(diss) || is.data.frame(diss))
 
   # Default labels taken from diss (if NA)
@@ -65,7 +65,6 @@ visualize_dist <- function(
 
   # Encodings
   dat$mag  <- pmax(0, abs(dat$z))      # magnitude for area
-  dat$sign <- ifelse(dat$z >= 0, "pos", "neg")
 
   # Breaks for legend similar to pretty() midpoints in ade4 legend
   # We show |value| directly; scale_size_area makes point area ~ value.
@@ -76,20 +75,17 @@ visualize_dist <- function(
   # Plot
   p <- ggplot(dat, aes(x = col, y = row)) +
     geom_point(
-      aes(size = mag, fill = sign),
+      aes(size = mag),
       shape = 22,        # filled square
+      fill = "black",
       color = "black",
       stroke = 0.3) +
     # Area-proportional sizing, max size scaled by csize
     scale_size_area(
       max_size = 10 * csize,
       breaks   = breaks_mag,
-      name     = "|value|",
+      name     = "Distance",
       guide    = if (clegend > 0) "legend" else "none") +
-    scale_fill_manual(
-      values = c(pos = "black", neg = "white"),
-      name   = "sign",
-      guide  = if (clegend > 0){ guide_legend(override.aes = list(shape = 22, size = 5)) } else { "none" } ) +
     coord_fixed() +
     scale_x_discrete(position = "top") +
     scale_y_discrete(position = "right") +
@@ -101,7 +97,7 @@ visualize_dist <- function(
       axis.text.x = element_text(size = rel(clabel.col), angle = 90, vjust = 0.5, hjust = 0),
       axis.text.y = element_text(size = rel(clabel.row)),
       panel.grid.minor = element_blank() )
-  
+
   if (isTRUE(grid)) {
     p <- p + base_theme +
       theme(panel.grid.major = element_line(color = "grey85"))
