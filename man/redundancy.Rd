@@ -16,9 +16,7 @@ scaled in [0, 1]. Must be square with dimension equal to length of \code{ab}.}
 A numeric value representing functional redundancy, \eqn{Re = D - Q}.
 }
 \description{
-Computes functional redundancy as the difference between Simpson's diversity
-(probability that two randomly drawn individuals are of different species)
-and Rao's quadratic entropy based on a supplied dissimilarity matrix.
+Computes functional redundancy as the degree of functional similarity among distinct species.
 }
 \details{
 Formally: \eqn{Re = D - Q}, where \eqn{D = 1 - \sum_i p_i^2} is Simpson's
@@ -30,6 +28,6 @@ of quadratic diversity indices.
 \references{
 \itemize{
 \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
-\item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}. \url{https://doi.org/10.1016/0040-5809(82)90004-1}
+\item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 }
 }

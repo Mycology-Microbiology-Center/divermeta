@@ -20,6 +20,6 @@ a measure of diversity that accounts for both element abundances and their dissi
 }
 \references{
 \itemize{
-\item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology, 21. \doi{10.1016/0040-5809(82)90004-1}. \url{https://doi.org/10.1016/0040-5809(82)90004-1}
+\item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology, 21. \doi{10.1016/0040-5809(82)90004-1}.
 }
 }
