@@ -28,7 +28,7 @@ The core indexes implemented in this package include:
 * **Inventory multiplicity**: The ratio of diversity before and after clustering elements.
 * **Distance multiplicity**: A measure based on the ratio of functional diversities.
 
-In addtion, there are several other functions for esimation of previously proposed diversity indexes 
+In addition, there are several other functions for estimation of previously proposed diversity indexes 
 (e.g., Rao's quadratic entropy, Chiu & Chao 2014 functional diversity, etc.).
 
 ## Installation
