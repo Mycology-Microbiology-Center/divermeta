@@ -65,7 +65,7 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
   Q <- raoQuadratic(ab, diss)
   Pq <- P^q
 
-  vals <- sum(Pq %*% diss %*% t(Pq))
+  vals <- as.numeric(t(Pq) %*% diss %*% Pq)
 
   vals <- vals / Q
 
