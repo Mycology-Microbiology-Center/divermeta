@@ -1,9 +1,45 @@
 
-# x <- 1:10
-# names(x) <- LETTERS[1:10]
-# diss <- dist(x)
-# visualize_dist(diss)
+#' Visualize a distance matrix as a sized-tile plot
+#'
+#' Creates a compact visualization of a distance or dissimilarity matrix where
+#' each cell is drawn as a square whose area is proportional to the magnitude
+#' of the corresponding value. Labels are taken from the input when available
+#' and can be customized.
+#'
+#' @param diss A distance object (class `dist`), numeric matrix, or
+#'   `data.frame` containing pairwise distances/dissimilarities.
+#' @param row.labels Optional character vector of row labels. If `NA` (default),
+#'   labels are taken from `diss` when available, otherwise sequential indices
+#'   are used.
+#' @param col.labels Optional character vector of column labels. 
+#'   If `NA` (default), labels are taken from `diss` when available, otherwise
+#'   sequential indices are used.
+#' @param clabel.row Numeric multiplier for the relative size of y-axis text.
+#' @param clabel.col Numeric multiplier for the relative size of x-axis text.
+#' @param csize Numeric multiplier controlling the maximum symbol (tile) size.
+#' @param clegend If greater than 0, a size legend is shown; otherwise the
+#'   legend is hidden.
+#' @param grid Logical; whether to draw a light grid behind the tiles.
+#'
+#' @return A `ggplot2` object representing the visualization.
+#'
+#' @details If `diss` is a `dist` object, labels are taken from the `Labels`
+#' attribute when present. Values are visualized by absolute magnitude; larger
+#' values produce larger squares. The first row is displayed at the top.
+#'
+#' @seealso \code{\link[ade4]{table.value}}
 
+#' @examples
+#' x <- 1:10
+#' names(x) <- LETTERS[1:10]
+#' diss <- stats::dist(x)
+#' visualize_dist(diss)
+#'
+#' @export
+#' @importFrom ggplot2 ggplot aes geom_point scale_size_area coord_fixed
+#' @importFrom ggplot2 scale_x_discrete scale_y_discrete labs theme_minimal
+#' @importFrom ggplot2 theme element_text rel element_blank element_line
+#' 
 visualize_dist <- function(
   diss,
   row.labels = NA,
