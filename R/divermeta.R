@@ -1,3 +1,43 @@
+#' Estimate diversity and multiplicity indices across samples
+#'
+#' This function estimates several diversity and multiplicity indices for
+#' many samples at once. Input abundances are expected with samples in columns
+#' and features (species/OTUs/genes) in rows. Dissimilarity matrix rows/cols
+#' should correspond to feature names (rownames of the abundance table).
+#'
+#' Indices available (use these names in `indices`):
+#' - "multiplicity_inventory": Inventory multiplicity of order `q`
+#' - "multiplicity_distance": Distance-based multiplicity with cutoff `sig`
+#' - "raoQ": Rao's quadratic entropy
+#' - "FD_sigma": Functional diversity with cutoff `sig` (Chiu & Chao 2014)
+#' - "FD_q": Functional diversity of order `q` (Chiu & Chao 2014)
+#' - "redundancy": Functional redundancy (Ricotta & Pavoine 2025)
+#'
+#' Notes:
+#' - Indices that require a dissimilarity matrix
+#'   (`multiplicity_distance`, `raoQ`, `FD_sigma`, `FD_q`, `redundancy`) 
+#'   need `diss` to be provided.
+#' - Indices that require clustering
+#'   (`multiplicity_inventory`, `multiplicity_distance`)
+#'   need `clusters`, a vector/factor of length equal to the number of rows
+#'   (features). The same clustering is applied to all samples.
+#'
+#' @param abund A numeric matrix or data.frame of abundances with samples in
+#'   columns and features in rows.
+#' @param diss Optional numeric dissimilarity matrix among features. Must be
+#'   square and (ideally) have row/column names matching `rownames(abund)`.
+#' @param indices Character vector of index names to compute. See list above.
+#' @param clusters Optional vector/factor of cluster membership for each feature
+#'   (row of `abund`), required for multiplicity indices that use clustering.
+#' @param q Numeric order for Hill-number based indices (used by `FD_q` and
+#'   `multiplicity_inventory`). Default: 1.
+#' @param sig Numeric cutoff σ for distance-based measures (used by
+#'   `FD_sigma` and `multiplicity_distance`). Default: 1.
+#'
+#' @return A data.frame with one row per sample and one column per requested
+#'   index.
+#' @export
+#' 
 divermeta <- function(abund,
   diss = NULL,
   indices = c("multiplicity_inventory"),
