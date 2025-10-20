@@ -1,6 +1,6 @@
 
 
-# Distance Based
+# Tests for distance-based multiplicity
 
 # Basic
 # ----------------------------
@@ -12,13 +12,45 @@ test_that("Basic", {
 
   sig <- 0.5
   n <- 10
-  ab <- matrix(1, nrow = 1, ncol = n)
+  ab <- rep(1, n)
   diss <- matrix(sig, nrow = n, ncol = n)
   diag(diss) <- 0
 
   expect_equal(round(diversity.functional.traditional(ab, diss), 3), n)
   expect_equal(diversity.functional(ab, diss, sig), n)
 
+})
+
+
+# Deterministic numeric checks (two-species and sigma capping)
+# -----------------------------------------------------------
+test_that("Two-species numeric and sigma capping", {
+
+  # Two species with unequal abundances, distance above sigma
+  ab <- c(2, 1)
+  d <- 0.7
+  sig <- 0.5
+
+  diss <- matrix(c(0, d, d, 0), nrow = 2, ncol = 2)
+
+  # diversity.functional must cap to sigma; equivalent to using min(d, sig)
+  diss_capped <- matrix(c(0, sig, sig, 0), nrow = 2, ncol = 2)
+  expect_equal(diversity.functional(ab, diss, sig), diversity.functional(ab, diss_capped, sig))
+
+  # multiplicity.distance closed form for 2 species
+  # raoQ_before = 2 * p1 * p2 * min(d, sig); raoQ_after with two clusters at distance sig: 2 * p1 * p2 * sig
+  p <- ab / sum(ab)
+  Q_before <- 2 * p[1] * p[2] * sig
+  Q_after <- 2 * p[1] * p[2] * sig
+
+  # After clustering matrix uses inter-cluster distance = sig
+  ab_clust <- ab
+  diss_clust <- diss_capped
+
+  expect_equal(
+    multiplicity.distance(ab, diss, ab_clust, diss_clust, sig),
+    (sig - Q_after) / (sig - Q_before)
+  )
 })
 
 
@@ -34,9 +66,10 @@ test_that("Basic", {
 # Ratio should be 3
 test_that("Doubling Property", {
 
+  set.seed(42)
   sig <- 0.9
   n <- 10
-  ab_unit <- rbind(runif(n, 100, 1000))
+  ab_unit <- runif(n, 100, 1000)
   diss_unit <- random_matrix <- matrix(runif(n * n, min = 0.3, max = 0.6), nrow = n, ncol = n)
   diag(diss_unit) <- 0
 
@@ -49,7 +82,7 @@ test_that("Doubling Property", {
   diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
   diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
 
-  ab <- cbind(ab_unit, ab_unit, ab_unit)
+  ab <- c(ab_unit, ab_unit, ab_unit)
 
   expect_equal(round(diversity.functional.traditional(ab, diss) / diversity.functional.traditional(ab_unit, diss_unit)), 3)
   expect_equal(diversity.functional(ab, diss, sig) / diversity.functional(ab_unit, diss_unit, sig), 3)
@@ -71,7 +104,7 @@ test_that("Assemblage  of units", {
 
     sig <- 1
     n <- 10
-    ab_unit <- rbind(runif(n, 100, 1000))
+    ab_unit <- runif(n, 100, 1000)
     diss_unit <- matrix(0, nrow = n, ncol = n)
 
     div_trad <- diversity.functional.traditional(ab_unit, diss_unit)
@@ -83,10 +116,10 @@ test_that("Assemblage  of units", {
     diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
     diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
 
-    ab <- cbind(ab_unit, ab_unit, ab_unit)
+    ab <- c(ab_unit, ab_unit, ab_unit)
 
     # Equivalent (Clusteres)
-    ab_clust <- cbind(sum(ab_unit), sum(ab_unit), sum(ab_unit))
+    ab_clust <- c(sum(ab_unit), sum(ab_unit), sum(ab_unit))
     diss_clust <- matrix(sig, ncol = 3, nrow = 3)
     diag(diss_clust) <- 0
 
@@ -99,7 +132,8 @@ test_that("Assemblage  of units", {
 # Ratio Equivalence. Distance based multiplicity should be equivalent to the
 # ratio of the functional diversities
 test_that("Ratio equivalence", {
-#
+
+  set.seed(42)
   for(i in 1:10)
   {
     # Parameters
@@ -112,7 +146,7 @@ test_that("Ratio equivalence", {
 
 
 
-    ab_unit <- rbind(runif(n, min_abundance, max_abundance))
+    ab_unit <- runif(n, min_abundance, max_abundance)
     diss_unit <- matrix(runif(n * n, min = min_intra_distance, max = max_intra_distance), nrow = n, ncol = n)
     diag(diss_unit) <- 0
 
@@ -126,10 +160,10 @@ test_that("Ratio equivalence", {
     diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
     diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
 
-    ab <- cbind(ab_unit, ab_unit, ab_unit)
+    ab <- c(ab_unit, ab_unit, ab_unit)
 
     # Equivalent (Clusteres)
-    ab_clust <- cbind(sum(ab_unit), sum(ab_unit), sum(ab_unit))
+    ab_clust <- c(sum(ab_unit), sum(ab_unit), sum(ab_unit))
     diss_clust <- matrix(sig, ncol = 3, nrow = 3)
     diag(diss_clust) <- 0
 
@@ -142,12 +176,50 @@ test_that("Ratio equivalence", {
 
 })
 
+# Deterministic by-blocks equals manual multiplicity
+# --------------------------------------------------
+test_that("by_blocks equals manual for simple case", {
+
+  # Four elements in two clusters (1-2, 3-4)
+  ids <- c("a", "b", "c", "d")
+  ab <- c(2, 3, 5, 7)
+  clust <- c(1, 1, 2, 2)
+  sig <- 0.8
+
+  # Within-cluster distances (symmetric); between clusters implicitly = sig for by_blocks
+  # Build diss_frame with unique pairs only
+  # Only include within-cluster unique pairs; cross-cluster assumed to be sigma internally
+  df <- data.frame(
+    ID1 = c("b", "d"),
+    ID2 = c("a", "c"),
+    Distance = c(0.2, 0.15),
+    stringsAsFactors = FALSE
+  )
+
+  # by_blocks computation
+  mb <- multiplicity.distance.by_blocks(ids = ids, ab = ab, diss_frame = df, clust = clust, sigma = sig)
+
+  # Manual full matrices: within clusters as above, between clusters = sig
+  diss <- matrix(sig, nrow = 4, ncol = 4, dimnames = list(ids, ids))
+  diag(diss) <- 0
+  diss["a", "b"] <- diss["b", "a"] <- 0.2
+  diss["c", "d"] <- diss["d", "c"] <- 0.15
+
+  ab_clust <- tapply(ab, clust, sum)
+  diss_clust <- matrix(sig, nrow = 2, ncol = 2)
+  diag(diss_clust) <- 0
+
+  mm <- multiplicity.distance(ab, diss, ab_clust, diss_clust, sig)
+
+  expect_equal(mb, mm, tolerance = 1e-12)
+})
+
 # Block equivalence
 # Checks that the by blocks implementation gives the same results as the
 # normal implementation
 test_that("Implementation equivalence",{
 
-  set.seed(123)
+  set.seed(42)
 
   for(w_ in 1:10)
   {
