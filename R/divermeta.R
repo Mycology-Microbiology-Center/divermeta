@@ -1,39 +1,38 @@
 #' Estimate diversity and multiplicity indices across samples
 #'
-#' This function estimates several diversity and multiplicity indices for
-#' many samples at once. Input abundances are expected with samples in columns
-#' and features (species/OTUs/genes) in rows. Dissimilarity matrix rows/cols
-#' should correspond to feature names (rownames of the abundance table).
+#' Estimate several diversity and multiplicity indices for many samples at once.
+#' Abundances are provided with samples in columns and features (species/OTUs/genes)
+#' in rows. If supplied, the dissimilarity matrix must correspond to feature names.
 #'
-#' Indices available (use these names in `indices`):
-#' - "multiplicity_inventory": Inventory multiplicity of order `q`
-#' - "multiplicity_distance": Distance-based multiplicity with cutoff `sig`
-#' - "raoQ": Rao's quadratic entropy
-#' - "FD_sigma": Functional diversity with cutoff `sig` (Chiu & Chao 2014)
-#' - "FD_q": Functional diversity of order `q` (Chiu & Chao 2014)
-#' - "redundancy": Functional redundancy (Ricotta & Pavoine 2025)
+#' Indices available (use these labels in `indices`):
+#' - "multiplicity_inventory": inventory multiplicity \eqn{^{q}M}{M^q} (order \eqn{q}{q})
+#' - "multiplicity_distance": distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} (cutoff `sig`)
+#' - "raoQ": Rao quadratic entropy \eqn{Q}{Q}
+#' - "FD_sigma": distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} (cutoff `sig`)
+#' - "FD_q": distance-based functional diversity \eqn{^{q}FD}{FD^q} (order \eqn{q}{q})
+#' - "redundancy": functional redundancy \eqn{Re}{Re}
 #'
 #' Notes:
-#' - Indices that require a dissimilarity matrix
-#'   (`multiplicity_distance`, `raoQ`, `FD_sigma`, `FD_q`, `redundancy`) 
-#'   need `diss` to be provided.
-#' - Indices that require clustering
-#'   (`multiplicity_inventory`, `multiplicity_distance`)
-#'   need `clusters`, a vector/factor of length equal to the number of rows
-#'   (features). The same clustering is applied to all samples.
+#' - Indices that use dissimilarities (`multiplicity_distance`, `raoQ`, `FD_sigma`,
+#'   `FD_q`, `redundancy`) require `diss`.
+#' - Indices that use clustering (`multiplicity_inventory`, `multiplicity_distance`)
+#'   require `clusters` (same length/order as feature rows).
 #'
-#' @param abund A numeric matrix or data.frame of abundances with samples in
-#'   columns and features in rows.
-#' @param diss Optional numeric dissimilarity matrix among features. Must be
-#'   square and (ideally) have row/column names matching `rownames(abund)`.
-#' @param indices Character vector of index names to compute. See list above.
-#' @param clusters Optional vector/factor of cluster membership for each feature
-#'   (row of `abund`), required for multiplicity indices that use clustering.
+#' @param abund Numeric matrix or data.frame of abundances with samples in columns
+#'   and features in rows.
+#' @param diss Optional numeric dissimilarity matrix among features; square with
+#'   row/column names matching `rownames(abund)` when present.
+#' @param indices Character vector of index names to compute (see list above).
+#' @param clusters Optional vector/factor of cluster memberships for each feature
+#'   (row of `abund`).
 #' @param q Numeric order for Hill-number based indices (used by `FD_q` and
-#'   `multiplicity_inventory`). Default: 1.
-#' @param sig Numeric cutoff σ for distance-based measures (used by
-#'   `FD_sigma` and `multiplicity_distance`). Default: 1.
+#'   `multiplicity_inventory`). Default `1`.
+#' @param sig Numeric cutoff `σ` for distance-based measures (used by
+#'   `FD_sigma` and `multiplicity_distance`). Default `1`.
 #'
+#' @return data.frame with one row per sample and one column per requested index.
+#' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
+#'   [diversity.functional.traditional()], [raoQuadratic()], [redundancy()]
 #' @return A data.frame with one row per sample and one column per requested
 #'   index.
 #' @export

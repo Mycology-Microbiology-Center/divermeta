@@ -1,15 +1,18 @@
-#' Distance based Multiplicity
+#' Distance-based multiplicity
 #'
-#' Computes the distance-based multiplicity,
-#' defined as the ratio between the functional diversities of the unclustered set and the clustered set.
+#' Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} as the ratio of distance-based
+#' functional diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap
+#' pairwise distances. Provide abundances and dissimilarities both for the
+#' unclustered elements and for the clustered representation.
 #'
-#' @param ab A numeric vector of element abundances before clustering.
-#' @param diss A numeric matrix representing the dissimilarities or distances between elements before clustering.
-#' @param ab_clust A numeric vector of element abundances after clustering.
-#' @param diss_clust A numeric matrix representing the dissimilarities or distances between elements after clustering.
-#' @param sig A numeric value determining the threshold (sigma) at which two units are considered different.
+#' @param ab Numeric vector of element abundances before clustering.
+#' @param diss Numeric matrix of pairwise dissimilarities among elements before clustering.
+#' @param ab_clust Numeric vector of element abundances after clustering.
+#' @param diss_clust Numeric matrix of pairwise dissimilarities among clusters after clustering.
+#' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
-#' @return A numeric value representing the distance multiplicity, \eqn{FM_{\sigma}}.
+#' @return Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
+#' @seealso [raoQuadratic()], [diversity.functional()], [multiplicity.distance.by_blocks()]
 #' @export
 multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
@@ -21,24 +24,20 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
 
 
-#' Distance based Multiplicity by Blocks
+#' Distance-based multiplicity by blocks
 #'
-#' Distance Multiplicity defined as the ratio between the functional
-#' diversities of the unclustered set and the cluster set. Computed over a
-#' block distance matrix. Here we assume that the distance between elements of
-#' different clusters is maximum (i.e. sigma)
+#' Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact three-column
+#' distance table. Distances are capped at \eqn{\sigma}{sigma} and distances between elements
+#' from different clusters are assumed to be equal to \eqn{\sigma}{sigma}.
 #'
+#' @param ids Character or integer vector of element identifiers (length `n`).
+#' @param ab Numeric vector of pre-clustering abundances (length `n`, same order as `ids`).
+#' @param diss_frame Data frame with columns `ID1`, `ID2`, `Distance` for unique pairs of elements.
+#' @param clust Vector or factor of cluster memberships for each element (length `n`).
+#' @param sigma Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
-#' @param ids 1 x n vector of the ids of the elements.
-#' @param ab 1 x n vector of abundances before clustering, in the same order
-#' as the ids.
-#' @param diss_frame a three columns data frame, with the distances between
-#' elements. Columns are assumed to be in the order: ID1, ID2 and distance.
-#' @param clust List or vector  element of size n with the unit's corresponding
-#' cluster
-#' @param sig float value determining that two units are different
-#'
-#' @return \eqn{FM_{\sigma}}.
+#' @return Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
+#' @seealso [multiplicity.distance()], [raoQuadratic()], [diversity.functional()]
 #' @export
 multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 1)
 {

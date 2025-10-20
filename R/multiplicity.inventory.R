@@ -1,17 +1,22 @@
-#' Inventory Multiplicity
+#' Inventory multiplicity
 #'
-#' Computes the inventory multiplicity, derived from the factor of the true diversity of unclustered abundances and the clustered abundances.
+#' Computes inventory multiplicity \eqn{^{q}M}{M^q}, the within-cluster diversity component
+#' under Hill-number partitioning. It summarizes the average diversity inside
+#' clusters given element abundances and their cluster memberships. Use `q`
+#' to control abundance weighting (e.g., `q = 0` richness-like, `q = 1`
+#' Shannon-type).
 #'
-#' @param ab A numeric vector or list of element abundances.
-#' @param clust A numeric vector or list indicating the cluster assignment for each element.
-#' @param q A numeric parameter for the Hill number, which determines the diversity order.
+#' @param ab Numeric vector of subunit abundances.
+#' @param clust Vector or factor of cluster memberships for each element of `ab`.
+#' @param q Numeric order of the Hill number (default `1`).
 #'
-#' @return A numeric value representing the inventory multiplicity, \eqn{^qM}.
+#' @return Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q} for the input.
+#' @seealso [diversity.functional()], [multiplicity.distance()]
 #' @export
 #'
 #' @examples
-#' ab <- rep(10,9)
-#' clust <- c(rep(1,3), rep(2,3), rep(3,3))
+#' ab <- rep(10, 9)
+#' clust <- c(rep(1, 3), rep(2, 3), rep(3, 3))
 #' multiplicity.inventory(ab, clust)
 #'
 multiplicity.inventory <- function(ab, clust, q = 1) {

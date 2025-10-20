@@ -1,17 +1,19 @@
-#' Functional diversity (Chiu & Chao 2014)
+#' Distance-based functional diversity (q = 1) (Chiu & Chao 2014)
 #'
-#' Computes the functional diversity, derived from Chiu & Chao (2014), 
-#' assuming no intra-specific variation and using a default q value of 1.
+#' Computes distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} following Chiu & Chao (2014)
+#' with Shannon-type weighting (order \eqn{q = 1}{q = 1}). Pairwise distances are capped at
+#' the cutoff \eqn{\sigma}{sigma}.
 #'
-#' @param ab A numeric vector of element abundances.
-#' @param diss A numeric matrix representing the dissimilarities or distances between elements.
-#' @param sig A numeric value determining the threshold (sigma) at which two units are considered different.
+#' @param ab Numeric vector of element abundances.
+#' @param diss Numeric matrix of pairwise dissimilarities among elements.
+#' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
-#' @return A numeric value representing the functional diversity, \eqn{FD_{\sigma}}.
+#' @return Numeric scalar, the distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma}.
 #' @references
 #' \itemize{
 #' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 #' }
+#' @seealso [raoQuadratic()], [diversity.functional.traditional()]
 #' @export
 diversity.functional <- function(ab, diss, sig = 1) {
   diss[diss > sig] <- sig
@@ -22,22 +24,22 @@ diversity.functional <- function(ab, diss, sig = 1) {
 
 
 
-#' Functional diversity (Chiu & Chao 2014)
+#' Distance-based functional diversity (order q) (Chiu & Chao 2014)
 #'
-#' Computes the functional diversity, derived from Chiu & Chao (2014). 
-#' This corresponds to D(Q) in their paper and \eqn{^qFD} in the multiplicity manuscript.
+#' Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014).
+#' This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript. 
+#' For \eqn{q = 1}{q = 1}, an approximation is used internally.
 #'
-# TODO: create the case for q = 1
-#' 
-#' @param ab A numeric vector of element abundances.
-#' @param diss A numeric matrix representing the dissimilarities or distances between elements.
-#' @param q A numeric parameter for the Hill number, which determines the diversity order.
+#' @param ab Numeric vector of element abundances.
+#' @param diss Numeric matrix of pairwise dissimilarities among elements.
+#' @param q Numeric order of the Hill number (non-negative).
 #'
-#' @return A numeric value representing the functional diversity, \eqn{^qFD}.
+#' @return Numeric scalar, the distance-based functional diversity \eqn{^{q}FD}{FD^q}.
 #' @references
 #' \itemize{
 #' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 #' }
+#' @seealso [diversity.functional()], [raoQuadratic()]
 #' @export
 diversity.functional.traditional <- function(ab, diss, q = 1) {
 
@@ -76,26 +78,24 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
 
 
 
-#' Redundancy index (Ricotta & Pavoine 2025)
+#' Functional redundancy (Re) (Ricotta & Pavoine 2025)
 #'
-#' Computes functional redundancy as the degree of functional similarity among distinct species.
+#' Computes functional redundancy \eqn{Re}{Re}, a measure of the degree to which
+#' distinct elements are functionally similar given their abundances and
+#' pairwise dissimilarities. This implementation follows the Simpson–Rao
+#' family and corresponds to the `q = 2` case.
 #'
-#' Formally: \eqn{Re = D - Q}, where \eqn{D = 1 - \sum_i p_i^2} is Simpson's
-#' index and \eqn{Q = \sum_{i,j} p_i \, p_j \, \delta_{ij}} is Rao's quadratic
-#' entropy. This redundancy measure is mathematically fixed to \eqn{q = 2}
-#' because both components (Simpson and Rao) belong to the Simpson–Rao family
-#' of quadratic diversity indices.
+#' @param ab Numeric vector of element abundances.
+#' @param diss Numeric square matrix of pairwise dissimilarities among elements
+#'   scaled to the range \[0, 1\].
 #'
-#' @param ab A numeric vector of element abundances.
-#' @param diss A numeric matrix of pairwise dissimilarities among elements
-#'   scaled in \[0, 1\]. Must be square with dimension equal to length of `ab`.
-#'
-#' @return A numeric value representing functional redundancy, \eqn{Re = D - Q}.
+#' @return Numeric scalar, functional redundancy `Re`.
 #' @references
 #' \itemize{
 #' \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
 #' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 #' }
+#' @seealso [raoQuadratic()]
 #' @export
 #' 
 redundancy <- function(ab, diss) {
