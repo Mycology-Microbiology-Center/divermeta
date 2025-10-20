@@ -2,26 +2,30 @@
 % Please edit documentation in R/other_indices.R
 \name{diversity.functional}
 \alias{diversity.functional}
-\title{Functional diversity (Chiu & Chao 2014)}
+\title{Distance-based functional diversity (q = 1) (Chiu & Chao 2014)}
 \usage{
 diversity.functional(ab, diss, sig = 1)
 }
 \arguments{
-\item{ab}{A numeric vector of element abundances.}
+\item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{A numeric matrix representing the dissimilarities or distances between elements.}
+\item{diss}{Numeric matrix of pairwise dissimilarities among elements.}
 
-\item{sig}{A numeric value determining the threshold (sigma) at which two units are considered different.}
+\item{sig}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
 }
 \value{
-A numeric value representing the functional diversity, \eqn{FD_{\sigma}}.
+Numeric scalar, the distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma}.
 }
 \description{
-Computes the functional diversity, derived from Chiu & Chao (2014),
-assuming no intra-specific variation and using a default q value of 1.
+Computes distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} following Chiu & Chao (2014)
+with Shannon-type weighting (order \eqn{q = 1}{q = 1}). Pairwise distances are capped at
+the cutoff \eqn{\sigma}{sigma}.
 }
 \references{
 \itemize{
 \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 }
+}
+\seealso{
+\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional.traditional]{diversity.functional.traditional()}}
 }

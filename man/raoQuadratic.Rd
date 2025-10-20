@@ -2,21 +2,21 @@
 % Please edit documentation in R/raoQ.R
 \name{raoQuadratic}
 \alias{raoQuadratic}
-\title{Rao's Quadratic Entropy}
+\title{Rao quadratic entropy (Q) (Rao 1982)}
 \usage{
 raoQuadratic(ab, diss)
 }
 \arguments{
-\item{ab}{A numeric vector of element abundances. Each element represents the abundance of an entity.}
+\item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{A numeric matrix representing the dissimilarities or distances between entities. It should be a square matrix with dimensions equal to the length of \code{ab}.}
+\item{diss}{Numeric square matrix of pairwise dissimilarities among elements.}
 }
 \value{
-A numeric value representing Rao's Quadratic Entropy.
+Numeric scalar, Rao quadratic entropy \eqn{Q}{Q}.
 }
 \description{
-Computes Rao's Quadratic Entropy,
-a measure of diversity that accounts for both element abundances and their dissimilarities.
+Computes Rao quadratic entropy \eqn{Q}{Q}, a diversity measure that accounts for
+element abundances and their pairwise dissimilarities.
 }
 \references{
 \itemize{

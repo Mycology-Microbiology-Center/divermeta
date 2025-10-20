@@ -2,26 +2,30 @@
 % Please edit documentation in R/other_indices.R
 \name{diversity.functional.traditional}
 \alias{diversity.functional.traditional}
-\title{Functional diversity (Chiu & Chao 2014)}
+\title{Distance-based functional diversity (order q) (Chiu & Chao 2014)}
 \usage{
 diversity.functional.traditional(ab, diss, q = 1)
 }
 \arguments{
-\item{ab}{A numeric vector of element abundances.}
+\item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{A numeric matrix representing the dissimilarities or distances between elements.}
+\item{diss}{Numeric matrix of pairwise dissimilarities among elements.}
 
-\item{q}{A numeric parameter for the Hill number, which determines the diversity order.}
+\item{q}{Numeric order of the Hill number (non-negative).}
 }
 \value{
-A numeric value representing the functional diversity, \eqn{^qFD}.
+Numeric scalar, the distance-based functional diversity \eqn{^{q}FD}{FD^q}.
 }
 \description{
-Computes the functional diversity, derived from Chiu & Chao (2014).
-This corresponds to D(Q) in their paper and \eqn{^qFD} in the multiplicity manuscript.
+Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014).
+This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript.
+For \eqn{q = 1}{q = 1}, an approximation is used internally.
 }
 \references{
 \itemize{
 \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 }
+}
+\seealso{
+\code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}
 }

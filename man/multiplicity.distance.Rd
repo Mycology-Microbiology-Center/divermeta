@@ -2,25 +2,30 @@
 % Please edit documentation in R/multiplicity.distance.R
 \name{multiplicity.distance}
 \alias{multiplicity.distance}
-\title{Distance based Multiplicity}
+\title{Distance-based multiplicity}
 \usage{
 multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 }
 \arguments{
-\item{ab}{A numeric vector of element abundances before clustering.}
+\item{ab}{Numeric vector of element abundances before clustering.}
 
-\item{diss}{A numeric matrix representing the dissimilarities or distances between elements before clustering.}
+\item{diss}{Numeric matrix of pairwise dissimilarities among elements before clustering.}
 
-\item{ab_clust}{A numeric vector of element abundances after clustering.}
+\item{ab_clust}{Numeric vector of element abundances after clustering.}
 
-\item{diss_clust}{A numeric matrix representing the dissimilarities or distances between elements after clustering.}
+\item{diss_clust}{Numeric matrix of pairwise dissimilarities among clusters after clustering.}
 
-\item{sig}{A numeric value determining the threshold (sigma) at which two units are considered different.}
+\item{sig}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
 }
 \value{
-A numeric value representing the distance multiplicity, \eqn{FM_{\sigma}}.
+Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
 }
 \description{
-Computes the distance-based multiplicity,
-defined as the ratio between the functional diversities of the unclustered set and the clustered set.
+Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} as the ratio of distance-based
+functional diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap
+pairwise distances. Provide abundances and dissimilarities both for the
+unclustered elements and for the clustered representation.
+}
+\seealso{
+\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=multiplicity.distance.by_blocks]{multiplicity.distance.by_blocks()}}
 }

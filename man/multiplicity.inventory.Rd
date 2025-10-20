@@ -2,26 +2,33 @@
 % Please edit documentation in R/multiplicity.inventory.R
 \name{multiplicity.inventory}
 \alias{multiplicity.inventory}
-\title{Inventory Multiplicity}
+\title{Inventory multiplicity}
 \usage{
 multiplicity.inventory(ab, clust, q = 1)
 }
 \arguments{
-\item{ab}{A numeric vector or list of element abundances.}
+\item{ab}{Numeric vector of subunit abundances.}
 
-\item{clust}{A numeric vector or list indicating the cluster assignment for each element.}
+\item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.}
 
-\item{q}{A numeric parameter for the Hill number, which determines the diversity order.}
+\item{q}{Numeric order of the Hill number (default \code{1}).}
 }
 \value{
-A numeric value representing the inventory multiplicity, \eqn{^qM}.
+Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q} for the input.
 }
 \description{
-Computes the inventory multiplicity, derived from the factor of the true diversity of unclustered abundances and the clustered abundances.
+Computes inventory multiplicity \eqn{^{q}M}{M^q}, the within-cluster diversity component
+under Hill-number partitioning. It summarizes the average diversity inside
+clusters given element abundances and their cluster memberships. Use \code{q}
+to control abundance weighting (e.g., \code{q = 0} richness-like, \code{q = 1}
+Shannon-type).
 }
 \examples{
-ab <- rep(10,9)
-clust <- c(rep(1,3), rep(2,3), rep(3,3))
+ab <- rep(10, 9)
+clust <- c(rep(1, 3), rep(2, 3), rep(3, 3))
 multiplicity.inventory(ab, clust)
 
+}
+\seealso{
+\code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=multiplicity.distance]{multiplicity.distance()}}
 }

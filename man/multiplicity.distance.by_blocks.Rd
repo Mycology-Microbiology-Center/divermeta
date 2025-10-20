@@ -2,30 +2,29 @@
 % Please edit documentation in R/multiplicity.distance.R
 \name{multiplicity.distance.by_blocks}
 \alias{multiplicity.distance.by_blocks}
-\title{Distance based Multiplicity by Blocks}
+\title{Distance-based multiplicity by blocks}
 \usage{
 multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma = 1)
 }
 \arguments{
-\item{ids}{1 x n vector of the ids of the elements.}
+\item{ids}{Character or integer vector of element identifiers (length \code{n}).}
 
-\item{ab}{1 x n vector of abundances before clustering, in the same order
-as the ids.}
+\item{ab}{Numeric vector of pre-clustering abundances (length \code{n}, same order as \code{ids}).}
 
-\item{diss_frame}{a three columns data frame, with the distances between
-elements. Columns are assumed to be in the order: ID1, ID2 and distance.}
+\item{diss_frame}{Data frame with columns \code{ID1}, \code{ID2}, \code{Distance} for unique pairs of elements.}
 
-\item{clust}{List or vector  element of size n with the unit's corresponding
-cluster}
+\item{clust}{Vector or factor of cluster memberships for each element (length \code{n}).}
 
-\item{sig}{float value determining that two units are different}
+\item{sigma}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
 }
 \value{
-\eqn{FM_{\sigma}}.
+Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
 }
 \description{
-Distance Multiplicity defined as the ratio between the functional
-diversities of the unclustered set and the cluster set. Computed over a
-block distance matrix. Here we assume that the distance between elements of
-different clusters is maximum (i.e. sigma)
+Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact three-column
+distance table. Distances are capped at \eqn{\sigma}{sigma} and distances between elements
+from different clusters are assumed to be equal to \eqn{\sigma}{sigma}.
+}
+\seealso{
+\code{\link[=multiplicity.distance]{multiplicity.distance()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional]{diversity.functional()}}
 }

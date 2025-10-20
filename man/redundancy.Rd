@@ -2,32 +2,31 @@
 % Please edit documentation in R/other_indices.R
 \name{redundancy}
 \alias{redundancy}
-\title{Redundancy index (Ricotta & Pavoine 2025)}
+\title{Functional redundancy (Re) (Ricotta & Pavoine 2025)}
 \usage{
 redundancy(ab, diss)
 }
 \arguments{
-\item{ab}{A numeric vector of element abundances.}
+\item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{A numeric matrix of pairwise dissimilarities among elements
-scaled in [0, 1]. Must be square with dimension equal to length of \code{ab}.}
+\item{diss}{Numeric square matrix of pairwise dissimilarities among elements
+scaled to the range [0, 1].}
 }
 \value{
-A numeric value representing functional redundancy, \eqn{Re = D - Q}.
+Numeric scalar, functional redundancy \code{Re}.
 }
 \description{
-Computes functional redundancy as the degree of functional similarity among distinct species.
-}
-\details{
-Formally: \eqn{Re = D - Q}, where \eqn{D = 1 - \sum_i p_i^2} is Simpson's
-index and \eqn{Q = \sum_{i,j} p_i \, p_j \, \delta_{ij}} is Rao's quadratic
-entropy. This redundancy measure is mathematically fixed to \eqn{q = 2}
-because both components (Simpson and Rao) belong to the Simpson–Rao family
-of quadratic diversity indices.
+Computes functional redundancy \eqn{Re}{Re}, a measure of the degree to which
+distinct elements are functionally similar given their abundances and
+pairwise dissimilarities. This implementation follows the Simpson–Rao
+family and corresponds to the \code{q = 2} case.
 }
 \references{
 \itemize{
 \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
 \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 }
+}
+\seealso{
+\code{\link[=raoQuadratic]{raoQuadratic()}}
 }
