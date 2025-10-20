@@ -31,10 +31,51 @@
 #'   `FD_sigma` and `multiplicity_distance`). Default `1`.
 #'
 #' @return data.frame with one row per sample and one column per requested index.
+#' 
 #' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
 #'   [diversity.functional.traditional()], [raoQuadratic()], [redundancy()]
-#' @return A data.frame with one row per sample and one column per requested
-#'   index.
+#' 
+#' @examples
+#' 
+#' # Abundance matrix: rows = features, columns = samples
+#' species <- c("s1", "s2", "s3", "s4")
+#' samples <- c("Sample1", "Sample2", "Sample3")
+#' abund <- matrix(
+#'   c(
+#'     10, 5,  0,   # s1
+#'     0,  8, 12,   # s2
+#'     4,  3,  7,   # s3
+#'     6,  0,  9    # s4
+#'   ),
+#'   nrow = length(species),
+#'   ncol = length(samples),
+#'   byrow = TRUE,
+#'   dimnames = list(species, samples))
+#' 
+#' # Dissimilarity matrix among features (0-1), names must match abund rownames
+#' diss <- matrix(
+#'   c(
+#'     0.0, 0.2, 0.7, 1.0,
+#'     0.2, 0.0, 0.6, 0.9,
+#'     0.7, 0.6, 0.0, 0.4,
+#'     1.0, 0.9, 0.4, 0.0
+#'   ),
+#'   nrow = length(species),
+#'   ncol = length(species),
+#'   byrow = TRUE,
+#'   dimnames = list(species, species))
+#' 
+#' # Clusters per feature (used by multiplicity_* indices)
+#' clusters <- c(s1 = "A", s2 = "A", s3 = "B", s4 = "B")
+#' 
+#' ## Run divermeta
+#' divermeta(abund,
+#'   clusters = clusters,
+#'   diss = diss,
+#'   q = 1,
+#'   sig = 0.8,
+#'   indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy"))
+#'
 #' @export
 #' 
 divermeta <- function(abund,
