@@ -39,4 +39,36 @@ test_that("diversity.functional.traditional two-species across q", {
 })
 
 
+test_that("redundancy numeric and bounds (2 species)", {
+
+  ab <- c(2, 1)
+  d <- 0.3
+  diss <- matrix(c(0, d, d, 0), 2, 2)
+
+  # Redundancy = (1 - sum p_i^2) - Q
+  p <- ab / sum(ab)
+  D <- 1 - sum(p^2)
+  Q <- 2 * p[1] * p[2] * d
+  expected <- D - Q
+
+  expect_equal(redundancy(ab, diss), expected, tolerance = 1e-12)
+
+  # Bounds: redundancy <= D and >= 0 when diss in [0,1]
+  expect_true(redundancy(ab, diss) <= D + 1e-12)
+  expect_true(redundancy(ab, diss) >= 0 - 1e-12)
+})
+
+
+test_that("redundancy input validation", {
+
+  ab <- c(1, 2)
+  diss <- matrix(c(0, 0.2, 0.2, 0), 2, 2)
+
+  expect_error(redundancy("a", diss))
+  expect_error(redundancy(ab, "not a matrix"))
+  expect_error(redundancy(ab, matrix(1, 2, 3)))
+  expect_error(redundancy(c(-1, 2), diss))
+  expect_error(redundancy(c(0, 0), diss))
+})
+
 
