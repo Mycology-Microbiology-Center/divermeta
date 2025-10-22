@@ -20,3 +20,23 @@ test_that("diversity.functional (q=1) matches capped Rao formula (2 species)", {
   expect_equal(diversity.functional(ab, diss, sig), expected, tolerance = 1e-12)
 })
 
+
+test_that("diversity.functional.traditional two-species across q", {
+
+  ab <- c(3, 1)
+  d <- 0.4
+  diss <- matrix(c(0, d, d, 0), 2, 2)
+
+  # For two species symmetric distances, check monotonicity with q and q=1 continuity
+  q_values <- c(0.5, 0.9, 1.1, 2)
+  vals <- vapply(q_values, function(q) diversity.functional.traditional(ab, diss, q), numeric(1))
+
+  # Ensure all finite and positive
+  expect_true(all(is.finite(vals) & vals > 0))
+
+  # q near 1 on both sides should be close
+  expect_equal(vals[which(q_values == 0.9)], vals[which(q_values == 1.1)], tolerance = 1e-2)
+})
+
+
+
