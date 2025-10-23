@@ -103,3 +103,79 @@ test_that("multiple indices and alias mapping; matches direct functions", {
 })
 
 
+test_that("errors when diss required but missing; and when clusters required but missing", {
+  fx <- make_fixture()
+
+  # diss-required indices
+  expect_error(divermeta(fx$abund, indices = c("raoQ")))
+
+  # clusters-required indices
+  expect_error(divermeta(fx$abund, indices = c("multiplicity_inventory")))
+})
+
+
+test_that("unsupported index label errors clearly", {
+  fx <- make_fixture()
+  expect_error(divermeta(fx$abund, indices = c("not_an_index")))
+})
+
+
+test_that("non-numeric abund errors; and diss misalignment errors when no names", {
+  fx <- make_fixture()
+
+  bad_abund <- data.frame(
+    f1 = c("1", "2", "3"),
+    f2 = c("4", "5", "6"),
+    f3 = c("7", "8", "9")
+  )
+  # Transpose to get rows as features; still character matrix
+  bad_abund <- as.matrix(t(bad_abund))
+  expect_error(divermeta(bad_abund, indices = c("multiplicity_inventory"), clusters = fx$clusters))
+
+  # No names on diss; mismatched dims with abund should error
+  abund2 <- fx$abund
+  diss_bad <- matrix(0, nrow = 5, ncol = 5)
+  expect_error(divermeta(abund2, diss = diss_bad, indices = c("raoQ")))
+})
+
+
+test_that("alignment by names with warnings and dropping/excess features", {
+  fx <- make_fixture()
+
+  # Add an extra feature to diss; reorder rows/cols
+  diss2 <- rbind(fx$diss, extra = c(0.3, 0.3, 0.3, 0.3))
+  diss2 <- cbind(diss2, extra = c(0.3, 0.3, 0.3, 0.3, 0.0))
+  diss2 <- diss2[c("f3", "f1", "extra", "f4", "f2"), c("f3", "f1", "extra", "f4", "f2")]
+
+  # Expect warnings about missing features in abund, and in diss
+  expect_warning({
+    res <- divermeta(fx$abund, diss = diss2, indices = c("raoQ"))
+    expect_true(all(is.finite(res$raoQ[1:2])))
+    expect_true(is.na(res$raoQ[3]))  # empty column should be NA
+  })
+})
+
+
+test_that("named clusters align regardless of order", {
+  fx <- make_fixture()
+  cl1 <- fx$clusters
+  cl2 <- fx$clusters[c("f4", "f3", "f2", "f1")]  # different order, still named
+
+  r1 <- divermeta(fx$abund, indices = c("multiplicity_inventory"), clusters = cl1)
+  r2 <- divermeta(fx$abund, indices = c("multiplicity_inventory"), clusters = cl2)
+
+  expect_equal(r1$multiplicity_inventory, r2$multiplicity_inventory)
+})
+
+
+test_that("all-zero sample columns produce NA for applicable indices", {
+  fx <- make_fixture()
+
+  res <- divermeta(fx$abund, diss = fx$diss, indices = c("raoQ", "FD_sigma", "multiplicity_inventory"), clusters = fx$clusters, sig = 0.8)
+
+  # Third sample is all zeros
+  expect_true(is.na(res$raoQ[3]))
+  expect_true(is.na(res$FD_sigma[3]))
+  expect_true(is.na(res$multiplicity_inventory[3]))
+})
+
