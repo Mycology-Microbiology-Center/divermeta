@@ -1,0 +1,6 @@
+pandoc: 3.6.3
+pkgdown: 2.1.3
+pkgdown_sha: ~
+articles:
+  divermeta: divermeta.html
+last_built: 2025-10-28T17:32Z
