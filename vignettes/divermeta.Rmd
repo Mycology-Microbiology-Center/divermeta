@@ -16,20 +16,20 @@ knitr::opts_chunk$set(
   fig.width = 7,
   fig.height = 5
 )
+set.seed(42)
 ```
 
 ## Introduction
 
-The `divermeta` package provides tools for calculating various biodiversity metrics with a focus on multiplicity index. 
-This index implements methods for quantifying diversity at different organizational levels, accounting for both abundance and dissimilarity between elements.
+`divermeta` computes multiplicity, the metric that quantifies within‑cluster diversity that is typically neglected when elements are grouped into units (e.g., genes into homolog groups, ASVs into OTUs, etc.).  
 
-The core indexes implemented in this package include:
+The core funcion of the package is `divermeta()`, which computes multiple indices across all samples at once. You may request the following indices via `indices` argument:
 
-* **Inventory multiplicity**: The ratio of diversity before and after clustering elements.
-* **Distance multiplicity**: A measure based on the ratio of functional diversities.
+- inventory multiplicity: `"multiplicity_inventory"`
+- distance‑based multiplicity (σ‑capped): `"multiplicity_distance"`
+- optional companions: `"raoQ"`, `"FD_sigma"`, `"FD_q"`, `"redundancy"`
 
-In addition, there are several other functions for estimation of previously proposed diversity indexes 
-(e.g., Rao's quadratic entropy, Chiu & Chao 2014 functional diversity, etc.).
+This vignette uses tiny synthetic data to keep runtime short and outputs deterministic.
 
 ## Installation
 
@@ -40,41 +40,166 @@ You can install the development version of divermeta from GitHub with:
 remotes::install_github("Mycology-Microbiology-Center/divermeta")
 ```
 
-Let's load the package to explore its functionality:
+Load the package:
 
 ```{r setup}
 library(divermeta)
 ```
 
-## Inventory multiplicity
+## Quick start
 
-Inventory multiplicity is defined as the ratio between the true diversity of unclustered abundances and the clustered abundances. 
-It provides a way to quantify the diversity lost when grouping elements together.
-
-### Basic example
-
-Let's start with a simple example of calculating inventory multiplicity:
+We create a small features x samples abundance matrix, a cluster membership vector aligned by feature names, and a feature dissimilarity matrix in the 0-1 range.
 
 ```{r}
-# High multiplicity example
-# Three clusters of ten different units each
-# Expected multiplicity is close to 10
-ab_high <- rep(10, 30)
-clust_high <- c(rep(1, 10), rep(2, 10), rep(3, 10))
-multiplicity.inventory(ab_high, clust_high)
+# Features (rows) and samples (columns)
+features <- c("f1", "f2", "f3", "f4")
+samples  <- c("S1", "S2", "S3")
 
-# Low multiplicity example
-# Three clusters with one unit each
-# Expected multiplicity is close to 1
-ab_low <- rep(10, 3)
-clust_low <- c(1, 2, 3)
-multiplicity.inventory(ab_low, clust_low)
+abund <- matrix(
+  c(
+    10,  4,  0,  # f1
+     0,  9,  6,  # f2
+     5,  3,  7,  # f3
+     6,  0, 12   # f4
+  ),
+  nrow = length(features), byrow = TRUE,
+  dimnames = list(features, samples)
+)
+
+# Clusters per feature (named, aligned to rownames(abund))
+clusters <- c(f1 = "A", f2 = "A", f3 = "B", f4 = "B")
+
+# Optional dissimilarity among features (0-1); names must match abund rownames
+diss <- matrix(
+  c(
+    0.0, 0.2, 0.7, 1.0,
+    0.2, 0.0, 0.6, 0.9,
+    0.7, 0.6, 0.0, 0.4,
+    1.0, 0.9, 0.4, 0.0
+  ),
+  nrow = length(features), byrow = TRUE,
+  dimnames = list(features, features)
+)
+
+# One call computes multiple indices across all samples
+res <- divermeta(
+  abund,
+  clusters = clusters,
+  diss     = diss,
+  q        = 1,
+  sig      = 0.8,
+  indices  = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy"))
+res
 ```
 
-In the high multiplicity example, we have 30 units divided into 3 clusters of 10 units each. 
-The multiplicity is close to 10, indicating that each cluster contains approximately 10 distinct elements.
+Columns correspond to requested indices; rows correspond to samples. 
+Inventory multiplicity reflects the average within‑cluster diversity; 
+distance‑based multiplicity reflects average within‑cluster functional or phylogenetic diversity with distances capped at a threshold sigma (`σ`).
 
-In the low multiplicity example, we have 3 units in 3 separate clusters, 
-resulting in a multiplicity close to 1, indicating no information is lost when clustering.
+## About multiplicity index
+
+TODO - brief intro + figure 1 & 2 (a bit reworked)
+
+Here we illustrate the multiplicity index concept using two samples with the same cluster structure:
+
+- High: multiple subunits per cluster (higher within‑cluster diversity)
+- Low: only one representative per cluster (lower within‑cluster diversity)
+
+```{r}
+# Reuse `features` and `clusters` from above
+abund_concept <- matrix(
+  c(
+    10, 10,  # f1 (A, representative)
+    10,  0,  # f2 (A, additional subunit present only in High)
+    12, 12,  # f3 (B, representative)
+     8,  0   # f4 (B, additional subunit present only in High)
+  ),
+  nrow = length(features), byrow = TRUE,
+  dimnames = list(features, c("High","Low")) )
+
+concept_res <- divermeta(
+  abund_concept,
+  clusters = clusters,
+  indices  = "multiplicity_inventory",
+  q        = 1)
+
+concept_res
+```
+
+As expected, `High` shows a larger multiplicity value than `Low`, since each cluster contains more distinct subunits.
+
+Note: TODO - add a simple distance visualization and abundance overview to make these scenarios visually clear.
+
+### Inventory multiplicity
+
+```{r}
+res_q0 <- divermeta(
+  abund,
+  clusters = clusters,
+  indices  = "multiplicity_inventory",
+  q        = 0)
+
+res_q1 <- divermeta(
+  abund,
+  clusters = clusters,
+  indices  = "multiplicity_inventory",
+  q        = 1)
+
+res_q2 <- divermeta(
+  abund,
+  clusters = clusters,
+  indices  = "multiplicity_inventory",
+  q        = 2)
+
+cbind(
+  Sample = res_q1$Sample,
+  M_q0   = res_q0$multiplicity_inventory,
+  M_q1   = res_q1$multiplicity_inventory,
+  M_q2   = res_q2$multiplicity_inventory)
+```
+
+`q` controls abundance weighting (0 richness‑like, 1 Shannon‑type, 2 Simpson‑type). Higher `q` down‑weights rare subunits.
+
+### Distance‑based multiplicity
+
+Distance‑based multiplicity requires a dissimilarity matrix and uses Shannon‑type weighting. Use `sig` to cap pairwise distances and define when two subunits are considered distinct.
+
+```{r}
+res_sig08 <- divermeta(
+  abund,
+  clusters = clusters,
+  diss     = diss,
+  indices  = "multiplicity_distance",
+  sig      = 0.8)
+
+res_sig10 <- divermeta(
+  abund,
+  clusters = clusters,
+  diss     = diss,
+  indices  = "multiplicity_distance",
+  sig      = 1.0)
+
+merge(res_sig08, res_sig10, by = "Sample", suffixes = c("_sig0.8","_sig1.0"))
+```
+
+Smaller `sig` trims large distances, making subunits more similar and lowering functional/phylogenetic diversity; this typically increases distance‑based multiplicity (less diversity lost to clustering, relatively more within‑cluster similarity accounted for).
+
+## Practical tips
+
+- Ensure `clusters` is aligned to `rownames(abund)`; a named vector is the most robust.
+- Provide `diss` scaled to 0-1. Values above `sig` are capped internally.
+- Choose `q` to emphasize common vs. rare subunits; distance‑based multiplicity is fixed to Shannon‑type weighting.
+
+
+## Importing data from third‑party tools (TODO)
+
+TODO - add recipes on importing outputs from common pipelines/tools and preparing data for `divermeta()`.
+
+
+## Session info
+
+```{r}
+sessionInfo()
+```
 
 
