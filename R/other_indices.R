@@ -27,7 +27,7 @@ diversity.functional <- function(ab, diss, sig = 1) {
 #' Distance-based functional diversity (order q) (Chiu & Chao 2014)
 #'
 #' Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014).
-#' This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript. 
+#' This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript.
 #' For \eqn{q = 1}{q = 1}, an approximation is used internally.
 #'
 #' @param ab Numeric vector of element abundances.
@@ -42,7 +42,6 @@ diversity.functional <- function(ab, diss, sig = 1) {
 #' @seealso [diversity.functional()], [raoQuadratic()]
 #' @export
 diversity.functional.traditional <- function(ab, diss, q = 1) {
-
   # Validate inputs
   if (!is.numeric(ab)) {
     stop("Abundance vector must be numeric")
@@ -60,8 +59,9 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
     stop("q parameter must be positive")
   }
 
-  if(q == 1)
-    q = q + 10e-12
+  if (q == 1) {
+    q <- q + 10e-12
+  }
 
   P <- as.matrix(ab / sum(ab))
   Q <- raoQuadratic(ab, diss)
@@ -97,9 +97,8 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
 #' }
 #' @seealso [raoQuadratic()]
 #' @export
-#' 
+#'
 redundancy <- function(ab, diss) {
-
   # Validate inputs
   if (!is.numeric(ab)) {
     stop("Abundance vector must be numeric")
@@ -135,3 +134,70 @@ redundancy <- function(ab, diss) {
   return(res)
 }
 
+
+#' Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)
+#' Computes the metagenomic alpha-diversity index, a metric that  measures the the dissimilarity of protein-encoding genes within a community.
+#'
+#' @param clust Vector or factor of cluster memberships for each element (gene).
+#' @param diss Numeric square matrix of pairwise dissimilarities among elements (gene)
+#'   scaled to the range \[0, 1\].
+#' @param representatives Named list or vector mapping the cluster name to the position of the representative element of the cluster.
+#'  This value is used to compute the average withn distance of the cluster. If `NULL` will choose the first element as the representative (default `NULL`).
+#'
+#' @return Numeric scalar, metagenomic alpha-diversity index `MAD`.
+#' @references
+#' \itemize{
+#' \item Finn, D. R. (2024). A metagenomic alpha-diversity index for microbial functional biodiversity. FEMS Microbiology Ecology, 100(3), fiae019.
+#' }
+#' @seealso [multiplicity.distance()]
+#' @export
+#'
+metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
+  if (!is.matrix(diss)) {
+    stop("Dissimilarity input must be a matrix")
+  }
+  if (length(clust) != nrow(diss) || nrow(diss) != ncol(diss)) {
+    stop("Cluster memberships length must match square dissimilarity matrix dimensions")
+  }
+  if (any(is.na(clust)) || any(is.na(diss))) {
+    stop("Input contains NA values")
+  }
+
+  # Custer names
+  cluster_names <- unique(clust)
+
+  # Validates representatives
+  if (!is.null(representatives)) {
+    if (!is.numeric(representatives)) {
+      stop("Representative values should be numeric (indices)")
+    }
+    if (any(representatives < 1) || any(representatives > length(clust))) {
+      stop(paste0(
+        "Representative values should be between 1 and ",
+        length(clust),
+        "."
+      ))
+    }
+    if (!all(cluster_names %in% names(representatives))) {
+      missing <- cluster_names[!(cluster_names %in% names(representatives))]
+      stop(paste0(
+        "Reprentative values has missing represntative for clusters: ",
+        paste(missing, collapse = ",")
+      ))
+    }
+  }
+
+  # Summand function
+  summand <- function(cluster_name) {
+    ids <- which(clust == cluster_name)
+    rep <- ids[1]
+    if (!is.null(representatives)) {
+      rep <- representatives[[cluster_name]]
+    }
+
+    1 + mean(diss[rep, ids])
+  }
+
+  # Sum and divide
+  sum(sapply(cluster_names, summand)) / length(clust)
+}

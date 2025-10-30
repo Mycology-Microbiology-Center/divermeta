@@ -5,6 +5,8 @@
 .DS_Store
 .quarto
 
-Notes.R
 
+// Custom
 commands.txt
+Notes.R
+Notes.ipynb

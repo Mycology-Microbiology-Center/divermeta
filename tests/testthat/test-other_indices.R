@@ -1,8 +1,6 @@
-
 ## Tests for distance-based functional diversity and redundancy
 
 test_that("diversity.functional (q=1) matches capped Rao formula (2 species)", {
-
   ab <- c(2, 1)
   sig <- 0.5
   d <- 0.7
@@ -22,7 +20,6 @@ test_that("diversity.functional (q=1) matches capped Rao formula (2 species)", {
 
 
 test_that("diversity.functional.traditional two-species across q", {
-
   ab <- c(3, 1)
   d <- 0.4
   diss <- matrix(c(0, d, d, 0), 2, 2)
@@ -40,7 +37,6 @@ test_that("diversity.functional.traditional two-species across q", {
 
 
 test_that("redundancy numeric and bounds (2 species)", {
-
   ab <- c(2, 1)
   d <- 0.3
   diss <- matrix(c(0, d, d, 0), 2, 2)
@@ -60,7 +56,6 @@ test_that("redundancy numeric and bounds (2 species)", {
 
 
 test_that("redundancy input validation", {
-
   ab <- c(1, 2)
   diss <- matrix(c(0, 0.2, 0.2, 0), 2, 2)
 
@@ -71,4 +66,65 @@ test_that("redundancy input validation", {
   expect_error(redundancy(c(0, 0), diss))
 })
 
+test_that("MAD numeric check", {
+  clust <- c(1, 2, 2, 3, 3, 3)
 
+  diss <- matrix(
+    c(
+      0.0, 0.3, 0.6, 0.4, 0.3, 0.8,
+      0.3, 0.0, 0.7, 0.4, 0.4, 0.7,
+      0.6, 0.7, 0.0, 0.7, 0.5, 0.5,
+      0.4, 0.4, 0.7, 0.0, 0.5, 0.6,
+      0.3, 0.4, 0.5, 0.5, 0.0, 0.5,
+      0.1, 0.5, 0.6, 0.3, 0.5, 0.6
+    ),
+    nrow = 6,
+    byrow = TRUE
+  )
+
+  representatives <- c(1, 3, 4)
+  names(representatives) <- c(1, 2, 3)
+
+  val <- (1 + 0) + (1 + (0.7 + 0) / 2) + (1 + (0.0 + 0.5 + 0.6) / 3)
+  val <- val / 6
+
+  mad_val <- metagenomic.alpha.index(clust, diss, representatives)
+
+  expect_equal(mad_val, val, tolerance = 1e-12)
+})
+
+test_that("MAD input validation", {
+  n <- 100
+  n_clust <- 10
+  clust <- sample(seq_len(n_clust),
+    size = n,
+    replace = TRUE
+  )
+
+  representatives <- sapply(seq_len(n_clust), function(cluster_name) {
+    sample(which(cluster_name == clust), 1)
+  })
+
+  names(representatives) <- seq_len(n_clust)
+
+
+  # Parameters
+  diss <- matrix(runif(n * n, min = 0, max = 1), ncol = n, nrow = n)
+  diss <- (diss + t(diss)) / 2
+  diag(diss) <- 0
+
+  expect_silent(metagenomic.alpha.index(clust, diss, representatives))
+  expect_error(metagenomic.alpha.index(clust, "not a matrix", representatives))
+  expect_error(metagenomic.alpha.index(clust[1:5], diss, representatives))
+  expect_error(metagenomic.alpha.index(c(clust[1:(n_clust - 1)], NA), diss, representatives))
+
+  new_representatives <- representatives
+  new_representatives[1] <- -1
+  expect_error(metagenomic.alpha.index(clust, diss, new_representatives))
+
+  new_representatives <- representatives
+  new_representatives[1] <- n + 1
+  expect_error(metagenomic.alpha.index(clust, diss, new_representatives))
+
+  expect_error(metagenomic.alpha.index(clust, diss, representatives[1:(n_clust - 1)]))
+})
