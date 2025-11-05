@@ -5,7 +5,7 @@
 #' the cutoff \eqn{\sigma}{sigma}.
 #'
 #' @param ab Numeric vector of element abundances.
-#' @param diss Numeric matrix of pairwise dissimilarities among elements.
+#' @param diss Numeric matrix or `dist` object of pairwise dissimilarities among elements.
 #' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
 #' @return Numeric scalar, the distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma}.
@@ -46,12 +46,6 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
   if (!is.numeric(ab)) {
     stop("Abundance vector must be numeric")
   }
-  if (!is.matrix(diss)) {
-    stop("Dissimilarity input must be a matrix")
-  }
-  if (length(ab) != nrow(diss)) {
-    stop("Abundance vector length must match dissimilarity matrix dimensions")
-  }
   if (!is.numeric(q) || length(q) != 1) {
     stop("q parameter must be a single numeric value")
   }
@@ -59,15 +53,45 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
     stop("q parameter must be positive")
   }
 
+  # If dist object
+  if (inherits(diss, "dist")) {
+    n <- attr(diss, "Size")
+    if (n != length(ab)) {
+      stop(paste0(
+        "Abundance vector and matrix must have compatible sizes. Matrix: ",
+        n, "x", n, ". Vector: ", length(ab)
+      ))
+    }
+  } else {
+    dims <- dim(diss)
+    if (dims[1] != dims[2]) {
+      stop(paste0(
+        "Distance matrix must be square. Matrix: ",
+        n, "x", n, "."
+      ))
+    }
+
+    if (dims[1] != length(ab)) {
+      stop(paste0(
+        "Abundance vector and matrix must have compatible sizes. Matrix: ",
+        dims[1], "x", dims[2], ". Vector: ", length(ab)
+      ))
+    }
+  }
+
   if (q == 1) {
     q <- q + 10e-12
   }
 
-  P <- as.matrix(ab / sum(ab))
+  P <- as.vector(ab / sum(ab))
   Q <- raoQuadratic(ab, diss)
   Pq <- P^q
 
-  vals <- as.numeric(t(Pq) %*% diss %*% Pq)
+  if (inherits(diss, "dist")) {
+    vals <- dist_quadratic_form(Pq, diss)
+  } else {
+    vals <- as.numeric(t(Pq) %*% diss %*% Pq)
+  }
 
   vals <- vals / Q
 
@@ -86,7 +110,7 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
 #' family and corresponds to the `q = 2` case.
 #'
 #' @param ab Numeric vector of element abundances.
-#' @param diss Numeric square matrix of pairwise dissimilarities among elements
+#' @param diss Numeric square matrix or `dist` object of pairwise dissimilarities among elements
 #'   scaled to the range \[0, 1\].
 #'
 #' @return Numeric scalar, functional redundancy `Re`.
@@ -103,12 +127,7 @@ redundancy <- function(ab, diss) {
   if (!is.numeric(ab)) {
     stop("Abundance vector must be numeric")
   }
-  if (!is.matrix(diss)) {
-    stop("Dissimilarity input must be a matrix")
-  }
-  if (length(ab) != nrow(diss) || nrow(diss) != ncol(diss)) {
-    stop("Abundance length must match square dissimilarity matrix dimensions")
-  }
+
   if (any(is.na(ab)) || any(is.na(diss))) {
     stop("Input contains NA values")
   }
@@ -121,17 +140,44 @@ redundancy <- function(ab, diss) {
     stop("Total abundance cannot be zero")
   }
 
+  # If dist object
+  if (inherits(diss, "dist")) {
+    n <- attr(diss, "Size")
+    if (n != length(ab)) {
+      stop(paste0(
+        "Abundance vector and matrix must have compatible sizes. Matrix: ",
+        n, "x", n, ". Vector: ", length(ab)
+      ))
+    }
+  } else {
+    dims <- dim(diss)
+    if (dims[1] != dims[2]) {
+      stop(paste0(
+        "Distance matrix must be square. Matrix: ",
+        n, "x", n, "."
+      ))
+    }
+
+    if (dims[1] != length(ab)) {
+      stop(paste0(
+        "Abundance vector and matrix must have compatible sizes. Matrix: ",
+        dims[1], "x", dims[2], ". Vector: ", length(ab)
+      ))
+    }
+  }
+
   p <- as.vector(ab / total_ab)
 
   # Simpson's diversity (q = 2): D = 1 - sum p_i^2
-  D <- 1 - sum(p^2)
+  d <- 1 - sum(p^2)
 
   # Rao's quadratic entropy
-  Q <- raoQuadratic(ab, diss)
+  q <- raoQuadratic(ab, diss)
 
   # Functional redundancy
-  res <- D - Q
-  return(res)
+  res <- d - q
+
+  res
 }
 
 

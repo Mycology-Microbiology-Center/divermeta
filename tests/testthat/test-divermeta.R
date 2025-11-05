@@ -1,4 +1,3 @@
-
 ## Tests for the `divermeta` function
 
 
@@ -8,15 +7,16 @@ make_fixture <- function() {
   samples <- c("S1", "S2", "S_empty")
   abund <- matrix(
     c(
-      10, 0,  0,   # f1
-      5,  8,  0,   # f2
-      0,  12, 0,   # f3
-      6,  3,  0    # f4
+      10, 0,  0, # f1
+      5,  8,  0, # f2
+      0,  12, 0, # f3
+      6,  3,  0 # f4
     ),
     nrow = length(species),
     ncol = length(samples),
     byrow = TRUE,
-    dimnames = list(species, samples))
+    dimnames = list(species, samples)
+  )
 
   diss <- matrix(
     c(
@@ -28,7 +28,8 @@ make_fixture <- function() {
     nrow = length(species),
     ncol = length(species),
     byrow = TRUE,
-    dimnames = list(species, species))
+    dimnames = list(species, species)
+  )
 
   clusters <- c(f1 = "A", f2 = "A", f3 = "B", f4 = "B")
 
@@ -41,18 +42,23 @@ test_that("single index multiplicity_inventory works and matches direct", {
 
   res <- divermeta(fx$abund,
     indices = c("multiplicity_inventory"),
-    clusters = fx$clusters)
+    clusters = fx$clusters
+  )
 
   expect_true(is.data.frame(res))
   expect_identical(colnames(res), c("Sample", "multiplicity_inventory"))
   expect_identical(res$Sample, colnames(fx$abund))
 
   expected <- apply(fx$abund, 2, function(col) {
-    if (sum(col) <= 0) return(NA_real_)
+    if (sum(col) <= 0) {
+      return(NA_real_)
+    }
     multiplicity.inventory(col, fx$clusters, q = 1)
   })
   expect_equal(res$multiplicity_inventory, as.numeric(expected))
 })
+
+
 
 
 test_that("multiple indices and alias mapping; matches direct functions", {
@@ -65,13 +71,21 @@ test_that("multiple indices and alias mapping; matches direct functions", {
     indices = c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq"),
     clusters = fx$clusters,
     q = q,
-    sig = sig)
+    sig = sig
+  )
 
   # Column names are normalized
   expect_identical(colnames(res), c("Sample", "multiplicity_inventory", "raoQ", "FD_sigma", "redundancy", "multiplicity_distance", "FD_q"))
 
   # Expected values per column
-  guard <- function(f) function(col) { if (sum(col) <= 0) return(NA_real_); f(col) }
+  guard <- function(f) {
+    function(col) {
+      if (sum(col) <= 0) {
+        return(NA_real_)
+      }
+      f(col)
+    }
+  }
 
   expected_mi <- apply(fx$abund, 2, guard(function(col) multiplicity.inventory(col, fx$clusters, q = q)))
   expected_rao <- apply(fx$abund, 2, guard(function(col) raoQuadratic(col, fx$diss)))
@@ -85,13 +99,15 @@ test_that("multiple indices and alias mapping; matches direct functions", {
     Distance = fx$diss[upper.tri(fx$diss)],
     stringsAsFactors = FALSE
   )
-  expected_md <- apply(fx$abund, 2, guard(function(col) multiplicity.distance.by_blocks(
-    ids = ids,
-    ab = col,
-    diss_frame = diss_frame,
-    clust = fx$clusters,
-    sigma = sig
-  )))
+  expected_md <- apply(fx$abund, 2, guard(function(col) {
+    multiplicity.distance.by_blocks(
+      ids = ids,
+      ab = col,
+      diss_frame = diss_frame,
+      clust = fx$clusters,
+      sigma = sig
+    )
+  }))
 
   expected_fd_q <- apply(fx$abund, 2, guard(function(col) diversity.functional.traditional(col, fx$diss, q = q)))
 
@@ -100,7 +116,52 @@ test_that("multiple indices and alias mapping; matches direct functions", {
   expect_equal(res$FD_sigma, as.numeric(expected_fd_sigma))
   expect_equal(res$multiplicity_distance, as.numeric(expected_md))
   expect_equal(res$FD_q, as.numeric(expected_fd_q))
+
+  res_norm <- divermeta(fx$abund,
+    diss = fx$diss,
+    indices = c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq"),
+    clusters = fx$clusters,
+    q = q,
+    sig = sig,
+    normalize = TRUE
+  )
+
+  # Checks normalization
+  for (ind in c("multiplicity_inventory", "raoQ", "FD_sigma", "redundancy", "multiplicity_distance", "FD_q")) {
+    expect_equal(max(res_norm[[ind]], na.rm = TRUE), 1.0)
+  }
 })
+
+
+
+test_that("multiple indices and alias mapping; checks for dist object equivalence", {
+  fx <- make_fixture()
+  sig <- 0.8
+  q <- 1
+
+  res_m <- divermeta(fx$abund,
+    diss = fx$diss,
+    indices = c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq"),
+    clusters = fx$clusters,
+    q = q,
+    sig = sig
+  )
+
+  res_d <- divermeta(fx$abund,
+    diss = as.dist(fx$diss),
+    indices = c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq"),
+    clusters = fx$clusters,
+    q = q,
+    sig = sig
+  )
+
+  expect_equal(res_m$multiplicity_inventory, res_d$multiplicity_inventory)
+  expect_equal(res_m$raoQ, res_d$raoQ)
+  expect_equal(res_m$FD_sigma, res_d$FD_sigma)
+  expect_equal(res_m$multiplicity_distance, res_d$multiplicity_distance)
+  expect_equal(res_m$FD_q, res_d$FD_q)
+})
+
 
 
 test_that("errors when diss required but missing; and when clusters required but missing", {
@@ -151,7 +212,7 @@ test_that("alignment by names with warnings and dropping/excess features", {
   expect_warning({
     res <- divermeta(fx$abund, diss = diss2, indices = c("raoQ"))
     expect_true(all(is.finite(res$raoQ[1:2])))
-    expect_true(is.na(res$raoQ[3]))  # empty column should be NA
+    expect_true(is.na(res$raoQ[3])) # empty column should be NA
   })
 })
 
@@ -159,7 +220,7 @@ test_that("alignment by names with warnings and dropping/excess features", {
 test_that("named clusters align regardless of order", {
   fx <- make_fixture()
   cl1 <- fx$clusters
-  cl2 <- fx$clusters[c("f4", "f3", "f2", "f1")]  # different order, still named
+  cl2 <- fx$clusters[c("f4", "f3", "f2", "f1")] # different order, still named
 
   r1 <- divermeta(fx$abund, indices = c("multiplicity_inventory"), clusters = cl1)
   r2 <- divermeta(fx$abund, indices = c("multiplicity_inventory"), clusters = cl2)
@@ -178,4 +239,3 @@ test_that("all-zero sample columns produce NA for applicable indices", {
   expect_true(is.na(res$FD_sigma[3]))
   expect_true(is.na(res$multiplicity_inventory[3]))
 })
-

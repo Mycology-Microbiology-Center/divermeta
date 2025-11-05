@@ -1,8 +1,6 @@
-
 ## Tests for Rao quadratic entropy
 
 test_that("raoQuadratic deterministic numeric (2 species)", {
-
   ab <- c(2, 1)
   d <- 0.4
   diss <- matrix(c(0, d, d, 0), nrow = 2, ncol = 2)
@@ -16,7 +14,6 @@ test_that("raoQuadratic deterministic numeric (2 species)", {
 
 
 test_that("raoQuadratic permutation invariance", {
-
   ab <- c(2, 3, 5)
   diss <- matrix(c(
     0,   0.1, 0.7,
@@ -36,7 +33,6 @@ test_that("raoQuadratic permutation invariance", {
 
 
 test_that("raoQuadratic input validation", {
-
   ab <- c(1, NA)
   diss <- matrix(c(0, 0.2, 0.2, 0), 2, 2)
   expect_error(raoQuadratic(ab, diss))
@@ -53,3 +49,15 @@ test_that("raoQuadratic input validation", {
   expect_error(raoQuadratic(ab, diss_bad))
 })
 
+
+test_that("raoQuadratic dist and matrix implementation equivalence", {
+  ab <- runif(30, min = 10, max = 100)
+  vec <- rnorm(30)
+  diss <- dist(vec)
+
+  v1 <- raoQuadratic(ab = ab, diss = diss)
+  v2 <- raoQuadratic(ab = ab, diss = as.matrix(diss))
+
+
+  expect_equal(v1, v2)
+})

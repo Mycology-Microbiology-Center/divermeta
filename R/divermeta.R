@@ -29,29 +29,32 @@
 #'   `multiplicity_inventory`). Default `1`.
 #' @param sig Numeric cutoff `σ` for distance-based measures (used by
 #'   `FD_sigma` and `multiplicity_distance`). Default `1`.
+#' @param normalize boolean value indicating if values should be normalized between 0 and 1. Values will be
+#'    normalized by dividing all index columns by their corresponding max value. Default `FALSE`
 #'
 #' @return data.frame with one row per sample and one column per requested index.
-#' 
+#'
 #' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
 #'   [diversity.functional.traditional()], [raoQuadratic()], [redundancy()]
-#' 
+#'
 #' @examples
-#' 
+#'
 #' # Abundance matrix: rows = features, columns = samples
 #' species <- c("s1", "s2", "s3", "s4")
 #' samples <- c("Sample1", "Sample2", "Sample3")
 #' abund <- matrix(
 #'   c(
-#'     10, 5,  0,   # s1
-#'     0,  8, 12,   # s2
-#'     4,  3,  7,   # s3
-#'     6,  0,  9    # s4
+#'     10, 5,  0, # s1
+#'     0,  8, 12, # s2
+#'     4,  3,  7, # s3
+#'     6,  0,  9 # s4
 #'   ),
 #'   nrow = length(species),
 #'   ncol = length(samples),
 #'   byrow = TRUE,
-#'   dimnames = list(species, samples))
-#' 
+#'   dimnames = list(species, samples)
+#' )
+#'
 #' # Dissimilarity matrix among features (0-1), names must match abund rownames
 #' diss <- matrix(
 #'   c(
@@ -63,28 +66,31 @@
 #'   nrow = length(species),
 #'   ncol = length(species),
 #'   byrow = TRUE,
-#'   dimnames = list(species, species))
-#' 
+#'   dimnames = list(species, species)
+#' )
+#'
 #' # Clusters per feature (used by multiplicity_* indices)
 #' clusters <- c(s1 = "A", s2 = "A", s3 = "B", s4 = "B")
-#' 
+#'
 #' ## Run divermeta
 #' divermeta(abund,
 #'   clusters = clusters,
 #'   diss = diss,
 #'   q = 1,
 #'   sig = 0.8,
-#'   indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy"))
+#'   indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy")
+#' )
 #'
 #' @export
-#' 
-divermeta <- function(abund,
-  diss = NULL,
-  indices = c("multiplicity_inventory"),
-  clusters = NULL,
-  q = 1,
-  sig = 1) {
-
+#'
+divermeta <- function(
+    abund,
+    diss = NULL,
+    indices = c("multiplicity_inventory"),
+    clusters = NULL,
+    q = 1,
+    sig = 1,
+    normalize = FALSE) {
   ## Validation
   if (!is.matrix(abund) && !is.data.frame(abund)) {
     stop("abund must be a matrix or data.frame")
@@ -120,7 +126,7 @@ divermeta <- function(abund,
   supported <- unname(unlist(idx_map))
   unsupported <- setdiff(normalized_indices, unique(supported))
   if (length(unsupported) > 0) {
-    stop(paste0("Unsupported indices: ", paste(unsupported, collapse = ", "))) 
+    stop(paste0("Unsupported indices: ", paste(unsupported, collapse = ", ")))
   }
 
   needs_diss <- any(normalized_indices %in% c("raoQ", "FD_sigma", "FD_q", "redundancy", "multiplicity_distance"))
@@ -134,9 +140,6 @@ divermeta <- function(abund,
   if (needs_diss) {
     if (is.null(diss)) {
       stop("A dissimilarity matrix `diss` is required for the requested indices")
-    }
-    if (!is.matrix(diss) || nrow(diss) != ncol(diss)) {
-      stop("`diss` must be a square numeric matrix")
     }
     if (!is.numeric(diss)) {
       stop("`diss` must be numeric")
@@ -174,21 +177,57 @@ divermeta <- function(abund,
       }
     } else {
       ## No dimnames on diss; assume it matches abund as-is
-      if (nrow(abund) != nrow(diss)) {
-        stop("`diss` dimensions do not match `abund` and lack dimnames for alignment")
+      # If dist object
+      if (inherits(diss, "dist")) {
+        n <- attr(diss, "Size")
+        if (n != nrow(abund)) {
+          stop(paste0(
+            "Lack dimnames for alignment so abundance vector and matrix must have compatible sizes. Matrix: ",
+            n, "x", n, ". Vector: ", nrow(abund)
+          ))
+        }
+      } else {
+        dims <- dim(diss)
+        n <- dims[1]
+        if (dims[1] != dims[2]) {
+          stop(paste0(
+            "Lack dimnames for alignment so distance matrix must be square. Matrix: ",
+            n, "x", n, "."
+          ))
+        }
+
+        if (dims[1] != nrow(abund)) {
+          stop(paste0(
+            "Lack dimnames for alignment so abundance vector and matrix must have compatible sizes. Matrix: ",
+            dims[1], "x", dims[2], ". Vector: ", nrow(abund)
+          ))
+        }
       }
       diss_mtx <- diss
     }
 
+
+
     ## Build an upper-triangle three-column frame for multiplicity_distance
     if (any(normalized_indices == "multiplicity_distance")) {
-      ut_idx <- which(upper.tri(diss_mtx), arr.ind = TRUE)
-      diss_frame <- data.frame(
-        ID1 = feature_names[ut_idx[, 1]],
-        ID2 = feature_names[ut_idx[, 2]],
-        Distance = diss_mtx[upper.tri(diss_mtx)],
-        stringsAsFactors = FALSE
-      )
+      if (inherits(diss_mtx, "dist")) {
+        # For dist object, use combn to get all pairs
+        ut_idx <- combn(n, 2)
+        diss_frame <- data.frame(
+          ID1 = feature_names[ut_idx[1, ]],
+          ID2 = feature_names[ut_idx[2, ]],
+          Distance = as.vector(diss_mtx),
+          stringsAsFactors = FALSE
+        )
+      } else {
+        ut_idx <- which(upper.tri(diss_mtx), arr.ind = TRUE)
+        diss_frame <- data.frame(
+          ID1 = feature_names[ut_idx[, 1]],
+          ID2 = feature_names[ut_idx[, 2]],
+          Distance = diss_mtx[upper.tri(diss_mtx)],
+          stringsAsFactors = FALSE
+        )
+      }
     }
   }
 
@@ -219,7 +258,9 @@ divermeta <- function(abund,
   ## Helper to guard against empty (all-zero) samples
   guard_nonempty <- function(f) {
     function(ab_vec) {
-      if (sum(ab_vec) <= 0) return(NA_real_)
+      if (sum(ab_vec) <= 0) {
+        return(NA_real_)
+      }
       f(ab_vec)
     }
   }
@@ -244,13 +285,15 @@ divermeta <- function(abund,
   }
   if ("multiplicity_distance" %in% normalized_indices) {
     ids <- feature_names
-    compute_map$multiplicity_distance <- guard_nonempty(function(ab_vec) multiplicity.distance.by_blocks(
-      ids = ids,
-      ab = ab_vec,
-      diss_frame = diss_frame,
-      clust = clust_vec,
-      sigma = sig
-    ))
+    compute_map$multiplicity_distance <- guard_nonempty(function(ab_vec) {
+      multiplicity.distance.by_blocks(
+        ids = ids,
+        ab = ab_vec,
+        diss_frame = diss_frame,
+        clust = clust_vec,
+        sigma = sig
+      )
+    })
   }
 
   ## Evaluate per index using
@@ -263,7 +306,22 @@ divermeta <- function(abund,
   names(res_list) <- normalized_indices
 
   res <- do.call(cbind, res_list)
+
+  # Checks if needs normalization
+  if (normalize == TRUE) {
+    col_max <- apply(res, 2, max, na.rm = TRUE)
+    # If columns are all zero will not divide
+    nonzero_cols <- col_max != 0 & !is.na(col_max)
+
+    res[, nonzero_cols] <- sweep(
+      res[, nonzero_cols, drop = FALSE],
+      2,
+      col_max[nonzero_cols], "/"
+    )
+
+    res
+  }
+
   res <- data.frame(Sample = colnames(abund), res)
   return(res)
 }
-
