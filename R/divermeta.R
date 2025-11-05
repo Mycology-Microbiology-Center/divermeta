@@ -20,7 +20,7 @@
 #'
 #' @param abund Numeric matrix or data.frame of abundances with samples in columns
 #'   and features in rows.
-#' @param diss Optional numeric dissimilarity matrix among features; square with
+#' @param diss Optional numeric dissimilarity matrix or `dist` object among features; square with
 #'   row/column names matching `rownames(abund)` when present.
 #' @param indices Character vector of index names to compute (see list above).
 #' @param clusters Optional vector/factor of cluster memberships for each feature
