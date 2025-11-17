@@ -67,7 +67,7 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
     if (dims[1] != dims[2]) {
       stop(paste0(
         "Distance matrix must be square. Matrix: ",
-        n, "x", n, "."
+        dims[1], "x", dims[2], "."
       ))
     }
 
@@ -154,7 +154,7 @@ redundancy <- function(ab, diss) {
     if (dims[1] != dims[2]) {
       stop(paste0(
         "Distance matrix must be square. Matrix: ",
-        n, "x", n, "."
+        dims[1], "x", dims[2], "."
       ))
     }
 
