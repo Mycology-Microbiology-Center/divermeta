@@ -307,19 +307,19 @@ divermeta <- function(
 
   res <- do.call(cbind, res_list)
 
-  # Checks if needs normalization
+  # Normalize if requested
   if (normalize == TRUE) {
     col_max <- apply(res, 2, max, na.rm = TRUE)
-    # If columns are all zero will not divide
+    # Only normalize columns with non-zero maximum
     nonzero_cols <- col_max != 0 & !is.na(col_max)
 
+    if (any(nonzero_cols)) {
     res[, nonzero_cols] <- sweep(
       res[, nonzero_cols, drop = FALSE],
       2,
       col_max[nonzero_cols], "/"
     )
-
-    res
+    }
   }
 
   res <- data.frame(Sample = colnames(abund), res)

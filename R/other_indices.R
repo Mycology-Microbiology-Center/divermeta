@@ -79,8 +79,10 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
     }
   }
 
-  if (q == 1) {
-    q <- q + 10e-12
+  # Handle q = 1 case by using a small epsilon (diversity.functional.traditional
+  # doesn't have a closed form for q = 1, so we approximate)
+  if (abs(q - 1) < .Machine$double.eps) {
+    q <- 1 + 1e-12
   }
 
   P <- as.vector(ab / sum(ab))
@@ -209,17 +211,17 @@ metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
     stop("Input contains NA values")
   }
 
-  # Custer names
+  # Cluster names
   cluster_names <- unique(clust)
 
-  # Validates representatives
+  # Validate representatives
   if (!is.null(representatives)) {
     if (!is.numeric(representatives)) {
-      stop("Representative values should be numeric (indices)")
+      stop("`representatives` must be a numeric vector (indices)")
     }
     if (any(representatives < 1) || any(representatives > length(clust))) {
       stop(paste0(
-        "Representative values should be between 1 and ",
+        "Representative indices must be between 1 and ",
         length(clust),
         "."
       ))
@@ -227,8 +229,8 @@ metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
     if (!all(cluster_names %in% names(representatives))) {
       missing <- cluster_names[!(cluster_names %in% names(representatives))]
       stop(paste0(
-        "Reprentative values has missing represntative for clusters: ",
-        paste(missing, collapse = ",")
+        "Missing representatives for clusters: ",
+        paste(missing, collapse = ", ")
       ))
     }
   }

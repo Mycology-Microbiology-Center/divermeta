@@ -21,9 +21,9 @@
 #'
 multiplicity.inventory <- function(ab, clust, q = 1) {
 
-  # Removes any elements with zeros abundance
+  # Remove elements with zero abundance
   zeros <- ab == 0
-  if(sum(zeros) > 0){
+  if (sum(zeros) > 0) {
     ab <- ab[!zeros]
     clust <- clust[!zeros]
   }
