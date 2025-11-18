@@ -33,7 +33,7 @@
 #'   by dividing each column by its maximum value. Useful for comparing indices with
 #'   different scales. Default `FALSE`.
 #'
-#' @return data.frame with one row per sample and one column per requested index.
+#' @return data.frame with one row per sample and one column per requested index. 
 #' Empty samples (all zero abundances) return `NA` for all indices.
 #'
 #' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
@@ -316,11 +316,11 @@ divermeta <- function(
     nonzero_cols <- col_max != 0 & !is.na(col_max)
 
     if (any(nonzero_cols)) {
-    res[, nonzero_cols] <- sweep(
-      res[, nonzero_cols, drop = FALSE],
-      2,
-      col_max[nonzero_cols], "/"
-    )
+      res[, nonzero_cols] <- sweep(
+        res[, nonzero_cols, drop = FALSE],
+        2,
+        col_max[nonzero_cols], "/"
+      )
     }
   }
 

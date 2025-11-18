@@ -33,6 +33,18 @@
 #'
 #' @export
 multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
+
+  # Input validation
+  if (!is.numeric(ab) || !is.numeric(ab_clust)) {
+    stop("Abundance vectors must be numeric")
+  }
+  if (!is.numeric(sig) || length(sig) != 1 || sig <= 0) {
+    stop("`sig` must be a single positive numeric value")
+  }
+  if (sum(ab) == 0 || sum(ab_clust) == 0) {
+    stop("Total abundance cannot be zero")
+  }
+
   diss_clust[diss_clust > sig] <- sig
   diss[diss > sig] <- sig
 
@@ -68,13 +80,25 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 #'
 #' @export
 multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 1) {
-  # Checks
+
+  # Input validation
   if (length(ids) == 0) {
     return(0)
   }
-
-  # Renames
-  colnames(diss_frame) <- c("ID1", "ID2", "Distance")
+  if (length(ids) != length(ab) || length(ids) != length(clust)) {
+    stop("`ids`, `ab`, and `clust` must have the same length")
+  }
+  if (!is.numeric(sigma) || length(sigma) != 1 || sigma <= 0) {
+    stop("`sigma` must be a single positive numeric value")
+  }
+  if (!is.data.frame(diss_frame) || !all(c("ID1", "ID2", "Distance") %in% colnames(diss_frame))) {
+    # Try to rename if columns exist but have different names
+    if (ncol(diss_frame) == 3) {
+      colnames(diss_frame) <- c("ID1", "ID2", "Distance")
+    } else {
+      stop("`diss_frame` must be a data frame with columns `ID1`, `ID2`, `Distance`")
+    }
+  }
 
   # Computes post Clustered
   ab_clust <- tapply(ab, clust, sum)
