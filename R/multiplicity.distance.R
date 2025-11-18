@@ -133,14 +133,15 @@ multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 
     }
   }
 
-  # Computes post Clustered
+  # Compute clustered abundances
   ab_clust <- tapply(ab, clust, sum)
   p_clust <- ab_clust / sum(ab_clust)
 
-  # Normalizes abundance
+  # Normalize abundances
   p <- ab / sum(ab)
+  names(p) <- ids
 
-  # Cuts off at sigma
+  # Cap distances at sigma
   diss_frame$Distance[diss_frame$Distance > sigma] <- sigma
 
   # Builds matrix multiplication by join
@@ -148,11 +149,21 @@ multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 
   diss_block <- merge(diss_block, data.frame(ID1 = ids, Abundance1 = p), by = "ID1", all = FALSE)
   diss_block <- merge(diss_block, data.frame(ID2 = ids, Abundance2 = p), by = "ID2", all = FALSE)
 
+  # Compute Rao's quadratic entropy before clustering
+  # This accounts for within-cluster distances from diss_frame and assumes cross-cluster distances = sigma
+  raoQ_before <- sigma +
+    2 * sum(diss_block$Abundance1 * diss_block$Distance * diss_block$Abundance2) -
+    sigma * sum(p^2) -
+    2 * sigma * sum(diss_block$Abundance1 * diss_block$Abundance2)
 
-  # Computes RaoQ before and after Clustering
-  raoQ_before <- sigma + 2 * sum(diss_block$Abundance1 * diss_block$Distance * diss_block$Abundance2) - sigma * sum(p**2) - 2 * sigma * sum(diss_block$Abundance1 * diss_block$Abundance2)
-  raoQ_after <- sigma - sigma * sum(p_clust**2)
+  # Compute Rao's quadratic entropy after clustering
+  raoQ_after <- sigma - sigma * sum(p_clust^2)
 
-  # Computes multiplicity
+  # Check for edge case
+  if (abs(sigma - raoQ_before) < .Machine$double.eps) {
+    stop("Cannot compute multiplicity: denominator (sigma - Q_before) is effectively zero")
+  }
+
+  # Compute multiplicity
   (sigma - raoQ_after) / (sigma - raoQ_before)
 }
