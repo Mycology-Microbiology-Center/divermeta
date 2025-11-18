@@ -112,6 +112,23 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 #'   [diversity.functional()] for distance-based functional diversity
 #'
 #' @export
+#'
+#' @examples
+#' # Example: Compute multiplicity from a distance table
+#' ids <- c("elem1", "elem2", "elem3", "elem4")
+#' ab <- c(10, 15, 20, 25)
+#' clust <- c(1, 1, 2, 2)
+#'
+#' # Distance table: only within-cluster pairs (cross-cluster assumed = sigma)
+#' diss_frame <- data.frame(
+#'   ID1 = c("elem1", "elem3"),
+#'   ID2 = c("elem2", "elem4"),
+#'   Distance = c(0.3, 0.4),
+#'   stringsAsFactors = FALSE
+#' )
+#'
+#' multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma = 1)
+#'
 multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 1) {
 
   # Input validation
