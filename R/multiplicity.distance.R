@@ -78,10 +78,28 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
     stop("Total abundance cannot be zero")
   }
 
+  if (inherits(diss, "dist")) {
+    diss <- as.matrix(diss)
+  }
+  if (inherits(diss_clust, "dist")) {
+    diss_clust <- as.matrix(diss_clust)
+  }
+
+  # Cap distances at sigma (modify copies to avoid side effects)
   diss_clust[diss_clust > sig] <- sig
   diss[diss > sig] <- sig
 
-  (sig - raoQuadratic(ab_clust, diss_clust)) / (sig - raoQuadratic(ab, diss))
+  # Compute Rao's quadratic entropy
+  Q_before <- raoQuadratic(ab, diss)
+  Q_after <- raoQuadratic(ab_clust, diss_clust)
+
+  # Check for edge case where denominator would be zero
+  if (abs(sig - Q_before) < .Machine$double.eps) {
+    stop("Cannot compute multiplicity: denominator (sigma - Q_before) is effectively zero")
+  }
+
+  # Compute multiplicity
+  (sig - Q_after) / (sig - Q_before)
 }
 
 
