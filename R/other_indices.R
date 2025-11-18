@@ -184,20 +184,38 @@ redundancy <- function(ab, diss) {
 
 
 #' Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)
-#' Computes the metagenomic alpha-diversity index, a metric that  measures the the dissimilarity of protein-encoding genes within a community.
 #'
-#' @param clust Vector or factor of cluster memberships for each element (gene).
-#' @param diss Numeric square matrix of pairwise dissimilarities among elements (gene)
-#'   scaled to the range \[0, 1\].
-#' @param representatives Named list or vector mapping the cluster name to the position of the representative element of the cluster.
-#'  This value is used to compute the average withn distance of the cluster. If `NULL` will choose the first element as the representative (default `NULL`).
+#' Computes the Metagenomic Alpha-Diversity Index (MAD), a metric that measures the
+#' average dissimilarity of elements (e.g., protein-encoding genes) within clusters
+#' relative to cluster representatives. Unlike multiplicity, MAD does not account for
+#' element abundances and decreases as the number of elements per cluster increases.
 #'
-#' @return Numeric scalar, metagenomic alpha-diversity index `MAD`.
+#' @param clust Vector or factor of cluster memberships for each element (e.g., gene).
+#'   Must have the same length as the number of rows/columns in `diss`.
+#' @param diss Numeric square matrix of pairwise dissimilarities among elements.
+#'   Should be scaled to the range \[0, 1\], where 0 indicates identical elements
+#'   and 1 indicates maximally different elements.
+#' @param representatives Optional named vector mapping cluster names to the index
+#'   (position) of the representative element for each cluster. If `NULL` (default),
+#'   the first element in each cluster is used as the representative.
+#'
+#' @return Numeric scalar, the Metagenomic Alpha-Diversity Index (MAD). Higher values
+#'   indicate greater average dissimilarity within clusters.
+#'
+#' @details
+#' Note: Unlike multiplicity indices, MAD does not incorporate element abundances and
+#' decreases as cluster size increases, which may not reflect biological complexity.
+#'
 #' @references
 #' \itemize{
-#' \item Finn, D. R. (2024). A metagenomic alpha-diversity index for microbial functional biodiversity. FEMS Microbiology Ecology, 100(3), fiae019.
+#' \item Finn DR (2024) A metagenomic alpha-diversity index for microbial functional
+#'   biodiversity. FEMS Microbiology Ecology 100(3):fiae019.
+#'   \doi{10.1093/femsec/fiae019}
 #' }
-#' @seealso [multiplicity.distance()]
+#'
+#' @seealso [multiplicity.distance()] for abundance-weighted distance-based multiplicity,
+#'   [multiplicity.inventory()] for inventory multiplicity
+#'
 #' @export
 #'
 metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
