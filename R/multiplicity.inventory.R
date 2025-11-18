@@ -6,12 +6,34 @@
 #' to control abundance weighting (e.g., `q = 0` richness-like, `q = 1`
 #' Shannon-type).
 #'
-#' @param ab Numeric vector of subunit abundances.
+#' @param ab Numeric vector of element (subunit) abundances. Elements with zero abundance
+#'   are automatically removed before computation.
 #' @param clust Vector or factor of cluster memberships for each element of `ab`.
-#' @param q Numeric order of the Hill number (default `1`).
+#'   Must have the same length as `ab` (after removing zeros).
+#' @param q Numeric order of the Hill number (default `1`). Controls abundance weighting:
+#'   \describe{
+#'     \item{`q = 0`}{Richness-like weighting (all elements weighted equally)}
+#'     \item{`q = 1`}{Shannon-type weighting (default, proportional to abundance)}
+#'     \item{`q = 2`}{Simpson-type weighting (emphasizes abundant elements)}
+#'   }
+#'   Must be non-negative.
 #'
-#' @return Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q} for the input.
-#' @seealso [diversity.functional()], [multiplicity.distance()]
+#' @return Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q}. This value can be
+#'   interpreted as the effective number of equally abundant elements per cluster. A value of 1
+#'   indicates each cluster contains essentially one element (no diversity lost), while higher
+#'   values indicate greater intra-cluster diversity.
+#'
+#' @references
+#' \itemize{
+#' \item Hill MO (1973) Diversity and evenness: a unifying notation and its consequences.
+#'   Ecology 54(2):427-432. \doi{10.2307/1934352}
+#' \item Jost L (2007) Partitioning diversity into independent alpha and beta components.
+#'   Ecology 88(10):2427-2439. \doi{10.1890/06-1736.1}
+#' }
+#'
+#' @seealso [multiplicity.distance()] for distance-based multiplicity,
+#'   [diversity.functional()] for functional diversity indices
+#'
 #' @export
 #'
 #' @examples
