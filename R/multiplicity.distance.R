@@ -32,6 +32,39 @@
 #'   [diversity.functional()] for distance-based functional diversity
 #'
 #' @export
+#'
+#' @examples
+#' # Example 1: High diversity within clusters
+#' # Two clusters, each with functionally diverse elements
+#' ab <- c(10, 10, 10, 10)  # 4 elements
+#' clust <- c(1, 1, 2, 2)    # 2 clusters
+#'
+#' # Distance matrix: elements within clusters are dissimilar (0.3, 0.4)
+#' # elements between clusters are maximally dissimilar (1.0)
+#' diss <- matrix(c(
+#'   0.0, 0.3, 1.0, 1.0,
+#'   0.3, 0.0, 1.0, 1.0,
+#'   1.0, 1.0, 0.0, 0.4,
+#'   1.0, 1.0, 0.4, 0.0
+#' ), nrow = 4, byrow = TRUE)
+#'
+#' # Clustered representation
+#' ab_clust <- c(20, 20)  # Two clusters
+#' diss_clust <- matrix(c(0, 1, 1, 0), nrow = 2)  # Clusters maximally different
+#'
+#' multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
+#'
+#' # Example 2: Low diversity within clusters
+#' # Elements within clusters are functionally similar (distance ~0)
+#' diss_low <- matrix(c(
+#'   0.0, 0.05, 1.0, 1.0,
+#'   0.05, 0.0, 1.0, 1.0,
+#'   1.0, 1.0, 0.0, 0.05,
+#'   1.0, 1.0, 0.05, 0.0
+#' ), nrow = 4, byrow = TRUE)
+#'
+#' multiplicity.distance(ab, diss_low, ab_clust, diss_clust, sig = 1)
+#'
 multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
   # Input validation
