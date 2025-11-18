@@ -29,10 +29,12 @@
 #'   `multiplicity_inventory`). Default `1`.
 #' @param sig Numeric cutoff `σ` for distance-based measures (used by
 #'   `FD_sigma` and `multiplicity_distance`). Default `1`.
-#' @param normalize boolean value indicating if values should be normalized between 0 and 1. Values will be
-#'    normalized by dividing all index columns by their corresponding max value. Default `FALSE`
+#' @param normalize Logical indicating whether index values should be normalized to [0, 1]
+#'   by dividing each column by its maximum value. Useful for comparing indices with
+#'   different scales. Default `FALSE`.
 #'
 #' @return data.frame with one row per sample and one column per requested index.
+#' Empty samples (all zero abundances) return `NA` for all indices.
 #'
 #' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
 #'   [diversity.functional.traditional()], [raoQuadratic()], [redundancy()]

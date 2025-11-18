@@ -1,18 +1,36 @@
 #' Distance-based multiplicity
 #'
 #' Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} as the ratio of distance-based
-#' functional diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap
-#' pairwise distances. Provide abundances and dissimilarities both for the
-#' unclustered elements and for the clustered representation.
+#' diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap pairwise distances. 
+#' This index quantifies the diversity lost when clustering elements into operational units, incorporating
+#' pairwise dissimilarities (e.g., genetic, functional, or phylogenetic distances) among elements.
 #'
 #' @param ab Numeric vector of element abundances before clustering.
-#' @param diss Numeric matrix or `dist` of pairwise dissimilarities among elements before clustering.
-#' @param ab_clust Numeric vector of element abundances after clustering.
-#' @param diss_clust Numeric matrix or `dist` object of pairwise dissimilarities among clusters after clustering.
-#' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
+#' @param diss Numeric matrix or `dist` object of pairwise dissimilarities among elements
+#'   before clustering. Must be square and match the length of `ab`.
+#' @param ab_clust Numeric vector of cluster abundances after clustering (sum of element
+#'   abundances within each cluster).
+#' @param diss_clust Numeric matrix or `dist` object of pairwise dissimilarities among clusters
+#'   after clustering. Must be square and match the length of `ab_clust`.
+#' @param sig Numeric cutoff \eqn{\sigma}{sigma} (default `1`) defining the threshold distance
+#'   at which two units are considered maximally different. All distances greater than `sig`
+#'   are capped at `sig`. This parameter should be chosen based on the biological meaning
+#'   of distances in your dataset (e.g., maximum expected genetic distance, functional
+#'   dissimilarity threshold).
 #'
 #' @return Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
-#' @seealso [raoQuadratic()], [diversity.functional()], [multiplicity.distance.by_blocks()]
+#'   This value represents the effective number of functionally distinct elements per cluster.
+#'   A value of 1 indicates minimal functional diversity within clusters, while higher values
+#'   indicate greater functional diversity lost through clustering.
+#'
+#' @details
+#' Unlike inventory multiplicity, distance-based multiplicity is only defined for \eqn{q = 1}{q = 1}
+#' (Shannon-type weighting), meaning all elements are weighted proportionally to their abundance.
+#'
+#' @seealso [multiplicity.distance.by_blocks()] for computing from a compact distance table,
+#'   [raoQuadratic()] for Rao's quadratic entropy,
+#'   [diversity.functional()] for distance-based functional diversity
+#'
 #' @export
 multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
   diss_clust[diss_clust > sig] <- sig
@@ -25,18 +43,29 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
 
 #' Distance-based multiplicity by blocks
 #'
-#' Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact three-column
-#' distance table. Distances are capped at \eqn{\sigma}{sigma} and distances between elements
-#' from different clusters are assumed to be equal to \eqn{\sigma}{sigma}.
+#' Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact
+#' three-column distance table. This is an efficient implementation for large datasets where
+#' storing the full distance matrix would be memory-intensive. Distances between elements from
+#' different clusters are assumed to be equal to \eqn{\sigma}{sigma} (maximally different).
 #'
-#' @param ids Character or integer vector of element identifiers (length `n`).
+#' @param ids Character or integer vector of element identifiers (length `n`). Must match
+#'   the identifiers used in `diss_frame`.
 #' @param ab Numeric vector of pre-clustering abundances (length `n`, same order as `ids`).
-#' @param diss_frame Data frame with columns `ID1`, `ID2`, `Distance` for unique pairs of elements.
-#' @param clust Vector or factor of cluster memberships for each element (length `n`).
-#' @param sigma Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
+#' @param diss_frame Data frame with columns `ID1`, `ID2`, `Distance` containing pairwise
+#'   distances for unique pairs of elements. Should only include within-cluster pairs or
+#'   pairs where distances are less than `sigma`; cross-cluster distances are automatically
+#'   set to `sigma`.
+#' @param clust Vector or factor of cluster memberships for each element (length `n`, same order as `ids`).
+#' @param sigma Numeric cutoff \eqn{\sigma}{sigma} (default `1`) at which two units are
+#'   considered maximally different. All distances in `diss_frame` greater than `sigma` are
+#'   capped, and distances between elements from different clusters are set to `sigma`.
 #'
 #' @return Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
-#' @seealso [multiplicity.distance()], [raoQuadratic()], [diversity.functional()]
+#'
+#' @seealso [multiplicity.distance()] for the standard implementation using full matrices,
+#'   [raoQuadratic()] for Rao's quadratic entropy,
+#'   [diversity.functional()] for distance-based functional diversity
+#'
 #' @export
 multiplicity.distance.by_blocks <- function(ids, ab, diss_frame, clust, sigma = 1) {
   # Checks
