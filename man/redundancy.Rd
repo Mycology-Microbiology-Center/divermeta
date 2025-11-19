@@ -9,7 +9,7 @@ redundancy(ab, diss)
 \arguments{
 \item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{Numeric square matrix of pairwise dissimilarities among elements
+\item{diss}{Numeric square matrix or \code{dist} object of pairwise dissimilarities among elements
 scaled to the range [0, 1].}
 }
 \value{

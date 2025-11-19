@@ -10,14 +10,15 @@ divermeta(
   indices = c("multiplicity_inventory"),
   clusters = NULL,
   q = 1,
-  sig = 1
+  sig = 1,
+  normalize = FALSE
 )
 }
 \arguments{
 \item{abund}{Numeric matrix or data.frame of abundances with samples in columns
 and features in rows.}
 
-\item{diss}{Optional numeric dissimilarity matrix among features; square with
+\item{diss}{Optional numeric dissimilarity matrix or \code{dist} object among features; square with
 row/column names matching \code{rownames(abund)} when present.}
 
 \item{indices}{Character vector of index names to compute (see list above).}
@@ -30,9 +31,14 @@ row/column names matching \code{rownames(abund)} when present.}
 
 \item{sig}{Numeric cutoff \code{σ} for distance-based measures (used by
 \code{FD_sigma} and \code{multiplicity_distance}). Default \code{1}.}
+
+\item{normalize}{Logical indicating whether index values should be normalized to [0, 1]
+by dividing each column by its maximum value. Useful for comparing indices with
+different scales. Default \code{FALSE}.}
 }
 \value{
 data.frame with one row per sample and one column per requested index.
+Empty samples (all zero abundances) return \code{NA} for all indices.
 }
 \description{
 Estimate several diversity and multiplicity indices for many samples at once.
@@ -65,15 +71,16 @@ species <- c("s1", "s2", "s3", "s4")
 samples <- c("Sample1", "Sample2", "Sample3")
 abund <- matrix(
   c(
-    10, 5,  0,   # s1
-    0,  8, 12,   # s2
-    4,  3,  7,   # s3
-    6,  0,  9    # s4
+    10, 5,  0, # s1
+    0,  8, 12, # s2
+    4,  3,  7, # s3
+    6,  0,  9 # s4
   ),
   nrow = length(species),
   ncol = length(samples),
   byrow = TRUE,
-  dimnames = list(species, samples))
+  dimnames = list(species, samples)
+)
 
 # Dissimilarity matrix among features (0-1), names must match abund rownames
 diss <- matrix(
@@ -86,7 +93,8 @@ diss <- matrix(
   nrow = length(species),
   ncol = length(species),
   byrow = TRUE,
-  dimnames = list(species, species))
+  dimnames = list(species, species)
+)
 
 # Clusters per feature (used by multiplicity_* indices)
 clusters <- c(s1 = "A", s2 = "A", s3 = "B", s4 = "B")
@@ -97,7 +105,8 @@ divermeta(abund,
   diss = diss,
   q = 1,
   sig = 0.8,
-  indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy"))
+  indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy")
+)
 
 }
 \seealso{

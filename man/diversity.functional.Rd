@@ -9,7 +9,7 @@ diversity.functional(ab, diss, sig = 1)
 \arguments{
 \item{ab}{Numeric vector of element abundances.}
 
-\item{diss}{Numeric matrix of pairwise dissimilarities among elements.}
+\item{diss}{Numeric matrix or \code{dist} object of pairwise dissimilarities among elements.}
 
 \item{sig}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
 }

@@ -9,23 +9,72 @@ multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 \arguments{
 \item{ab}{Numeric vector of element abundances before clustering.}
 
-\item{diss}{Numeric matrix of pairwise dissimilarities among elements before clustering.}
+\item{diss}{Numeric matrix or \code{dist} object of pairwise dissimilarities among elements
+before clustering. Must be square and match the length of \code{ab}.}
 
-\item{ab_clust}{Numeric vector of element abundances after clustering.}
+\item{ab_clust}{Numeric vector of cluster abundances after clustering (sum of element
+abundances within each cluster).}
 
-\item{diss_clust}{Numeric matrix of pairwise dissimilarities among clusters after clustering.}
+\item{diss_clust}{Numeric matrix or \code{dist} object of pairwise dissimilarities among clusters
+after clustering. Must be square and match the length of \code{ab_clust}.}
 
-\item{sig}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
+\item{sig}{Numeric cutoff \eqn{\sigma}{sigma} (default \code{1}) defining the threshold distance
+at which two units are considered maximally different. All distances greater than \code{sig}
+are capped at \code{sig}. This parameter should be chosen based on the biological meaning
+of distances in your dataset (e.g., maximum expected genetic distance, functional
+dissimilarity threshold).}
 }
 \value{
 Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
+This value represents the effective number of functionally distinct elements per cluster.
+A value of 1 indicates minimal functional diversity within clusters, while higher values
+indicate greater functional diversity lost through clustering.
 }
 \description{
 Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} as the ratio of distance-based
-functional diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap
-pairwise distances. Provide abundances and dissimilarities both for the
-unclustered elements and for the clustered representation.
+diversity before vs after clustering, using a cutoff \eqn{\sigma}{sigma} to cap pairwise distances.
+This index quantifies the diversity lost when clustering elements into operational units, incorporating
+pairwise dissimilarities (e.g., genetic, functional, or phylogenetic distances) among elements.
+}
+\details{
+Unlike inventory multiplicity, distance-based multiplicity is only defined for \eqn{q = 1}{q = 1}
+(Shannon-type weighting), meaning all elements are weighted proportionally to their abundance.
+}
+\examples{
+# Example 1: High diversity within clusters
+# Two clusters, each with functionally diverse elements
+ab <- c(10, 10, 10, 10)  # 4 elements
+clust <- c(1, 1, 2, 2)    # 2 clusters
+
+# Distance matrix: elements within clusters are dissimilar (0.3, 0.4)
+# elements between clusters are maximally dissimilar (1.0)
+diss <- matrix(c(
+  0.0, 0.3, 1.0, 1.0,
+  0.3, 0.0, 1.0, 1.0,
+  1.0, 1.0, 0.0, 0.4,
+  1.0, 1.0, 0.4, 0.0
+), nrow = 4, byrow = TRUE)
+
+# Clustered representation
+ab_clust <- c(20, 20)  # Two clusters
+diss_clust <- matrix(c(0, 1, 1, 0), nrow = 2)  # Clusters maximally different
+
+multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
+
+# Example 2: Low diversity within clusters
+# Elements within clusters are functionally similar (distance ~0)
+diss_low <- matrix(c(
+  0.0, 0.05, 1.0, 1.0,
+  0.05, 0.0, 1.0, 1.0,
+  1.0, 1.0, 0.0, 0.05,
+  1.0, 1.0, 0.05, 0.0
+), nrow = 4, byrow = TRUE)
+
+multiplicity.distance(ab, diss_low, ab_clust, diss_clust, sig = 1)
+
 }
 \seealso{
-\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=multiplicity.distance.by_blocks]{multiplicity.distance.by_blocks()}}
+\code{\link[=multiplicity.distance.by_blocks]{multiplicity.distance.by_blocks()}} for computing from a compact distance table,
+\code{\link[=raoQuadratic]{raoQuadratic()}} for Rao's quadratic entropy,
+\code{\link[=diversity.functional]{diversity.functional()}} for distance-based functional diversity
 }

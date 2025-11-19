@@ -7,14 +7,25 @@
 multiplicity.inventory(ab, clust, q = 1)
 }
 \arguments{
-\item{ab}{Numeric vector of subunit abundances.}
+\item{ab}{Numeric vector of element (subunit) abundances. Elements with zero abundance
+are automatically removed before computation.}
 
-\item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.}
+\item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.
+Must have the same length as \code{ab} (after removing zeros).}
 
-\item{q}{Numeric order of the Hill number (default \code{1}).}
+\item{q}{Numeric order of the Hill number (default \code{1}). Controls abundance weighting:
+\describe{
+\item{\code{q = 0}}{Richness-like weighting (all elements weighted equally)}
+\item{\code{q = 1}}{Shannon-type weighting (default, proportional to abundance)}
+\item{\code{q = 2}}{Simpson-type weighting (emphasizes abundant elements)}
+}
+Must be non-negative.}
 }
 \value{
-Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q} for the input.
+Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q}. This value can be
+interpreted as the effective number of equally abundant elements per cluster. A value of 1
+indicates each cluster contains essentially one element (no diversity lost), while higher
+values indicate greater intra-cluster diversity.
 }
 \description{
 Computes inventory multiplicity \eqn{^{q}M}{M^q}, the within-cluster diversity component
@@ -24,11 +35,44 @@ to control abundance weighting (e.g., \code{q = 0} richness-like, \code{q = 1}
 Shannon-type).
 }
 \examples{
+# Example 1: High multiplicity (many diverse elements per cluster)
+# Three clusters, each with 3 equally abundant elements
 ab <- rep(10, 9)
 clust <- c(rep(1, 3), rep(2, 3), rep(3, 3))
 multiplicity.inventory(ab, clust)
+# Result: 3 (each cluster has effective diversity of 3)
+
+# Example 2: Low multiplicity (one element per cluster)
+# Three clusters, each with one element
+ab <- c(10, 20, 30)
+clust <- c(1, 2, 3)
+multiplicity.inventory(ab, clust)
+# Result: 1 (no diversity lost, each cluster is a single element)
+
+# Example 3: Unequal abundances within clusters
+ab <- c(10, 5, 2,  # cluster 1: unequal abundances
+        8, 8, 8,    # cluster 2: equal abundances
+        20, 1)      # cluster 3: very unequal abundances
+clust <- c(rep(1, 3), rep(2, 3), rep(3, 2))
+multiplicity.inventory(ab, clust, q = 1)
+
+# Example 4: Using different q values
+ab <- rep(1:12)
+clust <- c(rep(1, 4), rep(2, 4), rep(3, 4))
+multiplicity.inventory(ab, clust, q = 0)  # Richness-like
+multiplicity.inventory(ab, clust, q = 1)  # Shannon-type (default)
+multiplicity.inventory(ab, clust, q = 2)  # Simpson-type
 
 }
+\references{
+\itemize{
+\item Hill MO (1973) Diversity and evenness: a unifying notation and its consequences.
+Ecology 54(2):427-432. \doi{10.2307/1934352}
+\item Jost L (2007) Partitioning diversity into independent alpha and beta components.
+Ecology 88(10):2427-2439. \doi{10.1890/06-1736.1}
+}
+}
 \seealso{
-\code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=multiplicity.distance]{multiplicity.distance()}}
+\code{\link[=multiplicity.distance]{multiplicity.distance()}} for distance-based multiplicity,
+\code{\link[=diversity.functional]{diversity.functional()}} for functional diversity indices
 }

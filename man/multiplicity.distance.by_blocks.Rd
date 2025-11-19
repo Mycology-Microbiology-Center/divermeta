@@ -7,24 +7,50 @@
 multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma = 1)
 }
 \arguments{
-\item{ids}{Character or integer vector of element identifiers (length \code{n}).}
+\item{ids}{Character or integer vector of element identifiers (length \code{n}). Must match
+the identifiers used in \code{diss_frame}.}
 
 \item{ab}{Numeric vector of pre-clustering abundances (length \code{n}, same order as \code{ids}).}
 
-\item{diss_frame}{Data frame with columns \code{ID1}, \code{ID2}, \code{Distance} for unique pairs of elements.}
+\item{diss_frame}{Data frame with columns \code{ID1}, \code{ID2}, \code{Distance} containing pairwise
+distances for unique pairs of elements. Should only include within-cluster pairs or
+pairs where distances are less than \code{sigma}; cross-cluster distances are automatically
+set to \code{sigma}.}
 
-\item{clust}{Vector or factor of cluster memberships for each element (length \code{n}).}
+\item{clust}{Vector or factor of cluster memberships for each element (length \code{n}, same order as \code{ids}).}
 
-\item{sigma}{Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default \code{1}).}
+\item{sigma}{Numeric cutoff \eqn{\sigma}{sigma} (default \code{1}) at which two units are
+considered maximally different. All distances in \code{diss_frame} greater than \code{sigma} are
+capped, and distances between elements from different clusters are set to \code{sigma}.}
 }
 \value{
 Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
 }
 \description{
-Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact three-column
-distance table. Distances are capped at \eqn{\sigma}{sigma} and distances between elements
-from different clusters are assumed to be equal to \eqn{\sigma}{sigma}.
+Computes distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma} from a compact
+three-column distance table. This is an efficient implementation for large datasets where
+storing the full distance matrix would be memory-intensive. Distances between elements from
+different clusters are assumed to be equal to \eqn{\sigma}{sigma} (maximally different).
+}
+\examples{
+# Example: Compute multiplicity from a distance table
+ids <- c("elem1", "elem2", "elem3", "elem4")
+ab <- c(10, 15, 20, 25)
+clust <- c(1, 1, 2, 2)
+
+# Distance table: only within-cluster pairs (cross-cluster assumed = sigma)
+diss_frame <- data.frame(
+  ID1 = c("elem1", "elem3"),
+  ID2 = c("elem2", "elem4"),
+  Distance = c(0.3, 0.4),
+  stringsAsFactors = FALSE
+)
+
+multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma = 1)
+
 }
 \seealso{
-\code{\link[=multiplicity.distance]{multiplicity.distance()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional]{diversity.functional()}}
+\code{\link[=multiplicity.distance]{multiplicity.distance()}} for the standard implementation using full matrices,
+\code{\link[=raoQuadratic]{raoQuadratic()}} for Rao's quadratic entropy,
+\code{\link[=diversity.functional]{diversity.functional()}} for distance-based functional diversity
 }
