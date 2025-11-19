@@ -85,9 +85,27 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
     clust <- clust[!zeros]
   }
 
-  # Checks
-  if(length(ab) == 0 || length(clust) == 0)
+  # Check for empty input
+  if (length(ab) == 0 || length(clust) == 0) {
     return(0)
+  }
+
+  # Check for single cluster case
+  if (length(unique(clust)) == 1) {
+    # Single cluster: multiplicity equals overall diversity
+    p <- ab / sum(ab)
+    if (q == 1) {
+      # Handle log(0) case
+      p_nonzero <- p[p > 0]
+      if (length(p_nonzero) == 0) {
+        return(0)
+      }
+      div <- exp(-sum(p_nonzero * log(p_nonzero)))
+    } else {
+      div <- (sum(p^q))^(1 / (1 - q))
+    }
+    return(div)
+  }
 
   # Compute true diversity before clustering
   p <- ab / sum(ab)
