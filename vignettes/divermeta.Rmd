@@ -29,6 +29,8 @@ The core funcion of the package is `divermeta()`, which computes multiple indice
 - distance‑based multiplicity (σ‑capped): `"multiplicity_distance"`
 - optional companions: `"raoQ"`, `"FD_sigma"`, `"FD_q"`, `"redundancy"`
 
+Additionally, the package provides `metagenomic.alpha.index()` (MAD) as a standalone function for computing the Metagenomic Alpha-Diversity Index (see below).
+
 This vignette uses tiny synthetic data to keep runtime short and outputs deterministic.
 
 ## Installation
@@ -183,6 +185,23 @@ merge(res_sig08, res_sig10, by = "Sample", suffixes = c("_sig0.8","_sig1.0"))
 ```
 
 Smaller `sig` trims large distances, making subunits more similar and lowering functional/phylogenetic diversity; this typically increases distance‑based multiplicity (less diversity lost to clustering, relatively more within‑cluster similarity accounted for).
+
+### Metagenomic Alpha-Diversity Index (MAD)
+
+The Metagenomic Alpha-Diversity Index (MAD) is another metric for measuring within-cluster diversity. Unlike multiplicity indices, MAD does not incorporate element abundances and decreases as cluster size increases. It is available as a standalone function `metagenomic.alpha.index()`:
+
+```{r}
+# Compute MAD
+# Note: MAD requires clusters and dissimilarity matrix, but doesn't use abundances
+# Since it doesn't use abundances, the value is the same regardless of sample
+mad_value <- metagenomic.alpha.index(
+  clust = clusters,
+  diss = diss
+)
+mad_value
+```
+
+**Note**: Unlike multiplicity, MAD does not account for element abundances and behaves differently as cluster size increases. See the manuscript for a detailed comparison between MAD and multiplicity indices.
 
 ## Practical tips
 
