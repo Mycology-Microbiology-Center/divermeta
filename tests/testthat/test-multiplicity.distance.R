@@ -20,7 +20,7 @@ test_that("Basic", {
 
 # Deterministic numeric checks (two-species and sigma capping)
 # -----------------------------------------------------------
-test_that("Two-species numeric and sigma capping", {
+test_that("Two-species case: sigma capping works correctly", {
   # Two species with unequal abundances, distance above sigma
   ab <- c(2, 1)
   d <- 0.7
@@ -52,14 +52,10 @@ test_that("Two-species numeric and sigma capping", {
 
 # Doubling property
 # ----------------------------
-# Builds an assemblage of three identical groups, inter Clustered distance are maximum.
-# The diversity of the assemblage should be three times the individual
-# diversity.
-# Note: We use ratio to check for doubling property, but this is not
-# multiplicity since there is there is no actual clustering.
-# Traditional is pretty close, the tweaked one we use works fine.
-# Ratio should be 3
-test_that("Doubling Property", {
+# Tests that distance-based functional diversity satisfies the doubling property:
+# when combining three identical groups with maximum inter-group distances,
+# the diversity should be three times the individual group diversity.
+test_that("Distance-based functional diversity satisfies doubling property", {
   set.seed(42)
   sig <- 0.9
   n <- 10
@@ -86,14 +82,13 @@ test_that("Doubling Property", {
 
 
 
-# Assemblage  of units
+# Assemblage of units
 # ----------------------------
-# Diversity of an assemblage  of groups of identical units (distance zero
-# between them) should be the same as an assemblage of representative units (a
-# matrix of ones with zero on the diagonal)
-# Only the tweaked one we use works, the traditional one fails.
-# ratio (or multiplicity) should be 1
-test_that("Assemblage  of units", {
+# Tests that clustering copies of identical units (distance zero within clusters)
+# does not change functional diversity. The diversity of an assemblage of groups
+# of identical units should equal the diversity of representative units.
+# Multiplicity should be 1 (no diversity lost).
+test_that("Clustering identical units: multiplicity equals 1", {
   sig <- 1
   n <- 10
   ab_unit <- runif(n, 100, 1000)
@@ -120,9 +115,11 @@ test_that("Assemblage  of units", {
 })
 
 
-# Ratio Equivalence. Distance based multiplicity should be equivalent to the
-# ratio of the functional diversities
-test_that("Ratio equivalence", {
+# Ratio equivalence
+# ----------------------------
+# Tests that distance-based multiplicity equals the ratio of functional diversities
+# before and after clustering (delta D_sigma before / delta D_sigma after).
+test_that("Distance-based multiplicity equals ratio of functional diversities", {
   set.seed(42)
   for (i in 1:10)
   {
@@ -164,9 +161,11 @@ test_that("Ratio equivalence", {
   }
 })
 
-# Deterministic by-blocks equals manual multiplicity
+# Implementation equivalence
 # --------------------------------------------------
-test_that("by_blocks equals manual for simple case", {
+# Tests that the by_blocks implementation produces identical results to the
+# standard implementation using full distance matrices.
+test_that("by_blocks implementation equals standard implementation", {
   # Four elements in two clusters (1-2, 3-4)
   ids <- c("a", "b", "c", "d")
   ab <- c(2, 3, 5, 7)
@@ -201,10 +200,11 @@ test_that("by_blocks equals manual for simple case", {
   expect_equal(mb, mm, tolerance = 1e-12)
 })
 
-# Block equivalence
-# Checks that the by blocks implementation gives the same results as the
-# normal implementation
-test_that("Implementation equivalence", {
+# Block equivalence for multiple clusters
+# ----------------------------------------
+# Tests that the by_blocks implementation produces identical results to the
+# standard implementation for complex multi-cluster scenarios.
+test_that("by_blocks equals standard implementation for multiple clusters", {
   set.seed(42)
 
   for (w_ in 1:10)
