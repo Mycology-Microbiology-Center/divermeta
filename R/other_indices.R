@@ -218,6 +218,25 @@ redundancy <- function(ab, diss) {
 #'
 #' @export
 #'
+#' @examples
+#' # Example: Compute MAD for gene clusters
+#' clust <- c(1, 1, 2, 2, 2, 3)
+#' diss <- matrix(c(
+#'   0.0, 0.2, 0.8, 0.9, 0.9, 0.9,
+#'   0.2, 0.0, 0.8, 0.9, 0.9, 0.9,
+#'   0.8, 0.8, 0.0, 0.1, 0.15, 0.9,
+#'   0.9, 0.9, 0.1, 0.0, 0.12, 0.9,
+#'   0.9, 0.9, 0.15, 0.12, 0.0, 0.9,
+#'   0.9, 0.9, 0.9, 0.9, 0.9, 0.0
+#' ), nrow = 6, byrow = TRUE)
+#'
+#' # Use default (first element as representative)
+#' metagenomic.alpha.index(clust, diss)
+#'
+#' # Specify representatives explicitly
+#' reps <- c("1" = 1, "2" = 3, "3" = 6)
+#' metagenomic.alpha.index(clust, diss, representatives = reps)
+#'
 metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
   if (!is.matrix(diss)) {
     stop("Dissimilarity input must be a matrix")
