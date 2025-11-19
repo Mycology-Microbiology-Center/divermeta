@@ -67,6 +67,17 @@
 #'
 multiplicity.inventory <- function(ab, clust, q = 1) {
 
+  # Input validation
+  if (!is.numeric(ab)) {
+    stop("`ab` must be a numeric vector")
+  }
+  if (!is.numeric(q) || length(q) != 1 || q < 0) {
+    stop("`q` must be a single non-negative numeric value")
+  }
+  if (length(ab) != length(clust)) {
+    stop("`ab` and `clust` must have the same length")
+  }
+
   # Remove elements with zero abundance
   zeros <- ab == 0
   if (sum(zeros) > 0) {
