@@ -98,6 +98,15 @@ Columns correspond to requested indices; rows correspond to samples.
 Inventory multiplicity reflects the average within‑cluster diversity; 
 distance‑based multiplicity reflects average within‑cluster functional or phylogenetic diversity with distances capped at a threshold sigma (`σ`).
 
+You can visualize the input data structures side-by-side:
+
+```{r fig.show='hold', out.width='50%', fig.width=4, fig.height=3}
+visualize_abundance(abund, csize = 0.7, clegend = 0.4)
+visualize_dist(diss, csize = 0.7, clegend = 0.4)
+```
+
+The left plot shows the abundance matrix (features x samples), where tile size represents abundance magnitude. The right plot shows the distance matrix (pairwise distances between features), where tile size represents distance magnitude. Features f1-f2 belong to cluster A, and f3-f4 belong to cluster B. Notice how within-cluster distances (f1-f2, f3-f4) are smaller than between-cluster distances.
+
 ## About multiplicity index
 
 TODO - brief intro + figure 1 & 2 (a bit reworked)
@@ -130,7 +139,18 @@ concept_res
 
 As expected, `High` shows a larger multiplicity value than `Low`, since each cluster contains more distinct subunits.
 
-Note: TODO - add a simple distance visualization and abundance overview to make these scenarios visually clear.
+Visualizing the abundance matrices side-by-side helps illustrate the difference:
+
+```{r fig.show='hold', out.width='50%', fig.width=4, fig.height=3}
+visualize_abundance(abund_concept[, "High", drop = FALSE], 
+                    sample.labels = "High multiplicity",
+                    csize = 0.8, clegend = 0.5)
+visualize_abundance(abund_concept[, "Low", drop = FALSE], 
+                    sample.labels = "Low multiplicity",
+                    csize = 0.8, clegend = 0.5)
+```
+
+In the **High** scenario (left), both clusters (A: f1+f2, B: f3+f4) contain multiple distinct features with non-zero abundances, resulting in higher multiplicity. In the **Low** scenario (right), each cluster effectively contains only one feature (f2 and f4 have zero abundance), resulting in lower multiplicity. The tile size represents abundance magnitude.
 
 ### Inventory multiplicity
 
@@ -165,6 +185,14 @@ cbind(
 ### Distance‑based multiplicity
 
 Distance‑based multiplicity requires a dissimilarity matrix and uses Shannon‑type weighting. Use `sig` to cap pairwise distances and define when two subunits are considered distinct.
+
+The distance matrix structure is key to understanding distance-based multiplicity. Here's the distance matrix from our example:
+
+```{r fig.width=5, fig.height=4}
+visualize_dist(diss, csize = 0.8, clegend = 0.5)
+```
+
+Notice how features within the same cluster (f1-f2 in cluster A, f3-f4 in cluster B) have smaller distances (smaller squares) compared to distances between clusters. Distance-based multiplicity quantifies the diversity within clusters while accounting for these functional/phylogenetic similarities.
 
 ```{r}
 res_sig08 <- divermeta(
