@@ -29,7 +29,7 @@
 #'   `multiplicity_inventory`). Default `1`.
 #' @param sig Numeric cutoff `σ` for distance-based measures (used by
 #'   `FD_sigma` and `multiplicity_distance`). Default `1`.
-#' @param normalize Logical indicating whether index values should be normalized to [0, 1]
+#' @param normalize Logical indicating whether index values should be normalized to \[0, 1\]
 #'   by dividing each column by its maximum value. Useful for comparing indices with
 #'   different scales. Default `FALSE`.
 #'
