@@ -89,22 +89,33 @@ multiplicity.inventory <- function(ab, clust, q = 1) {
   if(length(ab) == 0 || length(clust) == 0)
     return(0)
 
-  # Pre clust
-  p <- ab /sum(ab)
-  if(q == 1)
-    div <- exp(-sum(p*log(p)))
-  else
-    div <- (sum(p^q))^(1/(1-q))
+  # Compute true diversity before clustering
+  p <- ab / sum(ab)
+  if (q == 1) {
+    # Handle log(0) case
+    p_nonzero <- p[p > 0]
+    if (length(p_nonzero) == 0) {
+      return(0)
+    }
+    div_gamma <- exp(-sum(p_nonzero * log(p_nonzero)))
+  } else {
+    div_gamma <- (sum(p^q))^(1 / (1 - q))
+  }
 
-  # Post Clustering
+  # Compute true diversity after clustering
   ab_clust <- tapply(ab, clust, sum)
-  p_clust <- ab_clust /sum(ab_clust)
+  p_clust <- ab_clust / sum(ab_clust)
 
-  if(q == 1)
-    div_clust <- exp(-sum(p_clust*log(p_clust)))
-  else
-    div_clust <- (sum(p_clust^q))^(1/(1-q))
+  if (q == 1) {
+    p_clust_nonzero <- p_clust[p_clust > 0]
+    if (length(p_clust_nonzero) == 0) {
+      return(0)
+    }
+    div_beta <- exp(-sum(p_clust_nonzero * log(p_clust_nonzero)))
+  } else {
+    div_beta <- (sum(p_clust^q))^(1 / (1 - q))
+  }
 
-  return( div / div_clust)
-
+  # Multiplicity
+  return(div_gamma / div_beta)
 }
