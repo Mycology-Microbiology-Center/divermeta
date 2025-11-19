@@ -37,9 +37,33 @@
 #' @export
 #'
 #' @examples
+#' # Example 1: High multiplicity (many diverse elements per cluster)
+#' # Three clusters, each with 3 equally abundant elements
 #' ab <- rep(10, 9)
 #' clust <- c(rep(1, 3), rep(2, 3), rep(3, 3))
 #' multiplicity.inventory(ab, clust)
+#' # Result: 3 (each cluster has effective diversity of 3)
+#'
+#' # Example 2: Low multiplicity (one element per cluster)
+#' # Three clusters, each with one element
+#' ab <- c(10, 20, 30)
+#' clust <- c(1, 2, 3)
+#' multiplicity.inventory(ab, clust)
+#' # Result: 1 (no diversity lost, each cluster is a single element)
+#'
+#' # Example 3: Unequal abundances within clusters
+#' ab <- c(10, 5, 2,  # cluster 1: unequal abundances
+#'         8, 8, 8,    # cluster 2: equal abundances
+#'         20, 1)      # cluster 3: very unequal abundances
+#' clust <- c(rep(1, 3), rep(2, 3), rep(3, 2))
+#' multiplicity.inventory(ab, clust, q = 1)
+#'
+#' # Example 4: Using different q values
+#' ab <- rep(1:12)
+#' clust <- c(rep(1, 4), rep(2, 4), rep(3, 4))
+#' multiplicity.inventory(ab, clust, q = 0)  # Richness-like
+#' multiplicity.inventory(ab, clust, q = 1)  # Shannon-type (default)
+#' multiplicity.inventory(ab, clust, q = 2)  # Simpson-type
 #'
 multiplicity.inventory <- function(ab, clust, q = 1) {
 
