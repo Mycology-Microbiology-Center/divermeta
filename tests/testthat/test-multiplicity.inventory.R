@@ -140,33 +140,32 @@ test_that("Single cluster multiplicity equals overall diversity", {
   expect_equal(multiplicity.inventory(ab, clust, q = q), expected_q05, tolerance = 1e-12)
 })
 
-test_that("High Multlicity Works", {
-
-  ab <- rep(10,30)
-  clust <- c(rep(1,10), rep(2,10), rep(3,10))
-  # Multiplicity should be 10
+test_that("High multiplicity: many diverse elements per cluster", {
+  # Three clusters, each with 10 equally abundant elements
+  # Multiplicity should equal the number of elements per cluster
+  ab <- rep(10, 30)
+  clust <- c(rep(1, 10), rep(2, 10), rep(3, 10))
   expect_equal(multiplicity.inventory(ab, clust), 10)
 })
 
-
-test_that("Low Multlicity Works", {
-
-  ab <- rep(10,3)
-  clust <- c(1,2,3)
-  # Multiplicity should be 1
+test_that("Low multiplicity: one element per cluster", {
+  # Three clusters, each with one element
+  # Multiplicity should be 1 (no diversity lost)
+  ab <- rep(10, 3)
+  clust <- c(1, 2, 3)
   expect_equal(multiplicity.inventory(ab, clust), 1)
 })
 
 
-test_that("Abundance with zero works", {
+test_that("Zero abundances are automatically removed", {
+  # Elements with zero abundance should be ignored
+  ab_1 <- c(10, 3, 3, 5, 7, 1, 2, 3)
+  clust_1 <- c(1, 2, 3, 2, 3, 2, 1, 2)
 
-  ab_1 <- c(10,3,3,5,7,1,2,3)
-  clust_1 <- c(1,2,3,2,3,2,1,2)
+  ab_2 <- c(10, 3, 3, 5, 7, 1, 2, 3, 0, 0, 0, 0)
+  clust_2 <- c(1, 2, 3, 2, 3, 2, 1, 2, 1, 2, 3, 1)
 
-  ab_2 <- c(10,3,3,5,7,1,2,3,0,0,0,0)
-  clust_2 <- c(1,2,3,2,3,2,1,2,1,2,3,1)
-
-  # Multiplicity should be equal
+  # Multiplicity should be equal (zero-abundance elements ignored)
   expect_equal(multiplicity.inventory(ab_1, clust_1), multiplicity.inventory(ab_2, clust_2))
 })
 
