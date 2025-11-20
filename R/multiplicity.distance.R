@@ -78,13 +78,6 @@ multiplicity.distance <- function(ab, diss, ab_clust, diss_clust, sig = 1) {
     stop("Total abundance cannot be zero")
   }
 
-  if (inherits(diss, "dist")) {
-    diss <- as.matrix(diss)
-  }
-  if (inherits(diss_clust, "dist")) {
-    diss_clust <- as.matrix(diss_clust)
-  }
-
   # Cap distances at sigma (modify copies to avoid side effects)
   diss_clust[diss_clust > sig] <- sig
   diss[diss > sig] <- sig

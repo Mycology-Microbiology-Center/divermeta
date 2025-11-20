@@ -13,8 +13,8 @@
 #'
 #' @details
 #' The function uses the fact that a `dist` object stores only the lower triangle of
-#' the distance matrix in column-major order. It constructs all pairs of indices
-#' corresponding to this storage order and computes the sum efficiently.
+#' the distance matrix in column-major order. It removes zero entries and then constructs 
+#' all pairs of indices corresponding to this storage order and computes the sum efficiently.
 #'
 #' @examples
 #' library(vegan)
@@ -25,8 +25,19 @@
 #'
 #' @export
 dist_quadratic_form <- function(p, diss) {
-    # Get row/column indices for lower-triangle elements in dist
-    # This follows the order used in dist objects
-    idx <- combn(length(p), 2)
-    sum(2 * p[idx[1, ]] * p[idx[2, ]] * diss)
+  # Get indices of non-zero probabilities
+  non_zero <- which(p > 0)
+  n <- length(non_zero)
+
+  if (n < 2) return(0)  # Need at least 2 non-zero entries
+
+  # Only generate combinations for non-zero entries
+  idx <- combn(non_zero, 2)
+
+  # Convert matrix indices to vector index for dist object
+  # Using the formula: k = n*(i-1) - i*(i-1)/2 + j-i  for i < j
+  n_total <- length(p)
+  vec_indices <- (idx[1, ] - 1) * n_total - (idx[1, ] - 1) * idx[1, ] / 2 + (idx[2, ] - idx[1, ])
+
+  sum(2 * p[idx[1, ]] * p[idx[2, ]] * diss[vec_indices])
 }
