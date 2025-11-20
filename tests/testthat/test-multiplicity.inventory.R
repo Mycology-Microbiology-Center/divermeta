@@ -169,4 +169,18 @@ test_that("Zero abundances are automatically removed", {
   expect_equal(multiplicity.inventory(ab_1, clust_1), multiplicity.inventory(ab_2, clust_2))
 })
 
+test_that("Input validation works correctly", {
+  # Non-numeric abundance
+  expect_error(multiplicity.inventory(c("a", "b"), c(1, 2)), "must be a numeric vector")
+  
+  # Negative q
+  expect_error(multiplicity.inventory(c(1, 2), c(1, 2), q = -1), "must be a single non-negative")
+  
+  # Mismatched lengths
+  expect_error(multiplicity.inventory(c(1, 2, 3), c(1, 2)), "must have the same length")
+  
+  # All zero abundances
+  expect_equal(multiplicity.inventory(c(0, 0, 0), c(1, 2, 3)), 0)
+})
+
 
