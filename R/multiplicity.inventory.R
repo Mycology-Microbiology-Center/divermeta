@@ -9,7 +9,7 @@
 #' @param ab Numeric vector of element (subunit) abundances. Elements with zero abundance
 #'   are automatically removed before computation.
 #' @param clust Vector or factor of cluster memberships for each element of `ab`.
-#'   Must have the same length as `ab` (after removing zeros).
+#'   Must have the same length as `ab`
 #' @param q Numeric order of the Hill number (default `1`). Controls abundance weighting:
 #'   \describe{
 #'     \item{`q = 0`}{Richness-like weighting (all elements weighted equally)}

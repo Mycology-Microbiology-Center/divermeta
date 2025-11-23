@@ -43,7 +43,7 @@ test_that("Two-species case: sigma capping works correctly", {
   diss_clust <- diss_capped
 
   expect_equal(
-    multiplicity.distance(ab, diss, ab_clust, diss_clust, sig),
+    multiplicity.distance(ab = ab, diss = diss, clust = c(1, 2), method = "sigma", sig = sig),
     (sig - Q_after) / (sig - Q_before)
   )
 })
@@ -62,8 +62,7 @@ test_that("Distance-based functional diversity satisfies doubling property", {
   ab_unit <- runif(n, 100, 1000)
   diss_unit <- random_matrix <- matrix(runif(n * n, min = 0.3, max = 0.6), nrow = n, ncol = n)
   diag(diss_unit) <- 0
-
-  div_trad <- diversity.functional.traditional(ab_unit, diss_unit)
+  
   div <- diversity.functional(ab_unit, diss_unit, sig)
 
   # Assemblage
@@ -74,7 +73,6 @@ test_that("Distance-based functional diversity satisfies doubling property", {
 
   ab <- c(ab_unit, ab_unit, ab_unit)
 
-  expect_equal(round(diversity.functional.traditional(ab, diss) / diversity.functional.traditional(ab_unit, diss_unit)), 3)
   expect_equal(diversity.functional(ab, diss, sig) / diversity.functional(ab_unit, diss_unit, sig), 3)
 })
 
@@ -131,14 +129,12 @@ test_that("Distance-based multiplicity equals ratio of functional diversities", 
     min_intra_distance <- 0.1
     max_intra_distance <- 0.5
 
-
+    clust <- c(rep(1, n), rep(2, n), rep(3, n))
 
     ab_unit <- runif(n, min_abundance, max_abundance)
     diss_unit <- matrix(runif(n * n, min = min_intra_distance, max = max_intra_distance), nrow = n, ncol = n)
     diag(diss_unit) <- 0
 
-
-    div_trad <- diversity.functional.traditional(ab_unit, diss_unit)
     div <- diversity.functional(ab_unit, diss_unit, sig)
 
     # Assemblage
@@ -155,7 +151,7 @@ test_that("Distance-based multiplicity equals ratio of functional diversities", 
     diag(diss_clust) <- 0
 
     ratio <- diversity.functional(ab, diss, sig) / diversity.functional(ab_clust, diss_clust, sig)
-    m <- multiplicity.distance(ab, diss, ab_clust, diss_clust, sig)
+    m <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "sigma", sig = sig)
 
     expect_equal(round(ratio, 5), round(m, 5))
   }
@@ -195,7 +191,7 @@ test_that("by_blocks implementation equals standard implementation", {
   diss_clust <- matrix(sig, nrow = 2, ncol = 2)
   diag(diss_clust) <- 0
 
-  mm <- multiplicity.distance(ab, diss, ab_clust, diss_clust, sig)
+  mm <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "sigma", sig = sig)
 
   expect_equal(mb, mm, tolerance = 1e-12)
 })
@@ -223,6 +219,8 @@ test_that("by_blocks equals standard implementation for multiple clusters", {
     B <- (B + t(B)) / 2
     C <- (C + t(C)) / 2
     D <- (D + t(D)) / 2
+
+    clust  <- c(rep(1, total), rep(2, total), rep(3, total), rep(4, total))
 
 
     # Assign row and column names
@@ -266,8 +264,37 @@ test_that("by_blocks equals standard implementation for multiple clusters", {
     diag(diss_clust) <- 0
 
     byBlocks <- multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma)
-    classic <- multiplicity.distance(ab, diss, ab_clust, diss_clust, sigma)
+    classic <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "custom", sig = sigma, clust_ids_order = c(1,2,3,4), diss_clust = diss_clust)
 
     expect_equal(byBlocks - classic, 0)
   }
+})
+
+
+test_that("Distance-based multiplicity is the same using a specific link method than invoking it through custom",{
+  set.seed(42)
+  for (i in seq_len(10))
+  {
+    n <- 25
+    ab <- runif(n, min = 1, max = 100)
+    clust <- sample(c("e", "d", "c", "b", "a"), n, replace = TRUE)
+    clust_ids_order <- sample(c("e", "d", "c", "b", "a"))
+    diss <- matrix(runif(n*n, min = 0.3, max = 1), ncol = n, nrow = n)
+    diss <- (diss + t(diss))/2
+    diag(diss) <- 0
+    sig <- 0.7
+
+    for(method in c("sigma", "min", "average", "max"))
+    {
+
+      diss_clust <- cluster_distance_matrix(diss = diss,clust = clust,clust_ids_order = clust_ids_order, method = method, sig = sig)
+
+      m1 <- multiplicity.distance(ab = ab,diss = diss,clust = clust,method = method, sig = sig)
+      m2 <- multiplicity.distance(ab = ab,diss = diss,clust = clust, method = "custom", sig = sig, clust_ids_order = clust_ids_order, diss_clust = diss_clust)
+
+      expect_equal(m1, m2)
+
+    }
+}
+
 })

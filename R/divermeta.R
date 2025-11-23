@@ -29,6 +29,10 @@
 #'   `multiplicity_inventory`). Default `1`.
 #' @param sig Numeric cutoff `σ` for distance-based measures (used by
 #'   `FD_sigma` and `multiplicity_distance`). Default `1`.
+#' @param method Character string specifying the linkage method for
+#'   aggregating distances between clusters. One of: "average", "min",
+#'   "max", or "sigma". Sigma sets all distances between clusters to be
+#'    of value `sig`. Default is "sigma".
 #' @param normalize Logical indicating whether index values should be normalized to \[0, 1\]
 #'   by dividing each column by its maximum value. Useful for comparing indices with
 #'   different scales. Default `FALSE`.
@@ -92,6 +96,7 @@ divermeta <- function(
     clusters = NULL,
     q = 1,
     sig = 1,
+    method = "sigma",
     normalize = FALSE) {
   ## Validation
   if (!is.matrix(abund) && !is.data.frame(abund)) {
@@ -207,30 +212,6 @@ divermeta <- function(
       }
       diss_mtx <- diss
     }
-
-
-
-    ## Build an upper-triangle three-column frame for multiplicity_distance
-    if (any(normalized_indices == "multiplicity_distance")) {
-      if (inherits(diss_mtx, "dist")) {
-        # For dist object, use combn to get all pairs
-        ut_idx <- combn(n, 2)
-        diss_frame <- data.frame(
-          ID1 = feature_names[ut_idx[1, ]],
-          ID2 = feature_names[ut_idx[2, ]],
-          Distance = as.vector(diss_mtx),
-          stringsAsFactors = FALSE
-        )
-      } else {
-        ut_idx <- which(upper.tri(diss_mtx), arr.ind = TRUE)
-        diss_frame <- data.frame(
-          ID1 = feature_names[ut_idx[, 1]],
-          ID2 = feature_names[ut_idx[, 2]],
-          Distance = diss_mtx[upper.tri(diss_mtx)],
-          stringsAsFactors = FALSE
-        )
-      }
-    }
   }
 
   ## Cluster alignment
@@ -255,6 +236,18 @@ divermeta <- function(
       }
       clust_vec <- clusters
     }
+  }
+
+  ## Build dist for multiplicity_distance
+  clust_ids_order <- unique(clust_vec)
+  if (any(normalized_indices == "multiplicity_distance")) {
+    diss_clust <- cluster_distance_matrix(
+      diss = diss,
+      clust = clust_vec,
+      clust_ids_order = clust_ids_order,
+      method = method,
+      sig = sig
+    )
   }
 
   ## Helper to guard against empty (all-zero) samples
@@ -285,15 +278,16 @@ divermeta <- function(
   if ("multiplicity_inventory" %in% normalized_indices) {
     compute_map$multiplicity_inventory <- guard_nonempty(function(ab_vec) multiplicity.inventory(ab_vec, clust_vec, q = q))
   }
-  if ("multiplicity_distance" %in% normalized_indices) {
-    ids <- feature_names
+  if ("multiplicity_distance" %in% normalized_indices) {    
     compute_map$multiplicity_distance <- guard_nonempty(function(ab_vec) {
-      multiplicity.distance.by_blocks(
-        ids = ids,
+      multiplicity.distance(        
         ab = ab_vec,
-        diss_frame = diss_frame,
+        diss = diss_mtx,
         clust = clust_vec,
-        sigma = sig
+        method = "custom",
+        sig = sig,
+        clust_ids_order = clust_ids_order,
+        diss_clust = diss_clust
       )
     })
   }

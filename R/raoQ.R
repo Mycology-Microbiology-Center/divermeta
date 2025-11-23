@@ -40,7 +40,7 @@ raoQuadratic <- function(ab, diss) {
     if (dims[1] != dims[2]) {
       stop(paste0(
         "Distance matrix must be square. Matrix: ",
-        n, "x", n, "."
+        n_clust, "x", n_clust, "."
       ))
     }
 
@@ -52,12 +52,15 @@ raoQuadratic <- function(ab, diss) {
     }
   }
 
-  p <- as.vector(ab / total_ab)
-  if (inherits(diss, "dist")) {
-    res <- dist_quadratic_form(p, diss)
-  } else {
-    res <- sum(t(p) %*% diss %*% p)
+
+    # If dist object
+  if (!inherits(diss, "dist")) {
+    diss <- as.dist(diss)
   }
 
+  p <- as.vector(ab / total_ab)
+  
+  res <- dist_quadratic_form(p, diss)
+  
   res
 }
