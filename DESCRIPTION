@@ -1,6 +1,6 @@
 Package: divermeta
 Title: Multiplicity index
-Version: 0.0.2
+Version: 0.0.3
 Authors@R: c(
     person(given = "Felipe", family = "González-Casabianca", 
            email = "felipe.gonzalez.casabianca@ut.ee",
