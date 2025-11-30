@@ -27,10 +27,9 @@ the distance matrix in column-major order. It removes zero entries and then cons
 all pairs of indices corresponding to this storage order and computes the sum efficiently.
 }
 \examples{
-library(vegan)
-data(dune)
-diss <- vegdist(dune)
-p <- runif(nrow(dune))
+set.seed(123)
+p <- runif(5)  # abundances
+diss <- stats::dist(matrix(runif(5 * 3), ncol = 3)) # distance matrix
 dist_quadratic_form(p, diss)
 
 }
