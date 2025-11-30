@@ -11,7 +11,7 @@ multiplicity.inventory(ab, clust, q = 1)
 are automatically removed before computation.}
 
 \item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.
-Must have the same length as \code{ab} (after removing zeros).}
+Must have the same length as \code{ab}}
 
 \item{q}{Numeric order of the Hill number (default \code{1}). Controls abundance weighting:
 \describe{

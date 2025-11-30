@@ -11,6 +11,7 @@ divermeta(
   clusters = NULL,
   q = 1,
   sig = 1,
+  method = "sigma",
   normalize = FALSE
 )
 }
@@ -31,6 +32,11 @@ row/column names matching \code{rownames(abund)} when present.}
 
 \item{sig}{Numeric cutoff \code{σ} for distance-based measures (used by
 \code{FD_sigma} and \code{multiplicity_distance}). Default \code{1}.}
+
+\item{method}{Character string specifying the linkage method for
+aggregating distances between clusters. One of: "average", "min",
+"max", or "sigma". Sigma sets all distances between clusters to be
+of value \code{sig}. Default is "sigma".}
 
 \item{normalize}{Logical indicating whether index values should be normalized to [0, 1]
 by dividing each column by its maximum value. Useful for comparing indices with

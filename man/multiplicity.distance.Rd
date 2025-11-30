@@ -4,7 +4,15 @@
 \alias{multiplicity.distance}
 \title{Distance-based multiplicity}
 \usage{
-multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
+multiplicity.distance(
+  ab,
+  diss,
+  clust,
+  method = "sigma",
+  sig = 1,
+  clust_ids_order = NULL,
+  diss_clust = NULL
+)
 }
 \arguments{
 \item{ab}{Numeric vector of element abundances before clustering.}
@@ -12,17 +20,26 @@ multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
 \item{diss}{Numeric matrix or \code{dist} object of pairwise dissimilarities among elements
 before clustering. Must be square and match the length of \code{ab}.}
 
-\item{ab_clust}{Numeric vector of cluster abundances after clustering (sum of element
-abundances within each cluster).}
+\item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.
+Must have the same length as \code{ab}.}
 
-\item{diss_clust}{Numeric matrix or \code{dist} object of pairwise dissimilarities among clusters
-after clustering. Must be square and match the length of \code{ab_clust}.}
+\item{method}{Character string specifying the linkage method for
+aggregating distances between clusters. One of: "average", "min",
+"max", or "sigma". Sigma sets all distances between clusters to be
+of value \code{sig}. Default is "sigma".}
 
 \item{sig}{Numeric cutoff \eqn{\sigma}{sigma} (default \code{1}) defining the threshold distance
 at which two units are considered maximally different. All distances greater than \code{sig}
 are capped at \code{sig}. This parameter should be chosen based on the biological meaning
 of distances in your dataset (e.g., maximum expected genetic distance, functional
 dissimilarity threshold).}
+
+\item{clust_ids_order}{Integer or factor vector specifying the order of
+cluster IDs as they appear in the output. If \code{NULL} (default), uses the natural
+order of unique cluster IDs found in \code{clust}.}
+
+\item{diss_clust}{Numeric matrix or \code{dist} object of pairwise dissimilarities among clusters
+after clustering. Only used when \code{method} is "custom". Default is \code{NULL}.}
 }
 \value{
 Numeric scalar, the distance-based multiplicity \eqn{\delta M_{\sigma}}{delta M_sigma}.
@@ -39,15 +56,26 @@ pairwise dissimilarities (e.g., genetic, functional, or phylogenetic distances) 
 \details{
 Unlike inventory multiplicity, distance-based multiplicity is only defined for \eqn{q = 1}{q = 1}
 (Shannon-type weighting), meaning all elements are weighted proportionally to their abundance.
+
+The function supports several methods for computing inter-cluster distances:
+\itemize{
+\item \code{"sigma"}: All inter-cluster distances are set to \code{sig}, creating maximally
+different clusters (default)
+\item \code{"average"}: Mean distance between all cross-cluster element pairs
+\item \code{"min"}: Minimum distance between any cross-cluster element pair
+\item \code{"max"}: Maximum distance between any cross-cluster element pair
+\item \code{"custom"}: Use a pre-computed cluster distance matrix provided via \code{diss_clust}
+}
+
+When using the "custom" method, you must provide \code{diss_clust} and ensure its dimensions
+match the number of clusters. The \code{clust_ids_order} parameter determines how cluster
+abundances are aligned with the distance matrix.
 }
 \examples{
-# Example 1: High diversity within clusters
-# Two clusters, each with functionally diverse elements
+# Example 1: Using sigma method (default)
+# Two clusters with maximally different clusters
 ab <- c(10, 10, 10, 10)  # 4 elements
 clust <- c(1, 1, 2, 2)    # 2 clusters
-
-# Distance matrix: elements within clusters are dissimilar (0.3, 0.4)
-# elements between clusters are maximally dissimilar (1.0)
 diss <- matrix(c(
   0.0, 0.3, 1.0, 1.0,
   0.3, 0.0, 1.0, 1.0,
@@ -55,13 +83,28 @@ diss <- matrix(c(
   1.0, 1.0, 0.4, 0.0
 ), nrow = 4, byrow = TRUE)
 
-# Clustered representation
-ab_clust <- c(20, 20)  # Two clusters
-diss_clust <- matrix(c(0, 1, 1, 0), nrow = 2)  # Clusters maximally different
+multiplicity.distance(ab, diss, clust, method = "sigma", sig = 1)
 
-multiplicity.distance(ab, diss, ab_clust, diss_clust, sig = 1)
+# Example 2: Using average linkage
+# Compute cluster distances as mean of cross-cluster element distances
+multiplicity.distance(ab, diss, clust, method = "average", sig = 1)
 
-# Example 2: Low diversity within clusters
+# Example 3: Using custom cluster distances
+# Provide pre-computed cluster distance matrix
+ab <- c(10, 10, 10, 10)
+clust <- c("A", "A", "B", "B")
+clust_ids <- c("A", "B")
+diss <- dist(matrix(rnorm(4 * 3), ncol = 3))
+diss_clust <- matrix(c(0, 0.8, 0.8, 0), nrow = 2)
+
+multiplicity.distance(
+  ab, diss, clust,
+  method = "custom",
+  diss_clust = diss_clust,
+  clust_ids_order = clust_ids
+)
+
+# Example 4: Low diversity within clusters
 # Elements within clusters are functionally similar (distance ~0)
 diss_low <- matrix(c(
   0.0, 0.05, 1.0, 1.0,
@@ -70,11 +113,12 @@ diss_low <- matrix(c(
   1.0, 1.0, 0.05, 0.0
 ), nrow = 4, byrow = TRUE)
 
-multiplicity.distance(ab, diss_low, ab_clust, diss_clust, sig = 1)
+multiplicity.distance(ab, diss_low, clust, method = "sigma", sig = 1)
 
 }
 \seealso{
 \code{\link[=multiplicity.distance.by_blocks]{multiplicity.distance.by_blocks()}} for computing from a compact distance table,
 \code{\link[=raoQuadratic]{raoQuadratic()}} for Rao's quadratic entropy,
-\code{\link[=diversity.functional]{diversity.functional()}} for distance-based functional diversity
+\code{\link[=diversity.functional]{diversity.functional()}} for distance-based functional diversity,
+\code{\link[=cluster_distance_matrix]{cluster_distance_matrix()}} for computing cluster distance matrices
 }

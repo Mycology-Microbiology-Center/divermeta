@@ -23,8 +23,8 @@ explicitly constructing the full matrix.
 }
 \details{
 The function uses the fact that a \code{dist} object stores only the lower triangle of
-the distance matrix in column-major order. It constructs all pairs of indices
-corresponding to this storage order and computes the sum efficiently.
+the distance matrix in column-major order. It removes zero entries and then constructs
+all pairs of indices corresponding to this storage order and computes the sum efficiently.
 }
 \examples{
 library(vegan)
