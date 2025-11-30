@@ -1,5 +1,5 @@
-pandoc: 3.6.3
-pkgdown: 2.1.3
+pandoc: 3.6.4
+pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   divermeta: divermeta.html
