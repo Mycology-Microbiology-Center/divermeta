@@ -36,9 +36,6 @@
 #' visualize_dist(diss)
 #'
 #' @export
-#' @importFrom ggplot2 ggplot aes geom_point scale_size_area coord_fixed
-#' @importFrom ggplot2 scale_x_discrete scale_y_discrete labs theme_minimal
-#' @importFrom ggplot2 theme element_text rel element_blank element_line
 #' 
 visualize_dist <- function(
   diss,
@@ -53,6 +50,10 @@ visualize_dist <- function(
 
 
   stopifnot("dist" %in% class(diss) || is.matrix(diss) || is.data.frame(diss))
+
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("Package 'ggplot2' is required for `visualize_dist()`. Please install it with install.packages('ggplot2').", call. = FALSE)
+  }
 
   # Default labels taken from diss (if NA)
   if (is.na(row.labels) || is.na(col.labels)){
@@ -109,37 +110,37 @@ visualize_dist <- function(
   if (length(breaks_mag) == 0) breaks_mag <- unique(dat$mag)
 
   # Plot
-  p <- ggplot(dat, aes(x = col, y = row)) +
-    geom_point(
-      aes(size = mag),
+  p <- ggplot2::ggplot(dat, ggplot2::aes(x = col, y = row)) +
+    ggplot2::geom_point(
+      ggplot2::aes(size = mag),
       shape = 22,        # filled square
       fill = "black",
       color = "black",
       stroke = 0.3) +
     # Area-proportional sizing, max size scaled by csize
-    scale_size_area(
+    ggplot2::scale_size_area(
       max_size = 10 * csize,
       breaks   = breaks_mag,
       name     = "Distance",
       guide    = if (clegend > 0) "legend" else "none") +
-    coord_fixed() +
-    scale_x_discrete(position = "top") +
-    scale_y_discrete(position = "right") +
-    labs(x = NULL, y = NULL)
+    ggplot2::coord_fixed() +
+    ggplot2::scale_x_discrete(position = "top") +
+    ggplot2::scale_y_discrete(position = "right") +
+    ggplot2::labs(x = NULL, y = NULL)
 
   # Theme / grid
-  base_theme <- theme_minimal(base_size = 11) +
-    theme(
-      axis.text.x = element_text(size = rel(clabel.col), angle = 90, vjust = 0.5, hjust = 0),
-      axis.text.y = element_text(size = rel(clabel.row)),
-      panel.grid.minor = element_blank() )
+  base_theme <- ggplot2::theme_minimal(base_size = 11) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(size = ggplot2::rel(clabel.col), angle = 90, vjust = 0.5, hjust = 0),
+      axis.text.y = ggplot2::element_text(size = ggplot2::rel(clabel.row)),
+      panel.grid.minor = ggplot2::element_blank() )
 
   if (isTRUE(grid)) {
     p <- p + base_theme +
-      theme(panel.grid.major = element_line(color = "grey85"))
+      ggplot2::theme(panel.grid.major = ggplot2::element_line(color = "grey85"))
   } else {
     p <- p + base_theme +
-      theme(panel.grid.major = element_blank())
+      ggplot2::theme(panel.grid.major = ggplot2::element_blank())
   }
 
   return(p)
