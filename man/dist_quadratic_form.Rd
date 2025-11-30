@@ -13,12 +13,12 @@ dist_quadratic_form(p, diss)
 containing the pairwise distances between observations.}
 }
 \value{
-A numeric scalar, the value of the quadratic form \( P^\top M P \).
+A numeric scalar, the value of the quadratic form \eqn{P^T M P}.
 }
 \description{
-Computes the quadratic form \( \sum_{i,j} 2 \, p_i \, p_j \, m_{ij} \)
+Computes the quadratic form \eqn{\sum_{i,j} 2 p_i p_j m_{ij}}
 for a vector \code{p} and a \code{dist} object \code{m}. This is equivalent to
-\( P^\top M P \) where \code{M} is the full distance matrix, without
+\eqn{P^T M P}, where \code{M} is the full distance matrix, without
 explicitly constructing the full matrix.
 }
 \details{

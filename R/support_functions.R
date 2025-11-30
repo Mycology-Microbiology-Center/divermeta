@@ -1,15 +1,15 @@
 #' Quadratic Form for a Distance Object
 #'
-#' Computes the quadratic form \( \sum_{i,j} 2 \, p_i \, p_j \, m_{ij} \)
-#' for a vector `p` and a `dist` object `m`. This is equivalent to
-#' \( P^\top M P \) where `M` is the full distance matrix, without
+#' Computes the quadratic form \eqn{\sum_{i,j} 2 p_i p_j m_{ij}} 
+#' for a vector \code{p} and a \code{dist} object \code{m}. This is equivalent to
+#' \eqn{P^T M P}, where \code{M} is the full distance matrix, without
 #' explicitly constructing the full matrix.
 #'
 #' @param p Numeric vector of length \( n \), representing the weights or abundances.
 #' @param diss A `dist` object of size \( n \) (as returned by `vegdist` or `dist`),
 #'   containing the pairwise distances between observations.
 #'
-#' @return A numeric scalar, the value of the quadratic form \( P^\top M P \).
+#' @return A numeric scalar, the value of the quadratic form \eqn{P^T M P}.
 #'
 #' @details
 #' The function uses the fact that a `dist` object stores only the lower triangle of
