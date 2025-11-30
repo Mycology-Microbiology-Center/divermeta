@@ -17,16 +17,16 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">divermeta</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.2</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.3</span>
       </span>
     </div>
 
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav"><li>
-  <a href="../articles/divermeta.html">Get started</a>
+  <a href="../reference/index.html">Reference</a>
 </li>
 <li>
-  <a href="../reference/index.html">Reference</a>
+  <a href="../articles/divermeta.html">Get started</a>
 </li>
       </ul><ul class="nav navbar-nav navbar-right"></ul></div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -41,25 +41,37 @@
     </div>
 
     <table class="ref-index"><colgroup><col class="alias"><col class="title"></colgroup><tbody><tr><th colspan="2">
-          <h2 id="all-functions">All functions <a href="#all-functions" class="anchor" aria-hidden="true"></a></h2>
-          <p class="section-desc"></p>
+          <h2 id="core-function">Core function <a href="#core-function" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Main function of the package for computing the multiplicity index:</p>
         </th>
       </tr></tbody><tbody><tr><td>
-          <p><code><a href="cluster_distance_matrix.html">cluster_distance_matrix()</a></code> </p>
-        </td>
-        <td><p>Compute Distance Matrix Between Clusters</p></td>
-      </tr><tr><td>
-          <p><code><a href="convert_to_dist_indices.html">convert_to_dist_indices()</a></code> </p>
-        </td>
-        <td><p>Convert Matrix Indices to Distance Vector Position</p></td>
-      </tr><tr><td>
-          <p><code><a href="dist_quadratic_form.html">dist_quadratic_form()</a></code> </p>
-        </td>
-        <td><p>Quadratic Form for a Distance Object</p></td>
-      </tr><tr><td>
           <p><code><a href="divermeta.html">divermeta()</a></code> </p>
         </td>
         <td><p>Estimate diversity and multiplicity indices across samples</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="multiplicity-indices">Multiplicity indices <a href="#multiplicity-indices" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Functions to compute individual multiplicity indices and related quantities:</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="multiplicity.inventory.html">multiplicity.inventory()</a></code> </p>
+        </td>
+        <td><p>Inventory multiplicity</p></td>
+      </tr><tr><td>
+          <p><code><a href="multiplicity.distance.html">multiplicity.distance()</a></code> </p>
+        </td>
+        <td><p>Distance-based multiplicity</p></td>
+      </tr><tr><td>
+          <p><code><a href="multiplicity.distance.by_blocks.html">multiplicity.distance.by_blocks()</a></code> </p>
+        </td>
+        <td><p>Distance-based multiplicity by blocks</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="diversity-and-redundancy">Diversity and redundancy <a href="#diversity-and-redundancy" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Diversity, redundancy, and related indices:</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="metagenomic.alpha.index.html">metagenomic.alpha.index()</a></code> </p>
+        </td>
+        <td><p>Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)</p></td>
       </tr><tr><td>
           <p><code><a href="diversity.functional.html">diversity.functional()</a></code> </p>
         </td>
@@ -69,30 +81,34 @@
         </td>
         <td><p>Distance-based functional diversity (order q) (Chiu &amp; Chao 2014)</p></td>
       </tr><tr><td>
-          <p><code><a href="metagenomic.alpha.index.html">metagenomic.alpha.index()</a></code> </p>
-        </td>
-        <td><p>Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)</p></td>
-      </tr><tr><td>
-          <p><code><a href="multiplicity.distance.html">multiplicity.distance()</a></code> </p>
-        </td>
-        <td><p>Distance-based multiplicity</p></td>
-      </tr><tr><td>
-          <p><code><a href="multiplicity.distance.by_blocks.html">multiplicity.distance.by_blocks()</a></code> </p>
-        </td>
-        <td><p>Distance-based multiplicity by blocks</p></td>
-      </tr><tr><td>
-          <p><code><a href="multiplicity.inventory.html">multiplicity.inventory()</a></code> </p>
-        </td>
-        <td><p>Inventory multiplicity</p></td>
-      </tr><tr><td>
-          <p><code><a href="raoQuadratic.html">raoQuadratic()</a></code> </p>
-        </td>
-        <td><p>Rao quadratic entropy (Q) (Rao 1982)</p></td>
-      </tr><tr><td>
           <p><code><a href="redundancy.html">redundancy()</a></code> </p>
         </td>
         <td><p>Functional redundancy (Re) (Ricotta &amp; Pavoine 2025)</p></td>
       </tr><tr><td>
+          <p><code><a href="raoQuadratic.html">raoQuadratic()</a></code> </p>
+        </td>
+        <td><p>Rao quadratic entropy (Q) (Rao 1982)</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="distance-and-support-utilities">Distance and support utilities <a href="#distance-and-support-utilities" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Helper functions:</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
+          <p><code><a href="dist_quadratic_form.html">dist_quadratic_form()</a></code> </p>
+        </td>
+        <td><p>Quadratic Form for a Distance Object</p></td>
+      </tr><tr><td>
+          <p><code><a href="cluster_distance_matrix.html">cluster_distance_matrix()</a></code> </p>
+        </td>
+        <td><p>Compute Distance Matrix Between Clusters</p></td>
+      </tr><tr><td>
+          <p><code><a href="convert_to_dist_indices.html">convert_to_dist_indices()</a></code> </p>
+        </td>
+        <td><p>Convert Matrix Indices to Distance Vector Position</p></td>
+      </tr></tbody><tbody><tr><th colspan="2">
+          <h2 id="visualisation">Visualisation <a href="#visualisation" class="anchor" aria-hidden="true"></a></h2>
+          <p class="section-desc"></p><p>Function for visualizing abundances and distance structures:</p>
+        </th>
+      </tr></tbody><tbody><tr><td>
           <p><code><a href="visualize_abundance.html">visualize_abundance()</a></code> </p>
         </td>
         <td><p>Visualize an abundance matrix as a sized-tile plot</p></td>

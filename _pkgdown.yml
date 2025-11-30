@@ -1,0 +1,66 @@
+# pkgdown configuration for the divermeta package
+# This file controls the site structure; do not edit docs/pkgdown.yml
+
+# Where to build the site (you already use docs/)
+destination: docs
+
+# Basic home page metadata
+home:
+  title: "divermeta: Multiplicity index"
+  description: "Tools for computing the multiplicity index and related diversity metrics."
+
+# Navbar
+navbar:
+  structure:
+    left:
+      - home
+      - reference
+      - get-started
+    right:
+      - github
+  components:
+    get-started:
+      text: "Get started"
+      href: articles/divermeta.html
+
+# Reference index
+reference:
+  - title: "Core function"
+    desc: "Main function of the package for computing the multiplicity index:"
+    contents:
+      - divermeta
+
+  - title: "Multiplicity indices"
+    desc: "Functions to compute individual multiplicity indices and related quantities:"
+    contents:
+      - multiplicity.inventory
+      - multiplicity.distance
+      - multiplicity.distance.by_blocks
+
+  - title: "Diversity and redundancy"
+    desc: "Diversity, redundancy, and related indices:"
+    contents:
+      - metagenomic.alpha.index
+      - diversity.functional
+      - diversity.functional.traditional
+      - redundancy
+      - raoQuadratic
+
+  - title: "Distance and support utilities"
+    desc: "Helper functions:"
+    contents:
+      - dist_quadratic_form
+      - cluster_distance_matrix
+      - convert_to_dist_indices
+
+  - title: "Visualisation"
+    desc: "Function for visualizing abundances and distance structures:"
+    contents:
+      - visualize_abundance
+      - visualize_dist
+
+# Articles (vignettes)
+articles:
+  - title: "Get started"
+    contents:
+      - divermeta
