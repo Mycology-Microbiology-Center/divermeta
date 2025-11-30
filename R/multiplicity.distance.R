@@ -166,7 +166,7 @@ multiplicity.distance <- function(
 
     # Converts to dist object
     if (!inherits(diss_clust, "dist")) {
-      diss_clust <- as.dist(diss_clust)
+      diss_clust <- stats::as.dist(diss_clust)
     }
 
     n <- attr(diss_clust, "Size")

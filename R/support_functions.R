@@ -33,7 +33,7 @@ dist_quadratic_form <- function(p, diss) {
   } # Need at least 2 non-zero entries
 
   # Only generate combinations for non-zero entries
-  idx <- combn(non_zero, 2)
+  idx <- utils::combn(non_zero, 2)
 
   # Convert matrix indices to vector index for dist object
   # Using the formula: k = n*(i-1) - i*(i-1)/2 + j-i  for i < j
@@ -187,7 +187,7 @@ cluster_distance_matrix <- function(
     diag(diss_clust) <- 0
 
     if (is_dist) {
-      return(as.dist(diss_clust))
+      return(stats::as.dist(diss_clust))
     } else {
       return(diss_clust)
     }

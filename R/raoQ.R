@@ -52,10 +52,9 @@ raoQuadratic <- function(ab, diss) {
     }
   }
 
-
-    # If dist object
+  # If not already a dist object, coerce
   if (!inherits(diss, "dist")) {
-    diss <- as.dist(diss)
+    diss <- stats::as.dist(diss)
   }
 
   p <- as.vector(ab / total_ab)
