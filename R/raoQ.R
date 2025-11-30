@@ -40,7 +40,7 @@ raoQuadratic <- function(ab, diss) {
     if (dims[1] != dims[2]) {
       stop(paste0(
         "Distance matrix must be square. Matrix: ",
-        n_clust, "x", n_clust, "."
+        dims[1], "x", dims[2], "."
       ))
     }
 
