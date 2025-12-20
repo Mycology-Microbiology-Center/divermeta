@@ -9,15 +9,15 @@ home:
   title: "divermeta: Multiplicity index"
   description: "Tools for computing the multiplicity index and related diversity metrics."
 
+template:
+  bootstrap: 5
+  bootswatch: flatly    # https://bootswatch.com/flatly/
+
 # Navbar
 navbar:
   structure:
-    left:
-      - home
-      - reference
-      - get-started
-    right:
-      - github
+    left:  [home, reference, get-started]
+    right: [search, github]
   components:
     get-started:
       text: "Get started"
