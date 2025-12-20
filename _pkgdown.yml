@@ -1,6 +1,8 @@
 # pkgdown configuration for the divermeta package
 # This file controls the site structure; do not edit docs/pkgdown.yml
 
+url: https://mycology-microbiology-center.github.io/divermeta/
+
 # Where to build the site (you already use docs/)
 destination: docs
 
