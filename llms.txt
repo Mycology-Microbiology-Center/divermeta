@@ -1,0 +1,169 @@
+# divermeta
+
+**divermeta** is an R package for quantifying the diversity hidden
+within clustered units in metagenomic and ecological analyses. It
+implements the *multiplicity* index, a novel metric that measures the
+average diversity within clusters and quantifies how much diversity is
+lost when sequences or features are grouped into operational units
+(e.g., OTUs, gene clusters, functional groups).
+
+## What is multiplicity?
+
+In metagenomic and ecological studies, sequences are typically clustered
+into operational units to simplify analysis. While this clustering is
+necessary and useful, it inevitably obscures the diversity that exists
+*within* each cluster.
+
+**Multiplicity** quantifies this hidden diversity. It answers the
+question: “On average, how many distinct elements are contained within
+each cluster?”
+
+- **High multiplicity** means clusters contain many diverse elements
+  (e.g., multiple gene variants or haplotypes)  
+- **Low multiplicity** means clusters are dominated by similar elements
+  (e.g., nearly identical sequences within an OTU)
+
+Multiplicity complements traditional diversity indices by partitioning
+total diversity into:
+
+- Between-cluster diversity (what traditional indices measure)  
+- Within-cluster diversity (what multiplicity measures)
+
+This partitioning helps researchers understand how clustering choices
+affect diversity estimates and can reveal important biological patterns
+that would otherwise remain hidden.
+
+## Installation
+
+You can install the development version of divermeta from
+[GitHub](https://github.com/Mycology-Microbiology-Center/divermeta)
+with:
+
+``` r
+# install.packages("pak")
+pak::pak("Mycology-Microbiology-Center/divermeta")
+```
+
+Or using `remotes`:
+
+``` r
+# install.packages("remotes")
+remotes::install_github("Mycology-Microbiology-Center/divermeta")
+```
+
+## Quick start
+
+The main function
+[`divermeta()`](https://mycology-microbiology-center.github.io/divermeta/reference/divermeta.md)
+computes multiplicity and other diversity indices across all samples.
+Here’s a minimal example:
+
+``` r
+library(divermeta)
+
+# Abundance matrix: rows = features, columns = samples
+abund <- matrix(
+  c(10, 5,  8, 12,  6, 3,  4, 9),
+  nrow = 4,
+  ncol = 2,
+  dimnames = list(
+    c("gene1", "gene2", "gene3", "gene4"),
+    c("Sample_A", "Sample_B")
+  )
+)
+
+# Assign features to clusters
+clusters <- c(gene1 = "Group_A", gene2 = "Group_A", 
+              gene3 = "Group_B", gene4 = "Group_B")
+
+# Compute inventory multiplicity
+divermeta(abund, clusters = clusters, indices = "multiplicity_inventory")
+#>     Sample multiplicity_inventory
+#> 1 Sample_A               1.929710
+#> 2 Sample_B               1.868481
+```
+
+## Learn more
+
+For detailed examples, use cases, and technical documentation:
+
+- **[Vignette](https://mycology-microbiology-center.github.io/divermeta/articles/divermeta.html)**:
+  Comprehensive guide with examples for both inventory and
+  distance-based multiplicity
+- **[Function
+  reference](https://mycology-microbiology-center.github.io/divermeta/reference/index.html)**:
+  Complete documentation of all functions and parameters
+- **[Manuscript](https://github.com/Mycology-Microbiology-Center/divermeta)**:
+  Theoretical background, mathematical foundations, and real-world
+  applications
+
+## Citation
+
+If you use **divermeta** in your research, please cite:
+
+> González-Casabianca F, Dulya O, Flores-Almaraz V, Tedersoo L,
+> Mikryukov V. Multiplicity quantifies intra-cluster diversity in
+> metagenomic analysis // in prep.
+
+# Package index
+
+## Core function
+
+Main function of the package for computing the multiplicity index:
+
+- [`divermeta()`](https://mycology-microbiology-center.github.io/divermeta/reference/divermeta.md)
+  : Estimate diversity and multiplicity indices across samples
+
+## Multiplicity indices
+
+Functions to compute individual multiplicity indices and related
+quantities:
+
+- [`multiplicity.inventory()`](https://mycology-microbiology-center.github.io/divermeta/reference/multiplicity.inventory.md)
+  : Inventory multiplicity
+- [`multiplicity.distance()`](https://mycology-microbiology-center.github.io/divermeta/reference/multiplicity.distance.md)
+  : Distance-based multiplicity
+- [`multiplicity.distance.by_blocks()`](https://mycology-microbiology-center.github.io/divermeta/reference/multiplicity.distance.by_blocks.md)
+  : Distance-based multiplicity by blocks
+
+## Diversity and redundancy
+
+Diversity, redundancy, and related indices:
+
+- [`metagenomic.alpha.index()`](https://mycology-microbiology-center.github.io/divermeta/reference/metagenomic.alpha.index.md)
+  : Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)
+- [`diversity.functional()`](https://mycology-microbiology-center.github.io/divermeta/reference/diversity.functional.md)
+  : Distance-based functional diversity (q = 1) (Chiu & Chao 2014)
+- [`diversity.functional.traditional()`](https://mycology-microbiology-center.github.io/divermeta/reference/diversity.functional.traditional.md)
+  : Distance-based functional diversity (order q) (Chiu & Chao 2014)
+- [`redundancy()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.md)
+  : Functional redundancy (Re) (Ricotta & Pavoine 2025)
+- [`raoQuadratic()`](https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.md)
+  : Rao quadratic entropy (Q) (Rao 1982)
+
+## Distance and support utilities
+
+Helper functions:
+
+- [`dist_quadratic_form()`](https://mycology-microbiology-center.github.io/divermeta/reference/dist_quadratic_form.md)
+  : Quadratic Form for a Distance Object
+- [`cluster_distance_matrix()`](https://mycology-microbiology-center.github.io/divermeta/reference/cluster_distance_matrix.md)
+  : Compute Distance Matrix Between Clusters
+- [`convert_to_dist_indices()`](https://mycology-microbiology-center.github.io/divermeta/reference/convert_to_dist_indices.md)
+  : Convert Matrix Indices to Distance Vector Position
+
+## Visualisation
+
+Function for visualizing abundances and distance structures:
+
+- [`visualize_abundance()`](https://mycology-microbiology-center.github.io/divermeta/reference/visualize_abundance.md)
+  : Visualize an abundance matrix as a sized-tile plot
+- [`visualize_dist()`](https://mycology-microbiology-center.github.io/divermeta/reference/visualize_dist.md)
+  : Visualize a distance matrix as a sized-tile plot
+
+# Articles
+
+### Get started
+
+- [Introduction to
+  divermeta](https://mycology-microbiology-center.github.io/divermeta/articles/divermeta.md):
