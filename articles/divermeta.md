@@ -115,7 +115,40 @@ f3-f4) are smaller than between-cluster distances.
 
 ## About multiplicity index
 
-TODO - brief intro + figure 1 & 2 (a bit reworked)
+The multiplicity index is a diversity index design specially for
+metagenomic data, but that can be applied to other types of ecological
+data. In the context of clustering subunits (like strains, variants or
+proteins) in to their corresponding units (species, gene or homolog
+group), *multiplicity* measures both the average intra cluster diversity
+of across all units and the diversity sacrificed by the chosen
+clustering scheme. After clustering and working directly with the
+obtained units, the underlying composition and diversity of each unit is
+masked by the clustering scheme. This index serves as a tool to
+distinguish if the resulting units have a single representative subunit
+inside of them or instead, are composed of several distinct subunits
+that cluster together into the unit. The following image gives a
+graphical representation of this scenario
+
+``` r
+knitr::include_graphics("../img/Multiplicity Chart V2.png")
+```
+
+![](../img/Multiplicity%20Chart%20V2.png)
+
+There are two versions of the index, a distance agnostic version
+(inventory multiplicity) and one that incorporated the notion of
+similarity / distance between the subunits into it’s calculation
+(distance-based multiplicity). The case for low and hight distance-based
+multiplicity is graphically represented in the following figure using
+distance matrices among subunits (unclustered) and units (clustered)
+
+``` r
+knitr::include_graphics("../img/Multiplicity Matrix Chart V2.png")
+```
+
+![](../img/Multiplicity%20Matrix%20Chart%20V2.png)
+
+For more details, please refer to the accompanying publication.
 
 Here we illustrate the multiplicity index concept using two samples with
 the same cluster structure:
@@ -163,7 +196,7 @@ visualize_abundance(abund_concept[, "Low", drop = FALSE],
                     csize = 0.8, clegend = 0.5)
 ```
 
-![](divermeta_files/figure-html/unnamed-chunk-6-1.png)![](divermeta_files/figure-html/unnamed-chunk-6-2.png)
+![](divermeta_files/figure-html/unnamed-chunk-8-1.png)![](divermeta_files/figure-html/unnamed-chunk-8-2.png)
 
 In the **High** scenario (left), both clusters (A: f1+f2, B: f3+f4)
 contain multiple distinct features with non-zero abundances, resulting
@@ -220,7 +253,7 @@ multiplicity. Here’s the distance matrix from our example:
 visualize_dist(diss, csize = 0.8, clegend = 0.5)
 ```
 
-![](divermeta_files/figure-html/unnamed-chunk-8-1.png)
+![](divermeta_files/figure-html/unnamed-chunk-10-1.png)
 
 Notice how features within the same cluster (f1-f2 in cluster A, f3-f4
 in cluster B) have smaller distances (smaller squares) compared to
@@ -323,13 +356,13 @@ sessionInfo()
 #> [1] divermeta_0.0.3
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.6.5        cli_3.6.5          knitr_1.50         rlang_1.1.6       
-#>  [5] xfun_0.55          S7_0.2.1           textshaping_1.0.4  jsonlite_2.0.0    
+#>  [1] vctrs_0.7.1        cli_3.6.5          knitr_1.51         rlang_1.1.7       
+#>  [5] xfun_0.56          S7_0.2.1           textshaping_1.0.4  jsonlite_2.0.0    
 #>  [9] glue_1.8.0         htmltools_0.5.9    ragg_1.5.0         sass_0.4.10       
 #> [13] scales_1.4.0       rmarkdown_2.30     grid_4.5.2         evaluate_1.0.5    
-#> [17] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.4   
+#> [17] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5   
 #> [21] compiler_4.5.2     RColorBrewer_1.1-3 fs_1.6.6           farver_2.1.2      
-#> [25] systemfonts_1.3.1  digest_0.6.39      R6_2.6.1           bslib_0.9.0       
+#> [25] systemfonts_1.3.1  digest_0.6.39      R6_2.6.1           bslib_0.10.0      
 #> [29] withr_3.0.2        tools_4.5.2        gtable_0.3.6       pkgdown_2.2.0     
 #> [33] ggplot2_4.0.1      cachem_1.1.0       desc_1.4.3
 ```

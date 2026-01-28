@@ -13,14 +13,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/Mycology-Microbiology-Center/divermeta/blob/main/DESCRIPTION)
 
-González-Casabianca F, Mikryukov V (2025). *divermeta: Multiplicity
+González-Casabianca F, Mikryukov V (2026). *divermeta: Multiplicity
 index*. R package version 0.0.3,
 <https://mycology-microbiology-center.github.io/divermeta>.
 
     @Manual{,
       title = {divermeta: Multiplicity index},
       author = {Felipe González-Casabianca and Vladimir Mikryukov},
-      year = {2025},
+      year = {2026},
       note = {R package version 0.0.3},
       url = {https://mycology-microbiology-center.github.io/divermeta},
     }
