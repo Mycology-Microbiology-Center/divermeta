@@ -108,6 +108,7 @@ test_that("Clustering identical units: multiplicity equals 1", {
   diss_clust <- matrix(sig, ncol = 3, nrow = 3)
   diag(diss_clust) <- 0
 
+  
   expect_false((diversity.functional.traditional(ab, diss) / diversity.functional.traditional(ab_clust, diss_clust)) == 1)
   expect_equal(diversity.functional(ab, diss, sig) / diversity.functional(ab_clust, diss_clust, sig), 1)
 })

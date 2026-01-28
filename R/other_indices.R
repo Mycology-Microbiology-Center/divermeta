@@ -125,6 +125,8 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
 #' @export
 #'
 redundancy <- function(ab, diss) {
+
+
   # Validate inputs
   if (!is.numeric(ab)) {
     stop("Abundance vector must be numeric")
@@ -140,6 +142,11 @@ redundancy <- function(ab, diss) {
   total_ab <- sum(ab)
   if (total_ab == 0) {
     stop("Total abundance cannot be zero")
+  }
+
+  # Edge case
+  if (length(ab) == 1) {
+    return(0)
   }
 
   # If dist object

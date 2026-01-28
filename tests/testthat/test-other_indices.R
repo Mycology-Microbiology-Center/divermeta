@@ -91,6 +91,11 @@ test_that("MAD numeric check", {
   mad_val <- metagenomic.alpha.index(clust, diss, representatives)
 
   expect_equal(mad_val, val, tolerance = 1e-12)
+
+  # Change representatives
+  representatives <- c(1, 2, 4)
+  names(representatives) <- c(1, 2, 3)
+  expect_equal(metagenomic.alpha.index(clust, diss, representatives), metagenomic.alpha.index(clust, diss, NULL), tolerance = 1e-12)
 })
 
 test_that("MAD input validation", {
