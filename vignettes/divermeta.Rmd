@@ -110,7 +110,8 @@ The left plot shows the abundance matrix (features x samples), where tile size r
 ## About multiplicity index
 
 
-The multiplicity index is a diversity index design specially for metagenomic data, but that can be applied to other types of ecological data. In the context of clustering subunits (like strains, variants or proteins) in to their corresponding units (species, gene or homolog group), *multiplicity* measures both the average intra cluster diversity of across all units and the diversity sacrificed by the chosen clustering scheme. After clustering and working directly with the obtained units, the underlying composition and diversity of each unit is masked by the clustering scheme. This index serves as a tool to distinguish if the resulting units have a single representative subunit inside of them or instead, are composed of several distinct subunits that cluster together into the unit. The following image gives a graphical representation of this scenario
+The multiplicity index is a diversity index designed specifically for metagenomic data, but that can be applied to other types of ecological data. In the context of clustering subunits (like strains, variants, or protein sequences) into their corresponding units (species, gene families, or homologous groups), *multiplicity* measures both the average intra-cluster diversity across all units and the diversity sacrificed by the chosen clustering scheme. After clustering and working directly with the obtained units, the underlying composition and diversity of each unit is masked by the clustering scheme. This index serves as a tool to distinguish if the resulting units have a single representative subunit inside of them or instead, are composed of several distinct subunits that cluster together into the unit. The following image gives a graphical representation of this scenario
+
 ```{r}
 knitr::include_graphics("../img/Multiplicity Chart V2.png")
 ```
