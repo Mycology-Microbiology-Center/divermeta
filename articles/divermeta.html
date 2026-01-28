@@ -170,19 +170,19 @@ f3-f4) are smaller than between-cluster distances.</p>
 <div class="section level2">
 <h2 id="about-multiplicity-index">About multiplicity index<a class="anchor" aria-label="anchor" href="#about-multiplicity-index"></a>
 </h2>
-<p>The multiplicity index is a diversity index design specially for
+<p>The multiplicity index is a diversity index designed specifically for
 metagenomic data, but that can be applied to other types of ecological
-data. In the context of clustering subunits (like strains, variants or
-proteins) in to their corresponding units (species, gene or homolog
-group), <em>multiplicity</em> measures both the average intra cluster
-diversity of across all units and the diversity sacrificed by the chosen
-clustering scheme. After clustering and working directly with the
-obtained units, the underlying composition and diversity of each unit is
-masked by the clustering scheme. This index serves as a tool to
-distinguish if the resulting units have a single representative subunit
-inside of them or instead, are composed of several distinct subunits
-that cluster together into the unit. The following image gives a
-graphical representation of this scenario</p>
+data. In the context of clustering subunits (like strains, variants, or
+protein sequences) into their corresponding units (species, gene
+families, or homologous groups), <em>multiplicity</em> measures both the
+average intra-cluster diversity across all units and the diversity
+sacrificed by the chosen clustering scheme. After clustering and working
+directly with the obtained units, the underlying composition and
+diversity of each unit is masked by the clustering scheme. This index
+serves as a tool to distinguish if the resulting units have a single
+representative subunit inside of them or instead, are composed of
+several distinct subunits that cluster together into the unit. The
+following image gives a graphical representation of this scenario</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/include_graphics.html" class="external-link">include_graphics</a></span><span class="op">(</span><span class="st">"../img/Multiplicity Chart V2.png"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="../img/Multiplicity%20Chart%20V2.png"><!-- --></p>
