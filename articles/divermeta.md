@@ -29,6 +29,7 @@ deterministic.
 You can install the development version of divermeta from GitHub with:
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("Mycology-Microbiology-Center/divermeta")
 ```
@@ -36,6 +37,7 @@ remotes::install_github("Mycology-Microbiology-Center/divermeta")
 Load the package:
 
 ``` r
+
 library(divermeta)
 ```
 
@@ -46,6 +48,7 @@ membership vector aligned by feature names, and a feature dissimilarity
 matrix in the 0-1 range.
 
 ``` r
+
 # Features (rows) and samples (columns)
 features <- c("f1", "f2", "f3", "f4")
 samples  <- c("S1", "S2", "S3")
@@ -100,6 +103,7 @@ or phylogenetic diversity with distances capped at a threshold sigma
 You can visualize the input data structures side-by-side:
 
 ``` r
+
 visualize_abundance(abund, csize = 0.7, clegend = 0.4)
 visualize_dist(diss, csize = 0.7, clegend = 0.4)
 ```
@@ -130,6 +134,7 @@ several distinct subunits that cluster together into the unit. The
 following image gives a graphical representation of this scenario
 
 ``` r
+
 knitr::include_graphics("../img/Multiplicity Chart V2.png")
 ```
 
@@ -143,6 +148,7 @@ multiplicity is graphically represented in the following figure using
 distance matrices among subunits (unclustered) and units (clustered)
 
 ``` r
+
 knitr::include_graphics("../img/Multiplicity Matrix Chart V2.png")
 ```
 
@@ -158,6 +164,7 @@ the same cluster structure:
   diversity)
 
 ``` r
+
 # Reuse `features` and `clusters` from above
 abund_concept <- matrix(
   c(
@@ -188,6 +195,7 @@ Visualizing the abundance matrices side-by-side helps illustrate the
 difference:
 
 ``` r
+
 visualize_abundance(abund_concept[, "High", drop = FALSE], 
                     sample.labels = "High multiplicity",
                     csize = 0.8, clegend = 0.5)
@@ -208,6 +216,7 @@ magnitude.
 ### Inventory multiplicity
 
 ``` r
+
 res_q0 <- divermeta(
   abund,
   clusters = clusters,
@@ -250,6 +259,7 @@ The distance matrix structure is key to understanding distance-based
 multiplicity. Here’s the distance matrix from our example:
 
 ``` r
+
 visualize_dist(diss, csize = 0.8, clegend = 0.5)
 ```
 
@@ -262,6 +272,7 @@ diversity within clusters while accounting for these
 functional/phylogenetic similarities.
 
 ``` r
+
 res_sig08 <- divermeta(
   abund,
   clusters = clusters,
@@ -297,6 +308,7 @@ increases. It is available as a standalone function
 [`metagenomic.alpha.index()`](https://mycology-microbiology-center.github.io/divermeta/reference/metagenomic.alpha.index.md):
 
 ``` r
+
 # Compute MAD
 # Note: MAD requires clusters and dissimilarity matrix, but doesn't use abundances
 # Since it doesn't use abundances, the value is the same regardless of sample
@@ -331,10 +343,11 @@ preparing data for
 ## Session info
 
 ``` r
+
 sessionInfo()
-#> R version 4.5.2 (2025-10-31)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
-#> Running under: Ubuntu 24.04.3 LTS
+#> Running under: Ubuntu 24.04.5 LTS
 #> 
 #> Matrix products: default
 #> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
@@ -356,13 +369,13 @@ sessionInfo()
 #> [1] divermeta_0.0.3
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.7.1        cli_3.6.5          knitr_1.51         rlang_1.1.7       
-#>  [5] xfun_0.56          S7_0.2.1           textshaping_1.0.4  jsonlite_2.0.0    
-#>  [9] glue_1.8.0         htmltools_0.5.9    ragg_1.5.0         sass_0.4.10       
-#> [13] scales_1.4.0       rmarkdown_2.30     grid_4.5.2         evaluate_1.0.5    
-#> [17] jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5   
-#> [21] compiler_4.5.2     RColorBrewer_1.1-3 fs_1.6.6           farver_2.1.2      
-#> [25] systemfonts_1.3.1  digest_0.6.39      R6_2.6.1           bslib_0.10.0      
-#> [29] withr_3.0.2        tools_4.5.2        gtable_0.3.6       pkgdown_2.2.0     
-#> [33] ggplot2_4.0.1      cachem_1.1.0       desc_1.4.3
+#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.52         rlang_1.3.0       
+#>  [5] xfun_0.61          otel_0.2.0         S7_0.2.2           textshaping_1.0.5 
+#>  [9] jsonlite_2.0.0     glue_1.8.1         htmltools_0.5.9    ragg_1.5.2        
+#> [13] sass_0.4.10        scales_1.4.0       rmarkdown_2.32     grid_4.6.1        
+#> [17] evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12       
+#> [21] lifecycle_1.0.5    compiler_4.6.1     RColorBrewer_1.1-3 fs_2.1.0          
+#> [25] farver_2.1.2       systemfonts_1.3.2  digest_0.6.39      R6_2.6.1          
+#> [29] bslib_0.12.0       withr_3.0.3        tools_4.6.1        gtable_0.3.6      
+#> [33] pkgdown_2.2.1      ggplot2_4.0.3      cachem_1.1.0       desc_1.4.3
 ```

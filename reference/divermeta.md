@@ -109,6 +109,7 @@ Notes:
 ## Examples
 
 ``` r
+
 # Abundance matrix: rows = features, columns = samples
 species <- c("s1", "s2", "s3", "s4")
 samples <- c("Sample1", "Sample2", "Sample3")

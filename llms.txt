@@ -40,6 +40,7 @@ You can install the development version of divermeta from
 with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("Mycology-Microbiology-Center/divermeta")
 ```
@@ -47,6 +48,7 @@ pak::pak("Mycology-Microbiology-Center/divermeta")
 Or using `remotes`:
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("Mycology-Microbiology-Center/divermeta")
 ```
@@ -59,6 +61,7 @@ computes multiplicity and other diversity indices across all samples.
 Here’s a minimal example:
 
 ``` r
+
 library(divermeta)
 
 # Abundance matrix: rows = features, columns = samples
@@ -138,6 +141,8 @@ Diversity, redundancy, and related indices:
   : Distance-based functional diversity (order q) (Chiu & Chao 2014)
 - [`redundancy()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.md)
   : Functional redundancy (Re) (Ricotta & Pavoine 2025)
+- [`redundancy.by_blocks()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.by_blocks.md)
+  : Functional redundancy (Re) by blocks
 - [`raoQuadratic()`](https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.md)
   : Rao quadratic entropy (Q) (Rao 1982)
 

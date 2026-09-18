@@ -40,6 +40,7 @@ You can install the development version of divermeta from
 with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("Mycology-Microbiology-Center/divermeta")
 ```
@@ -47,6 +48,7 @@ pak::pak("Mycology-Microbiology-Center/divermeta")
 Or using `remotes`:
 
 ``` r
+
 # install.packages("remotes")
 remotes::install_github("Mycology-Microbiology-Center/divermeta")
 ```
@@ -59,6 +61,7 @@ computes multiplicity and other diversity indices across all samples.
 Here’s a minimal example:
 
 ``` r
+
 library(divermeta)
 
 # Abundance matrix: rows = features, columns = samples
