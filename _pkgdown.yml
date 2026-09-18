@@ -46,6 +46,7 @@ reference:
       - diversity.functional
       - diversity.functional.traditional
       - redundancy
+      - redundancy.by_blocks
       - raoQuadratic
 
   - title: "Distance and support utilities"

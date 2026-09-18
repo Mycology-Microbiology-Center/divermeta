@@ -115,7 +115,40 @@ f3-f4) are smaller than between-cluster distances.
 
 ## About multiplicity index
 
-TODO - brief intro + figure 1 & 2 (a bit reworked)
+The multiplicity index is a diversity index designed specifically for
+metagenomic data, but that can be applied to other types of ecological
+data. In the context of clustering subunits (like strains, variants, or
+protein sequences) into their corresponding units (species, gene
+families, or homologous groups), *multiplicity* measures both the
+average intra-cluster diversity across all units and the diversity
+sacrificed by the chosen clustering scheme. After clustering and working
+directly with the obtained units, the underlying composition and
+diversity of each unit is masked by the clustering scheme. This index
+serves as a tool to distinguish if the resulting units have a single
+representative subunit inside of them or instead, are composed of
+several distinct subunits that cluster together into the unit. The
+following image gives a graphical representation of this scenario
+
+``` r
+knitr::include_graphics("../img/Multiplicity Chart V2.png")
+```
+
+![](../img/Multiplicity%20Chart%20V2.png)
+
+There are two versions of the index, a distance agnostic version
+(inventory multiplicity) and one that incorporated the notion of
+similarity / distance between the subunits into it’s calculation
+(distance-based multiplicity). The case for low and hight distance-based
+multiplicity is graphically represented in the following figure using
+distance matrices among subunits (unclustered) and units (clustered)
+
+``` r
+knitr::include_graphics("../img/Multiplicity Matrix Chart V2.png")
+```
+
+![](../img/Multiplicity%20Matrix%20Chart%20V2.png)
+
+For more details, please refer to the accompanying publication.
 
 Here we illustrate the multiplicity index concept using two samples with
 the same cluster structure:
@@ -163,7 +196,7 @@ visualize_abundance(abund_concept[, "Low", drop = FALSE],
                     csize = 0.8, clegend = 0.5)
 ```
 
-![](divermeta_files/figure-html/unnamed-chunk-6-1.png)![](divermeta_files/figure-html/unnamed-chunk-6-2.png)
+![](divermeta_files/figure-html/unnamed-chunk-8-1.png)![](divermeta_files/figure-html/unnamed-chunk-8-2.png)
 
 In the **High** scenario (left), both clusters (A: f1+f2, B: f3+f4)
 contain multiple distinct features with non-zero abundances, resulting
@@ -220,7 +253,7 @@ multiplicity. Here’s the distance matrix from our example:
 visualize_dist(diss, csize = 0.8, clegend = 0.5)
 ```
 
-![](divermeta_files/figure-html/unnamed-chunk-8-1.png)
+![](divermeta_files/figure-html/unnamed-chunk-10-1.png)
 
 Notice how features within the same cluster (f1-f2 in cluster A, f3-f4
 in cluster B) have smaller distances (smaller squares) compared to
@@ -299,18 +332,21 @@ preparing data for
 
 ``` r
 sessionInfo()
-#> R version 4.5.2 (2025-10-31)
-#> Platform: x86_64-redhat-linux-gnu
-#> Running under: Fedora Linux 43 (KDE Plasma Desktop Edition)
+#> R version 4.3.3 (2024-02-29)
+#> Platform: x86_64-pc-linux-gnu (64-bit)
+#> Running under: Ubuntu 24.04.3 LTS
 #> 
 #> Matrix products: default
-#> BLAS/LAPACK: FlexiBLAS OPENBLAS-OPENMP;  LAPACK version 3.12.1
+#> BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.12.0 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.12.0
 #> 
 #> locale:
-#>  [1] LC_CTYPE=en_US.UTF-8    LC_NUMERIC=C            LC_TIME=C              
-#>  [4] LC_COLLATE=en_US.UTF-8  LC_MONETARY=en_US.UTF-8 LC_MESSAGES=en_US.UTF-8
-#>  [7] LC_PAPER=C              LC_NAME=C               LC_ADDRESS=C           
-#> [10] LC_TELEPHONE=C          LC_MEASUREMENT=C        LC_IDENTIFICATION=C    
+#>  [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+#>  [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+#>  [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+#>  [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+#>  [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+#> [11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
 #> 
 #> time zone: Europe/Tallinn
 #> tzcode source: system (glibc)
@@ -322,15 +358,15 @@ sessionInfo()
 #> [1] divermeta_0.0.3
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.6.5        cli_3.6.5          knitr_1.50         rlang_1.1.6       
-#>  [5] xfun_0.55          generics_0.1.4     S7_0.2.1           textshaping_1.0.4 
-#>  [9] jsonlite_2.0.0     glue_1.8.0         htmltools_0.5.9    ragg_1.5.0        
-#> [13] sass_0.4.10        scales_1.4.0       rmarkdown_2.30     grid_4.5.2        
-#> [17] tibble_3.3.0       evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0     
-#> [21] yaml_2.3.12        lifecycle_1.0.4    compiler_4.5.2     dplyr_1.1.4       
-#> [25] RColorBrewer_1.1-3 fs_1.6.6           pkgconfig_2.0.3    htmlwidgets_1.6.4 
-#> [29] rstudioapi_0.17.1  farver_2.1.2       systemfonts_1.3.1  digest_0.6.39     
-#> [33] R6_2.6.1           tidyselect_1.2.1   pillar_1.11.1      magrittr_2.0.4    
-#> [37] bslib_0.9.0        withr_3.0.2        tools_4.5.2        gtable_0.3.6      
-#> [41] pkgdown_2.2.0      ggplot2_4.0.1      cachem_1.1.0       desc_1.4.3
+#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.3.0       
+#>  [5] xfun_0.57          otel_0.2.0         generics_0.1.4     S7_0.2.2          
+#>  [9] textshaping_1.0.5  jsonlite_2.0.0     glue_1.8.1         htmltools_0.5.9   
+#> [13] ragg_1.5.2         sass_0.4.10        scales_1.4.0       rmarkdown_2.31    
+#> [17] grid_4.3.3         tibble_3.3.1       evaluate_1.0.5     jquerylib_0.1.4   
+#> [21] fastmap_1.2.0      yaml_2.3.12        lifecycle_1.0.5    compiler_4.3.3    
+#> [25] dplyr_1.2.1        RColorBrewer_1.1-3 fs_2.1.0           pkgconfig_2.0.3   
+#> [29] htmlwidgets_1.6.4  farver_2.1.2       systemfonts_1.3.2  digest_0.6.39     
+#> [33] R6_2.6.1           tidyselect_1.2.1   pillar_1.11.1      magrittr_2.0.5    
+#> [37] bslib_0.10.0       withr_3.0.2        tools_4.3.3        gtable_0.3.6      
+#> [41] pkgdown_2.2.1      ggplot2_4.0.3      cachem_1.1.0       desc_1.4.3
 ```

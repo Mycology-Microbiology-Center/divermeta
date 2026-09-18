@@ -31,6 +31,8 @@ Diversity, redundancy, and related indices:
   : Distance-based functional diversity (order q) (Chiu & Chao 2014)
 - [`redundancy()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.md)
   : Functional redundancy (Re) (Ricotta & Pavoine 2025)
+- [`redundancy.by_blocks()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.by_blocks.md)
+  : Functional redundancy (Re) by blocks
 - [`raoQuadratic()`](https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.md)
   : Rao quadratic entropy (Q) (Rao 1982)
 

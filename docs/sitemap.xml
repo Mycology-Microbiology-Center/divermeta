@@ -1,7 +1,9 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/404.html</loc></url>
+<url><loc>https://mycology-microbiology-center.github.io/divermeta/INSTRUCTIONS.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/LICENSE-text.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/LICENSE.html</loc></url>
+<url><loc>https://mycology-microbiology-center.github.io/divermeta/TODO.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/articles/divermeta.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/articles/index.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/authors.html</loc></url>
@@ -18,6 +20,7 @@
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/multiplicity.distance.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/multiplicity.inventory.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.html</loc></url>
+<url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.by_blocks.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/visualize_abundance.html</loc></url>
 <url><loc>https://mycology-microbiology-center.github.io/divermeta/reference/visualize_dist.html</loc></url>

@@ -73,7 +73,7 @@ top.
 
 ## See also
 
-[`table.value`](https://adeverse.github.io/ade4/reference/table.value.html)
+`table.value`
 
 ## Examples
 

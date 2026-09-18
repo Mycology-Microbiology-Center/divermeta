@@ -28,5 +28,5 @@ family and corresponds to the \code{q = 2} case.
 }
 }
 \seealso{
-\code{\link[=raoQuadratic]{raoQuadratic()}}
+\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=redundancy.by_blocks]{redundancy.by_blocks()}} for computing from a compact distance table
 }

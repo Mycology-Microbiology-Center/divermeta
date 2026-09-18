@@ -42,4 +42,6 @@ Numeric scalar, functional redundancy `Re`.
 
 ## See also
 
-[`raoQuadratic()`](https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.md)
+[`raoQuadratic()`](https://mycology-microbiology-center.github.io/divermeta/reference/raoQuadratic.md),
+[`redundancy.by_blocks()`](https://mycology-microbiology-center.github.io/divermeta/reference/redundancy.by_blocks.md)
+for computing from a compact distance table

@@ -285,53 +285,14 @@ multiplicity.distance.by_blocks <- function(
   if (!is.numeric(sigma) || length(sigma) != 1 || sigma <= 0) {
     stop("`sigma` must be a single positive numeric value")
   }
-  if (
-    !is.data.frame(diss_frame) ||
-      !all(c("ID1", "ID2", "Distance") %in% colnames(diss_frame))
-  ) {
-    # Try to rename if columns exist but have different names
-    if (ncol(diss_frame) == 3) {
-      colnames(diss_frame) <- c("ID1", "ID2", "Distance")
-    } else {
-      stop(
-        "`diss_frame` must be a data frame with columns `ID1`, `ID2`, `Distance`"
-      )
-    }
-  }
 
   # Compute clustered abundances
   ab_clust <- tapply(ab, clust, sum)
   p_clust <- ab_clust / sum(ab_clust)
 
-  # Normalize abundances
-  p <- ab / sum(ab)
-  names(p) <- ids
-
-  # Cap distances at sigma
-  diss_frame$Distance[diss_frame$Distance > sigma] <- sigma
-
-  # Builds matrix multiplication by join
-  diss_block <- diss_frame[diss_frame$ID1 != diss_frame$ID2, ]
-  diss_block <- merge(
-    diss_block,
-    data.frame(ID1 = ids, Abundance1 = p),
-    by = "ID1",
-    all = FALSE
-  )
-  diss_block <- merge(
-    diss_block,
-    data.frame(ID2 = ids, Abundance2 = p),
-    by = "ID2",
-    all = FALSE
-  )
-
   # Compute Rao's quadratic entropy before clustering
   # This accounts for within-cluster distances from diss_frame and assumes cross-cluster distances = sigma
-  raoQ_before <- sigma +
-    2 *
-      sum(diss_block$Abundance1 * diss_block$Distance * diss_block$Abundance2) -
-    sigma * sum(p^2) -
-    2 * sigma * sum(diss_block$Abundance1 * diss_block$Abundance2)
+  raoQ_before <- raoQuadratic.by_blocks(ids, ab, diss_frame, sigma)
 
   # Compute Rao's quadratic entropy after clustering
   raoQ_after <- sigma - sigma * sum(p_clust^2)

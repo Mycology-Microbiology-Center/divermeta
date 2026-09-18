@@ -66,6 +66,127 @@ test_that("redundancy input validation", {
   expect_error(redundancy(c(0, 0), diss))
 })
 
+# Builds the compact table (unique pairs) and the full matrix (1 off-block) from a list of blocks
+build_blocks <- function(blocks) {
+  sizes <- vapply(blocks, nrow, integer(1))
+  n <- sum(sizes)
+  ids <- seq_len(n)
+  diss <- matrix(1, nrow = n, ncol = n)
+  dfs <- list()
+  offset <- 0
+  for (k in seq_along(blocks)) {
+    idx <- offset + seq_len(sizes[k])
+    diss[idx, idx] <- blocks[[k]]
+    pairs <- which(upper.tri(blocks[[k]]), arr.ind = TRUE)
+    dfs[[k]] <- data.frame(
+      ID1 = idx[pairs[, "col"]],
+      ID2 = idx[pairs[, "row"]],
+      Distance = blocks[[k]][pairs]
+    )
+    offset <- offset + sizes[k]
+  }
+  diag(diss) <- 0
+  list(ids = ids, diss = diss, diss_frame = do.call(rbind, dfs))
+}
+
+random_block <- function(size, min = 0, max = 1) {
+  M <- matrix(runif(size^2, min, max), ncol = size, nrow = size)
+  M <- (M + t(M)) / 2
+  diag(M) <- 0
+  M
+}
+
+
+test_that("redundancy.by_blocks numeric check (2 blocks)", {
+  ids <- c("a", "b", "c", "d")
+  ab <- c(2, 3, 5, 7)
+  df <- data.frame(
+    ID1 = c("b", "d"),
+    ID2 = c("a", "c"),
+    Distance = c(0.2, 0.15),
+    stringsAsFactors = FALSE
+  )
+
+  # Re = 2 sum_P p_i p_j (1 - d_ij)
+  p <- ab / sum(ab)
+  expected <- 2 * (p[1] * p[2] * (1 - 0.2) + p[3] * p[4] * (1 - 0.15))
+
+  diss <- matrix(1, nrow = 4, ncol = 4, dimnames = list(ids, ids))
+  diag(diss) <- 0
+  diss["a", "b"] <- diss["b", "a"] <- 0.2
+  diss["c", "d"] <- diss["d", "c"] <- 0.15
+
+  rb <- redundancy.by_blocks(ids, ab, df)
+
+  expect_equal(rb, expected, tolerance = 1e-12)
+  expect_equal(rb, redundancy(ab, diss), tolerance = 1e-12)
+})
+
+
+test_that("redundancy.by_blocks equals standard implementation for multiple blocks", {
+  set.seed(42)
+
+  for (w_ in 1:10) {
+    sizes <- sample(2:10, sample(3:4, 1), replace = TRUE)
+    built <- build_blocks(lapply(sizes, random_block))
+    ab <- runif(length(built$ids), min = 1, max = 100)
+
+    rb <- redundancy.by_blocks(built$ids, ab, built$diss_frame)
+    classic <- redundancy(ab, built$diss)
+
+    expect_equal(rb, classic, tolerance = 1e-12)
+  }
+})
+
+
+test_that("redundancy.by_blocks caps distances greater than 1", {
+  set.seed(7)
+  built <- build_blocks(list(random_block(4, 0.5, 1.5), random_block(5, 0.5, 1.5)))
+  ab <- runif(length(built$ids), min = 1, max = 10)
+
+  diss_capped <- built$diss
+  diss_capped[diss_capped > 1] <- 1
+
+  expect_equal(
+    redundancy.by_blocks(built$ids, ab, built$diss_frame),
+    redundancy(ab, diss_capped),
+    tolerance = 1e-12
+  )
+})
+
+
+test_that("redundancy.by_blocks handles singleton units", {
+  set.seed(3)
+  built <- build_blocks(list(random_block(3), matrix(0, 1, 1), random_block(4), matrix(0, 1, 1)))
+  ab <- runif(length(built$ids), min = 1, max = 10)
+
+  expect_equal(
+    redundancy.by_blocks(built$ids, ab, built$diss_frame),
+    redundancy(ab, built$diss),
+    tolerance = 1e-12
+  )
+
+  # All singletons: no listed pairs, no redundancy
+  empty_df <- data.frame(ID1 = integer(0), ID2 = integer(0), Distance = numeric(0))
+  expect_equal(redundancy.by_blocks(1:3, c(1, 2, 3), empty_df), 0)
+})
+
+
+test_that("redundancy.by_blocks input validation", {
+  ids <- c("a", "b")
+  ab <- c(1, 2)
+  df <- data.frame(ID1 = "b", ID2 = "a", Distance = 0.2)
+
+  expect_error(redundancy.by_blocks(ids, "a", df))
+  expect_error(redundancy.by_blocks(ids, c(1, 2, 3), df))
+  expect_error(redundancy.by_blocks(ids, c(-1, 2), df))
+  expect_error(redundancy.by_blocks(ids, c(NA, 2), df))
+  expect_error(redundancy.by_blocks(ids, c(0, 0), df))
+  expect_error(redundancy.by_blocks(ids, ab, "not a data frame"))
+  expect_equal(redundancy.by_blocks("a", 5, df), 0)
+  expect_equal(redundancy.by_blocks(character(0), numeric(0), df), 0)
+})
+
 test_that("MAD numeric check", {
   clust <- c(1, 2, 2, 3, 3, 3)
 
