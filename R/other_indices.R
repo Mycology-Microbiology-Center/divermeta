@@ -79,14 +79,17 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
     }
   }
 
-  # Handle q = 1 case by using a small epsilon (diversity.functional.traditional
-  # doesn't have a closed form for q = 1, so we approximate)
-  if (abs(q - 1) < .Machine$double.eps) {
-    q <- 1 + 1e-12
-  }
-
   P <- as.vector(ab / sum(ab))
   Q <- raoQuadratic(ab, diss)
+
+  # Handle q = 1 with the analytic limit q -> 1:
+  # exp(-sum_ij d_ij p_i p_j ln(p_i) / Q) (square root already included)
+  if (abs(q - 1) < .Machine$double.eps) {
+    w <- ifelse(P > 0, P * log(P), 0)
+    D <- if (inherits(diss, "dist")) as.matrix(diss) else diss
+    return(exp(-as.numeric(t(w) %*% D %*% P) / Q))
+  }
+
   Pq <- P^q
 
   if (inherits(diss, "dist")) {
