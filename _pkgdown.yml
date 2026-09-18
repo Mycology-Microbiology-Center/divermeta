@@ -14,6 +14,7 @@ home:
 template:
   bootstrap: 5
   bootswatch: flatly    # https://bootswatch.com/flatly/
+  math-rendering: katex # render \eqn / \deqn as LaTeX
 
 # Navbar
 navbar:
