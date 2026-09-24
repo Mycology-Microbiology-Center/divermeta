@@ -101,30 +101,24 @@ raoQuadratic.by_blocks <- function(ids, ab, diss_frame, sigma = 1) {
 
   # Normalize abundances
   p <- ab / sum(ab)
-  names(p) <- ids
+
+  # Look up each pair's abundances by position (much faster than a merge join)
+  i1 <- match(diss_frame$ID1, ids)
+  i2 <- match(diss_frame$ID2, ids)
+  keep <- !is.na(i1) & !is.na(i2) & i1 != i2 # inner join + drop self pairs
+  i1 <- i1[keep]
+  i2 <- i2[keep]
+
+  # Each unordered pair must be listed once, otherwise it is counted twice
+  pair_key <- pmin(i1, i2) + (pmax(i1, i2) - 1) * as.numeric(length(ids))
+  stopifnot(
+    "`diss_frame` lists the same pair more than once (possibly as both ID1-ID2 and ID2-ID1)" =
+      anyDuplicated(pair_key) == 0
+  )
 
   # Cap distances at sigma
-  diss_frame$Distance[diss_frame$Distance > sigma] <- sigma
-
-  # Builds matrix multiplication by join
-  diss_block <- diss_frame[diss_frame$ID1 != diss_frame$ID2, ]
-  diss_block <- merge(
-    diss_block,
-    data.frame(ID1 = ids, Abundance1 = p),
-    by = "ID1",
-    all = FALSE
-  )
-  diss_block <- merge(
-    diss_block,
-    data.frame(ID2 = ids, Abundance2 = p),
-    by = "ID2",
-    all = FALSE
-  )
+  d <- pmin(diss_frame$Distance[keep], sigma)
 
   # Accounts for the listed distances and assumes unlisted distances = sigma
-  sigma +
-    2 *
-      sum(diss_block$Abundance1 * diss_block$Distance * diss_block$Abundance2) -
-    sigma * sum(p^2) -
-    2 * sigma * sum(diss_block$Abundance1 * diss_block$Abundance2)
+  sigma * (1 - sum(p^2)) + 2 * sum(p[i1] * p[i2] * (d - sigma))
 }

@@ -187,6 +187,34 @@ test_that("redundancy.by_blocks input validation", {
   expect_equal(redundancy.by_blocks(character(0), numeric(0), df), 0)
 })
 
+
+test_that("by_blocks functions reject pairs listed more than once", {
+  ids <- c("a", "b", "c")
+  ab <- c(1, 2, 3)
+  clust <- c(1, 1, 2)
+
+  # Same pair in both orders
+  df_both <- data.frame(ID1 = c("a", "b"), ID2 = c("b", "a"), Distance = c(0.2, 0.2))
+  # Same pair repeated in the same order
+  df_repeat <- data.frame(ID1 = c("a", "a"), ID2 = c("b", "b"), Distance = c(0.2, 0.2))
+
+  for (df in list(df_both, df_repeat)) {
+    expect_error(redundancy.by_blocks(ids, ab, df), "more than once")
+    expect_error(multiplicity.distance.by_blocks(ids, ab, df, clust), "more than once")
+  }
+
+  # Self pairs and ids not in `ids` are dropped before the check
+  df_ok <- data.frame(
+    ID1 = c("a", "a", "a", "x"),
+    ID2 = c("b", "a", "a", "a"),
+    Distance = c(0.2, 0, 0, 0.1)
+  )
+  expect_equal(
+    redundancy.by_blocks(ids, ab, df_ok),
+    redundancy.by_blocks(ids, ab, df_ok[1, ])
+  )
+})
+
 test_that("MAD numeric check", {
   clust <- c(1, 2, 2, 3, 3, 3)
 
