@@ -4,22 +4,73 @@
 \alias{redundancy}
 \title{Functional redundancy (Re) (Ricotta & Pavoine 2025)}
 \usage{
-redundancy(ab, diss)
+redundancy(
+  abund,
+  diss,
+  normalize = FALSE,
+  chunk_size = 1e+06,
+  check_large_distance_file = FALSE,
+  header = TRUE
+)
 }
 \arguments{
-\item{ab}{Numeric vector of element abundances.}
+\item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
+and subunits in columns. Column names are the subunit identifiers.}
 
-\item{diss}{Numeric square matrix or \code{dist} object of pairwise dissimilarities among elements
-scaled to the range [0, 1].}
+\item{diss}{Data frame with three columns (taken by position): the identifiers of two subunits
+and the dissimilarity between them, scaled to the range [0, 1] (distances above 1 are
+capped at 1), or the path to a file with them (see \link{distance-files}). Every pair of subunits
+present in at least one sample must be listed, in either orientation; pairs with a subunit
+that has zero abundance in every sample may be missing, with a warning.}
+
+\item{normalize}{Logical (default \code{FALSE}). If \code{TRUE}, the redundancy is divided by Simpson's
+diversity \eqn{S}{S}, giving \eqn{(S - Q) / S = 1 - Q / S}{(S - Q) / S = 1 - Q / S}.}
+
+\item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
+values use less memory. Ignored when \code{diss} is in memory.}
+
+\item{check_large_distance_file}{Logical (default \code{FALSE}). If \code{TRUE} and \code{diss} is a file, the
+file is fully checked with \code{\link[=check_distance_file]{check_distance_file()}} before computing the index: every needed
+pair must be listed exactly once, with a valid distance. This reads the file once more and
+uses temporary disk space. If \code{FALSE}, only the number of rows is checked and a warning is
+given. Ignored when \code{diss} is in memory, which is always fully checked. See
+\link{distance-files}.}
+
+\item{header}{Logical (default \code{TRUE}). Whether a distance file starts with a header line (with
+several files, every one of them). With \code{TRUE}, a first line that looks like data (a number as
+third field) is an error; use \code{FALSE} for files without a header. Ignored when \code{diss} is in
+memory. See \link{distance-files}.}
 }
 \value{
-Numeric scalar, functional redundancy \code{Re}.
+Named numeric vector with the functional redundancy \code{Re} of every sample. Samples
+with zero total abundance get \code{NA}.
 }
 \description{
 Computes functional redundancy \eqn{Re}{Re}, a measure of the degree to which
 distinct elements are functionally similar given their abundances and
-pairwise dissimilarities. This implementation follows the Simpson–Rao
+pairwise dissimilarities, for every sample. This implementation follows the Simpson–Rao
 family and corresponds to the \code{q = 2} case.
+}
+\details{
+With relative abundances \eqn{p_i}{p_i}, Simpson's diversity is
+\eqn{S = 1 - \sum_i p_i^2}{S = 1 - sum_i p_i^2} and Rao's quadratic entropy is
+\eqn{Q = \sum_{i \neq j} p_i p_j d_{ij}}{Q = sum_{i != j} p_i p_j d_ij}. Then
+\deqn{Re = S - Q,}{Re = S - Q,}
+and, with \code{normalize = TRUE},
+\deqn{Re = \frac{S - Q}{S} = 1 - \frac{Q}{S}.}{Re = (S - Q) / S = 1 - Q / S.}
+A sample with a single present subunit has no redundancy: its value is 0, also when normalized.
+
+Distances greater than 1 are capped at 1 (\eqn{d_{ij} = \min(d_{ij}, 1)}{d_ij = min(d_ij, 1)})
+before computing \eqn{Q}{Q}, so that \eqn{Q \le S}{Q <= S} and the redundancy is never negative:
+it lies between 0 and \eqn{S}{S}, or between 0 and 1 when normalized.
+}
+\examples{
+abund <- matrix(c(2, 1, 0, 1, 1, 1), nrow = 2, byrow = TRUE,
+                dimnames = list(c("S1", "S2"), c("a", "b", "c")))
+diss <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.4, 0.9, 0.6))
+redundancy(abund, diss)
+redundancy(abund, diss, normalize = TRUE)
+
 }
 \references{
 \itemize{
@@ -28,5 +79,5 @@ family and corresponds to the \code{q = 2} case.
 }
 }
 \seealso{
-\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=redundancy.by_blocks]{redundancy.by_blocks()}} for computing from a compact distance table
+\code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=average.redundancy]{average.redundancy()}}
 }

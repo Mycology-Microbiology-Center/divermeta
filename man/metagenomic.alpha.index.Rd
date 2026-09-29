@@ -4,52 +4,89 @@
 \alias{metagenomic.alpha.index}
 \title{Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)}
 \usage{
-metagenomic.alpha.index(clust, diss, representatives = NULL)
+metagenomic.alpha.index(
+  abund,
+  diss,
+  clust,
+  representatives = NULL,
+  chunk_size = 1e+06,
+  header = TRUE
+)
 }
 \arguments{
-\item{clust}{Vector or factor of cluster memberships for each element (e.g., gene).
-Must have the same length as the number of rows/columns in \code{diss}.}
+\item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
+and subunits in columns. Column names are the subunit identifiers.}
 
-\item{diss}{Numeric square matrix of pairwise dissimilarities among elements.
-Should be scaled to the range [0, 1], where 0 indicates identical elements
-and 1 indicates maximally different elements.}
+\item{diss}{Data frame with three columns (taken by position): the identifiers of two subunits
+and the dissimilarity between them, scaled to the range [0, 1], or the path to a file with
+them (see \link{distance-files}). The distance between every representative and every other
+subunit of its cluster present in a sample must be listed. Only these pairs are kept while
+reading, so missing pairs and pairs listed again with a different distance are always
+detected, also in files (there is no need for \code{check_large_distance_file}).}
 
-\item{representatives}{Optional named vector mapping cluster names to the index
-(position) of the representative element for each cluster. If \code{NULL} (default),
-the first element in each cluster is used as the representative.}
+\item{clust}{Vector or factor of cluster memberships for each subunit. If named, names are
+subunit identifiers; otherwise it follows the columns of \code{abund}. A data frame is also accepted, with two columns (subunit identifiers, units) or one
+column of units (named by its row names, if set).}
+
+\item{representatives}{Optional named vector mapping cluster names to the identifier of the
+representative subunit of each cluster. Numeric identifiers are matched as numbers, so a name
+\code{"1e+05"} matches the cluster \code{100000}. If \code{NULL} (default), the first subunit (in the column
+order of \code{abund}) of each cluster present in the sample is used as the representative.}
+
+\item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
+values use less memory. Ignored when \code{diss} is in memory.}
+
+\item{header}{Logical (default \code{TRUE}). Whether a distance file starts with a header line (with
+several files, every one of them). With \code{TRUE}, a first line that looks like data (a number as
+third field) is an error; use \code{FALSE} for files without a header. Ignored when \code{diss} is in
+memory. See \link{distance-files}.}
 }
 \value{
-Numeric scalar, the Metagenomic Alpha-Diversity Index (MAD). Higher values
-indicate greater average dissimilarity within clusters.
+Named numeric vector with the Metagenomic Alpha-Diversity Index (MAD) of every sample.
+Higher values indicate greater average dissimilarity within clusters. Samples with zero total
+abundance get \code{NA}.
 }
 \description{
-Computes the Metagenomic Alpha-Diversity Index (MAD), a metric that measures the
-average dissimilarity of elements (e.g., protein-encoding genes) within clusters
+Computes the Metagenomic Alpha-Diversity Index (MAD) of every sample, a metric that measures
+the average dissimilarity of elements (e.g., protein-encoding genes) within clusters
 relative to cluster representatives. Unlike multiplicity, MAD does not account for
 element abundances and decreases as the number of elements per cluster increases.
 }
 \details{
+Abundances are only used to decide which subunits are present (nonzero abundance) in every
+sample: the index of a sample is computed over its present subunits and clusters. A given
+representative is used as the reference of its cluster even when it is absent from a sample.
+
 Note: Unlike multiplicity indices, MAD does not incorporate element abundances and
 decreases as cluster size increases, which may not reflect biological complexity.
+
+Note on duplicated pairs: an in-memory \code{diss} is validated as a whole, so a pair listed again
+with a different distance is an error even when MAD does not use that pair. When \code{diss} is a
+file, only the pairs MAD uses (representative and subunit of its cluster) are checked for
+conflicting duplicates, and the others are ignored. In both cases every distance must be a
+valid (non-negative, not NA) number.
 }
 \examples{
 # Example: Compute MAD for gene clusters
-clust <- c(1, 1, 2, 2, 2, 3)
-diss <- matrix(c(
-  0.0, 0.2, 0.8, 0.9, 0.9, 0.9,
-  0.2, 0.0, 0.8, 0.9, 0.9, 0.9,
-  0.8, 0.8, 0.0, 0.1, 0.15, 0.9,
-  0.9, 0.9, 0.1, 0.0, 0.12, 0.9,
-  0.9, 0.9, 0.15, 0.12, 0.0, 0.9,
-  0.9, 0.9, 0.9, 0.9, 0.9, 0.0
-), nrow = 6, byrow = TRUE)
+clust <- c(g1 = 1, g2 = 1, g3 = 2, g4 = 2, g5 = 2, g6 = 3)
+diss <- data.frame(
+  ID1 = c("g1", "g3", "g3", "g4"),
+  ID2 = c("g2", "g4", "g5", "g5"),
+  Distance = c(0.2, 0.1, 0.15, 0.12)
+)
+abund <- matrix(
+  c(1, 1, 1, 1, 1, 1,
+    1, 0, 0, 1, 1, 1),
+  nrow = 2, byrow = TRUE,
+  dimnames = list(c("S1", "S2"), names(clust))
+)
 
-# Use default (first element as representative)
-metagenomic.alpha.index(clust, diss)
+# Use default (first present element as representative)
+metagenomic.alpha.index(abund, diss, clust)
 
 # Specify representatives explicitly
-reps <- c("1" = 1, "2" = 3, "3" = 6)
-metagenomic.alpha.index(clust, diss, representatives = reps)
+reps <- c("1" = "g1", "2" = "g3", "3" = "g6")
+metagenomic.alpha.index(abund, diss, clust, representatives = reps)
 
 }
 \references{

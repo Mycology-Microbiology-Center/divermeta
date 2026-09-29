@@ -4,22 +4,66 @@
 \alias{diversity.functional.traditional}
 \title{Distance-based functional diversity (order q) (Chiu & Chao 2014)}
 \usage{
-diversity.functional.traditional(ab, diss, q = 1)
+diversity.functional.traditional(
+  abund,
+  diss,
+  q = 1,
+  chunk_size = 1e+06,
+  check_large_distance_file = FALSE,
+  header = TRUE
+)
 }
 \arguments{
-\item{ab}{Numeric vector of element abundances.}
+\item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
+and subunits in columns. Column names are the subunit identifiers.}
 
-\item{diss}{Numeric matrix of pairwise dissimilarities among elements.}
+\item{diss}{Data frame with three columns (taken by position): the identifiers of two subunits
+and the dissimilarity between them, or the path to a file with them, read in chunks (see
+\link{distance-files}). Every pair of subunits present in at least one sample must be listed, in
+either orientation. Pairs with a subunit that has zero abundance in every sample are not
+needed: if some of them are missing, a warning is given. Rows with identifiers not in \code{abund}
+and self pairs are ignored.}
 
-\item{q}{Numeric order of the Hill number (non-negative).}
+\item{q}{Numeric order of the Hill number (non-negative, default \code{1}).}
+
+\item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
+values use less memory. Ignored when \code{diss} is in memory.}
+
+\item{check_large_distance_file}{Logical (default \code{FALSE}). If \code{TRUE} and \code{diss} is a file, the
+file is fully checked with \code{\link[=check_distance_file]{check_distance_file()}} before computing the index: every needed
+pair must be listed exactly once, with a valid distance. This reads the file once more and
+uses temporary disk space. If \code{FALSE}, only the number of rows is checked and a warning is
+given. Ignored when \code{diss} is in memory, which is always fully checked. See
+\link{distance-files}.}
+
+\item{header}{Logical (default \code{TRUE}). Whether a distance file starts with a header line (with
+several files, every one of them). With \code{TRUE}, a first line that looks like data (a number as
+third field) is an error; use \code{FALSE} for files without a header. Ignored when \code{diss} is in
+memory. See \link{distance-files}.}
 }
 \value{
-Numeric scalar, the distance-based functional diversity \eqn{^{q}FD}{FD^q}.
+Named numeric vector with the distance-based functional diversity \eqn{^{q}FD}{FD^q}
+of every sample. Samples with zero total abundance get \code{NA}.
 }
 \description{
-Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014).
-This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript.
-For \eqn{q = 1}{q = 1}, an approximation is used internally.
+Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014)
+for every sample. This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the
+divermeta manuscript. For \eqn{q = 1}{q = 1}, the analytic limit is used.
+}
+\details{
+Only the subunits present in a sample (nonzero abundance) contribute, also for \eqn{q = 0}{q = 0}.
+
+When Rao's quadratic entropy \eqn{Q}{Q} of a sample is 0 (a single present subunit, or all
+distances between its present subunits 0), the formula is undefined (0/0) and the value is set
+to 1, as \code{\link[=diversity.functional]{diversity.functional()}} gives for the same sample. Values of \eqn{q}{q} within
+\code{1e-8} of 1 use the analytic limit at \eqn{q = 1}{q = 1}.
+}
+\examples{
+abund <- matrix(c(2, 1, 0, 1, 1, 1), nrow = 2, byrow = TRUE,
+                dimnames = list(c("S1", "S2"), c("a", "b", "c")))
+diss <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.4, 0.9, 0.6))
+diversity.functional.traditional(abund, diss, q = 2)
+
 }
 \references{
 \itemize{

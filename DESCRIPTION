@@ -21,6 +21,10 @@ Suggests:
     testthat (>= 3.0.0),
     ggplot2 (>= 4.0.0),
     knitr,
-    rmarkdown
+    rmarkdown,
+    withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3
+Imports:
+    methods,
+    Matrix

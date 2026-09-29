@@ -2,12 +2,12 @@
 % Please edit documentation in R/visualize_dist.R
 \name{visualize_dist}
 \alias{visualize_dist}
-\title{Visualize a distance matrix as a sized-tile plot}
+\title{Visualize distances as a sized-tile plot}
 \usage{
 visualize_dist(
   diss,
-  row.labels = NA,
-  col.labels = NA,
+  ids = NULL,
+  labels = NULL,
   clabel.row = 1,
   clabel.col = 1,
   csize = 1,
@@ -16,16 +16,15 @@ visualize_dist(
 )
 }
 \arguments{
-\item{diss}{A distance object (class \code{dist}), numeric matrix, or
-\code{data.frame} containing pairwise distances/dissimilarities.}
+\item{diss}{Data frame with three columns (taken by position): the identifiers of two subunits
+and the distance between them, in either orientation. Only in-memory tables are accepted.}
 
-\item{row.labels}{Optional character vector of row labels. If \code{NA} (default),
-labels are taken from \code{diss} when available, otherwise sequential indices
-are used.}
+\item{ids}{Optional vector with the identifiers of the subunits to show, in the order they are
+drawn. If \code{NULL} (default), every identifier in the first two columns of \code{diss}, in order of
+first appearance. Rows with other identifiers are ignored.}
 
-\item{col.labels}{Optional character vector of column labels.
-If \code{NA} (default), labels are taken from \code{diss} when available, otherwise
-sequential indices are used.}
+\item{labels}{Optional character vector with one label per subunit (in the order of \code{ids}).
+If \code{NULL} (default), the identifiers are used.}
 
 \item{clabel.row}{Numeric multiplier for the relative size of y-axis text.}
 
@@ -42,22 +41,26 @@ legend is hidden.}
 A \code{ggplot2} object representing the visualization.
 }
 \description{
-Creates a compact visualization of a distance or dissimilarity matrix where
-each cell is drawn as a square whose area is proportional to the magnitude
-of the corresponding value. Labels are taken from the input when available
-and can be customized.
+Creates a compact visualization of the pairwise distances or dissimilarities between subunits,
+given as a three-column table as for the indices. They are drawn as a symmetric matrix where
+each cell is a square whose area is proportional to the distance.
 }
 \details{
-If \code{diss} is a \code{dist} object, labels are taken from the \code{Labels}
-attribute when present. Values are visualized by absolute magnitude; larger
-values produce larger squares. The first row is displayed at the top.
+The distance of a subunit to itself is 0, and pairs not listed in \code{diss} are left
+blank. Values are visualized by magnitude; larger values produce larger squares. The first
+subunit is displayed at the top. \code{diss} is validated as for the indices (numeric, finite,
+non-negative distances, and a pair listed again only with the same distance). Requires the
+\code{ggplot2} package.
 }
 \examples{
-x <- 1:10
-names(x) <- LETTERS[1:10]
-diss <- stats::dist(x)
+\dontshow{if (requireNamespace("ggplot2", quietly = TRUE)) withAutoprint(\{ # examplesIf}
+diss <- data.frame(
+  ID1 = c("a", "a", "a", "b", "b", "c"),
+  ID2 = c("b", "c", "d", "c", "d", "d"),
+  Distance = c(0.2, 0.7, 1.0, 0.6, 0.9, 0.4)
+)
 visualize_dist(diss)
-
+\dontshow{\}) # examplesIf}
 }
 \seealso{
 \code{\link[ade4]{table.value}}

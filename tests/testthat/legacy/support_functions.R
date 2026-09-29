@@ -1,3 +1,7 @@
+# LEGACY implementation (pre sample x subunit / three-column diss migration).
+# Not part of the package: sourced by tests/testthat/helper-legacy.R and used
+# as a reference in the tests. Do not modify.
+
 #' Quadratic Form for a Distance Object
 #'
 #' Computes the quadratic form \eqn{\sum_{i,j} 2 p_i p_j m_{ij}} 

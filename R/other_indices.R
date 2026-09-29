@@ -1,108 +1,169 @@
-#' Distance-based functional diversity (q = 1) (Chiu & Chao 2014)
+#' Distance-based functional diversity (Chiu & Chao 2014)
 #'
 #' Computes distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} following Chiu & Chao (2014)
-#' with Shannon-type weighting (order \eqn{q = 1}{q = 1}). Pairwise distances are capped at
-#' the cutoff \eqn{\sigma}{sigma}.
+#' for every sample. Pairwise distances are capped at the cutoff \eqn{\sigma}{sigma}.
 #'
-#' @param ab Numeric vector of element abundances.
-#' @param diss Numeric matrix or `dist` object of pairwise dissimilarities among elements.
+#' @inheritParams raoQuadratic
 #' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
-#' @return Numeric scalar, the distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma}.
+#' @return Named numeric vector with the distance-based functional diversity
+#'   \eqn{\delta D_{\sigma}}{delta D_sigma} of every sample. Samples with zero total abundance get `NA`.
 #' @references
 #' \itemize{
 #' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 #' }
 #' @seealso [raoQuadratic()], [diversity.functional.traditional()]
 #' @export
-diversity.functional <- function(ab, diss, sig = 1) {
-  diss[diss > sig] <- sig
-  vals <- 1 / (1 - raoQuadratic(ab, diss) / sig)
+#'
+#' @examples
+#' abund <- matrix(c(2, 1, 0, 1, 1, 1), nrow = 2, byrow = TRUE,
+#'                 dimnames = list(c("S1", "S2"), c("a", "b", "c")))
+#' diss <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.4, 0.9, 0.6))
+#' diversity.functional(abund, diss, sig = 0.8)
+#'
+diversity.functional <- function(
+  abund,
+  diss,
+  sig = 1,
+  chunk_size = 1e6,
+  check_large_distance_file = FALSE,
+  header = TRUE
+) {
+  .check_sig(sig)
+  ab <- .parse_abund(abund)
+  src <- .diss_source(
+    diss, ab$subunits, chunk_size, check_large_distance_file, "all",
+    header = header, need = .present_subunits(ab)
+  )
+  .diversity.functional_core(ab, src, sig)
+}
 
-  return(vals)
+
+.diversity.functional_core <- function(ab, src, sig) {
+  .consume_pairs(src, list(.diversity.functional_acc(ab, sig)), ab$subunits)[[1]]
+}
+
+
+# Accumulates Rao's quadratic entropy with the distances capped at sig
+.diversity.functional_acc <- function(ab, sig) {
+  P <- .relative(ab)
+  Q <- numeric(nrow(P))
+  list(
+    scope = "all",
+    update = function(pairs) {
+      pairs$d <- pmin(pairs$d, sig)
+      Q <<- Q + .rao_q(P, pairs)
+    },
+    finish = function() .by_sample(1 / (1 - Q / sig), ab)
+  )
 }
 
 
 
 #' Distance-based functional diversity (order q) (Chiu & Chao 2014)
 #'
-#' Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014).
-#' This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the divermeta manuscript.
-#' For \eqn{q = 1}{q = 1}, an approximation is used internally.
+#' Computes distance-based functional diversity \eqn{^{q}FD}{FD^q} following Chiu & Chao (2014)
+#' for every sample. This corresponds to D(Q) in their paper and \eqn{^{q}FD}{FD^q} in the
+#' divermeta manuscript. For \eqn{q = 1}{q = 1}, the analytic limit is used.
 #'
-#' @param ab Numeric vector of element abundances.
-#' @param diss Numeric matrix of pairwise dissimilarities among elements.
-#' @param q Numeric order of the Hill number (non-negative).
+#' @inheritParams raoQuadratic
+#' @param q Numeric order of the Hill number (non-negative, default `1`).
 #'
-#' @return Numeric scalar, the distance-based functional diversity \eqn{^{q}FD}{FD^q}.
+#' @return Named numeric vector with the distance-based functional diversity \eqn{^{q}FD}{FD^q}
+#'   of every sample. Samples with zero total abundance get `NA`.
+#'
+#' @details
+#' Only the subunits present in a sample (nonzero abundance) contribute, also for \eqn{q = 0}{q = 0}.
+#'
+#' When Rao's quadratic entropy \eqn{Q}{Q} of a sample is 0 (a single present subunit, or all
+#' distances between its present subunits 0), the formula is undefined (0/0) and the value is set
+#' to 1, as [diversity.functional()] gives for the same sample. Values of \eqn{q}{q} within
+#' `1e-8` of 1 use the analytic limit at \eqn{q = 1}{q = 1}.
+#'
 #' @references
 #' \itemize{
 #' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
 #' }
 #' @seealso [diversity.functional()], [raoQuadratic()]
 #' @export
-diversity.functional.traditional <- function(ab, diss, q = 1) {
-  # Validate inputs
-  if (!is.numeric(ab)) {
-    stop("Abundance vector must be numeric")
-  }
-  if (!is.numeric(q) || length(q) != 1) {
-    stop("q parameter must be a single numeric value")
-  }
-  if (q < 0) {
-    stop("q parameter must be positive")
-  }
+#'
+#' @examples
+#' abund <- matrix(c(2, 1, 0, 1, 1, 1), nrow = 2, byrow = TRUE,
+#'                 dimnames = list(c("S1", "S2"), c("a", "b", "c")))
+#' diss <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.4, 0.9, 0.6))
+#' diversity.functional.traditional(abund, diss, q = 2)
+#'
+diversity.functional.traditional <- function(
+  abund,
+  diss,
+  q = 1,
+  chunk_size = 1e6,
+  check_large_distance_file = FALSE,
+  header = TRUE
+) {
+  .check_q(q)
+  ab <- .parse_abund(abund)
+  src <- .diss_source(
+    diss, ab$subunits, chunk_size, check_large_distance_file, "all",
+    header = header, need = .present_subunits(ab)
+  )
+  .diversity.functional.traditional_core(ab, src, q)
+}
 
-  # If dist object
-  if (inherits(diss, "dist")) {
-    n <- attr(diss, "Size")
-    if (n != length(ab)) {
-      stop(paste0(
-        "Abundance vector and matrix must have compatible sizes. Matrix: ",
-        n, "x", n, ". Vector: ", length(ab)
-      ))
+
+.diversity.functional.traditional_core <- function(ab, src, q) {
+  .consume_pairs(src, list(.diversity.functional.traditional_acc(ab, q)), ab$subunits)[[1]]
+}
+
+
+# Accumulates Rao's quadratic entropy and the sum of order q in the same read
+.diversity.functional.traditional_acc <- function(ab, q) {
+  P <- .relative(ab)
+  Q <- numeric(nrow(P))
+  acc <- numeric(nrow(P))
+  q_one <- abs(q - 1) < .q_one_tol
+
+  if (q_one) {
+    # Analytic limit q -> 1: exp(-sum_ij d_ij p_i p_j ln(p_i) / Q) (square root
+    # already included), with w = p ln(p)
+    W <- P
+    if (inherits(W, "Matrix")) {
+      nz <- W@x > 0
+      W@x[nz] <- W@x[nz] * log(W@x[nz])
+    } else {
+      nz <- W > 0
+      W[nz] <- W[nz] * log(W[nz])
     }
   } else {
-    dims <- dim(diss)
-    if (dims[1] != dims[2]) {
-      stop(paste0(
-        "Distance matrix must be square. Matrix: ",
-        dims[1], "x", dims[2], "."
-      ))
+    # Only present subunits contribute (0^0 would be 1)
+    Pq <- if (q == 0) (P > 0) * 1 else P^q
+  }
+
+  update <- function(pairs) {
+    Q <<- Q + .rao_q(P, pairs)
+    if (q_one) {
+      # sum over ordered pairs of w_i d_ij p_j
+      acc <<- acc + .pair_sums(W, pairs$i, pairs$j, pairs$d, Y = P)[, 1] +
+        .pair_sums(W, pairs$j, pairs$i, pairs$d, Y = P)[, 1]
+    } else {
+      acc <<- acc + 2 * .pair_sums(Pq, pairs$i, pairs$j, pairs$d)[, 1]
     }
+  }
 
-    if (dims[1] != length(ab)) {
-      stop(paste0(
-        "Abundance vector and matrix must have compatible sizes. Matrix: ",
-        dims[1], "x", dims[2], ". Vector: ", length(ab)
-      ))
+  finish <- function() {
+    if (q_one) {
+      vals <- exp(-acc / Q)
+    } else {
+      vals <- sqrt((acc / Q)^(1 / (1 - q)))
     }
+    # Q = 0 (one present subunit, or all distances 0): a single functional type.
+    # Q is exactly 0 then, and a tolerance would break the invariance to the
+    # scale of the distances
+    vals[Q <= 0] <- 1
+    .by_sample(vals, ab)
   }
 
-  P <- as.vector(ab / sum(ab))
-  Q <- raoQuadratic(ab, diss)
-
-  # Handle q = 1 with the analytic limit q -> 1:
-  # exp(-sum_ij d_ij p_i p_j ln(p_i) / Q) (square root already included)
-  if (abs(q - 1) < .Machine$double.eps) {
-    w <- ifelse(P > 0, P * log(P), 0)
-    D <- if (inherits(diss, "dist")) as.matrix(diss) else diss
-    return(exp(-as.numeric(t(w) %*% D %*% P) / Q))
-  }
-
-  Pq <- P^q
-
-  if (inherits(diss, "dist")) {
-    vals <- dist_quadratic_form(Pq, diss)
-  } else {
-    vals <- as.numeric(t(Pq) %*% diss %*% Pq)
-  }
-
-  vals <- vals / Q
-
-  vals <- vals^(1 / (1 - q))
-
-  return(sqrt(vals))
+  list(scope = "all", update = update, finish = finish)
 }
 
 
@@ -111,207 +172,138 @@ diversity.functional.traditional <- function(ab, diss, q = 1) {
 #'
 #' Computes functional redundancy \eqn{Re}{Re}, a measure of the degree to which
 #' distinct elements are functionally similar given their abundances and
-#' pairwise dissimilarities. This implementation follows the Simpson–Rao
+#' pairwise dissimilarities, for every sample. This implementation follows the Simpson–Rao
 #' family and corresponds to the `q = 2` case.
 #'
-#' @param ab Numeric vector of element abundances.
-#' @param diss Numeric square matrix or `dist` object of pairwise dissimilarities among elements
-#'   scaled to the range \[0, 1\].
+#' @inheritParams raoQuadratic
+#' @param diss Data frame with three columns (taken by position): the identifiers of two subunits
+#'   and the dissimilarity between them, scaled to the range \[0, 1\] (distances above 1 are
+#'   capped at 1), or the path to a file with them (see [distance-files]). Every pair of subunits
+#'   present in at least one sample must be listed, in either orientation; pairs with a subunit
+#'   that has zero abundance in every sample may be missing, with a warning.
 #'
-#' @return Numeric scalar, functional redundancy `Re`.
-#' @references
-#' \itemize{
-#' \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
-#' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
-#' }
-#' @seealso [raoQuadratic()], [redundancy.by_blocks()] for computing from a compact distance table
-#' @export
+#' @param normalize Logical (default `FALSE`). If `TRUE`, the redundancy is divided by Simpson's
+#'   diversity \eqn{S}{S}, giving \eqn{(S - Q) / S = 1 - Q / S}{(S - Q) / S = 1 - Q / S}.
 #'
-redundancy <- function(ab, diss) {
-
-
-  # Validate inputs
-  if (!is.numeric(ab)) {
-    stop("Abundance vector must be numeric")
-  }
-
-  if (any(is.na(ab)) || any(is.na(diss))) {
-    stop("Input contains NA values")
-  }
-  if (any(ab < 0)) {
-    stop("Abundances must be non-negative")
-  }
-
-  total_ab <- sum(ab)
-  if (total_ab == 0) {
-    stop("Total abundance cannot be zero")
-  }
-
-  # Edge case
-  if (length(ab) == 1) {
-    return(0)
-  }
-
-  # If dist object
-  if (inherits(diss, "dist")) {
-    n <- attr(diss, "Size")
-    if (n != length(ab)) {
-      stop(paste0(
-        "Abundance vector and matrix must have compatible sizes. Matrix: ",
-        n, "x", n, ". Vector: ", length(ab)
-      ))
-    }
-  } else {
-    dims <- dim(diss)
-    if (dims[1] != dims[2]) {
-      stop(paste0(
-        "Distance matrix must be square. Matrix: ",
-        dims[1], "x", dims[2], "."
-      ))
-    }
-
-    if (dims[1] != length(ab)) {
-      stop(paste0(
-        "Abundance vector and matrix must have compatible sizes. Matrix: ",
-        dims[1], "x", dims[2], ". Vector: ", length(ab)
-      ))
-    }
-  }
-
-  p <- as.vector(ab / total_ab)
-
-  # Simpson's diversity (q = 2): D = 1 - sum p_i^2
-  d <- 1 - sum(p^2)
-
-  # Rao's quadratic entropy
-  q <- raoQuadratic(ab, diss)
-
-  # Functional redundancy
-  res <- d - q
-
-  res
-}
-
-
-#' Functional redundancy (Re) by blocks
-#'
-#' Computes functional redundancy \eqn{Re}{Re} from a compact three-column distance
-#' table. This is an efficient implementation of [redundancy()] for large datasets where
-#' storing the full distance matrix would be memory-intensive. Only the distances between
-#' elements inside the same unit (block) need to be provided; every pair of elements not
-#' listed in the table is assumed to be maximally different (distance equal to 1).
-#'
-#' @param ids Character or integer vector of element identifiers (length `n`). Must match
-#'   the identifiers used in `diss_frame`.
-#' @param ab Numeric vector of element abundances (length `n`, same order as `ids`).
-#' @param diss_frame Data frame with columns `ID1`, `ID2`, `Distance` containing pairwise
-#'   dissimilarities, scaled to the range \[0, 1\], for unique pairs of elements. Each
-#'   unordered pair must be listed only once. Should only include within-unit pairs or
-#'   pairs where distances are less than 1; unlisted pairs are automatically set to 1 and
-#'   distances greater than 1 are capped at 1.
-#'
-#' @return Numeric scalar, functional redundancy `Re`.
+#' @return Named numeric vector with the functional redundancy `Re` of every sample. Samples
+#'   with zero total abundance get `NA`.
 #'
 #' @details
-#' Let \eqn{p_i}{p_i} be the relative abundance of element \eqn{i}{i} and \eqn{P}{P} the set
-#' of unordered pairs \eqn{(i, j)}{(i, j)}, \eqn{i \neq j}{i != j}, listed in `diss_frame`.
-#' Assuming every pair not in \eqn{P}{P} is at distance 1, Rao's quadratic entropy is
-#' \deqn{Q = \left(1 - \sum_i p_i^2\right) - 2 \sum_{(i,j) \in P} p_i p_j + 2 \sum_{(i,j) \in P} p_i p_j d_{ij},}{Q = (1 - sum_i p_i^2) - 2 sum_P p_i p_j + 2 sum_P p_i p_j d_ij,}
-#' so that the redundancy \eqn{Re = \left(1 - \sum_i p_i^2\right) - Q}{Re = (1 - sum_i p_i^2) - Q} reduces to
-#' \deqn{Re = 2 \sum_{(i,j) \in P} p_i p_j \left(1 - d_{ij}\right).}{Re = 2 sum_P p_i p_j (1 - d_ij).}
-#' Only the listed (within-unit) pairs contribute, so the computation scales with the
-#' number of rows of `diss_frame` instead of \eqn{n^2}{n^2}.
+#' With relative abundances \eqn{p_i}{p_i}, Simpson's diversity is
+#' \eqn{S = 1 - \sum_i p_i^2}{S = 1 - sum_i p_i^2} and Rao's quadratic entropy is
+#' \eqn{Q = \sum_{i \neq j} p_i p_j d_{ij}}{Q = sum_{i != j} p_i p_j d_ij}. Then
+#' \deqn{Re = S - Q,}{Re = S - Q,}
+#' and, with `normalize = TRUE`,
+#' \deqn{Re = \frac{S - Q}{S} = 1 - \frac{Q}{S}.}{Re = (S - Q) / S = 1 - Q / S.}
+#' A sample with a single present subunit has no redundancy: its value is 0, also when normalized.
+#'
+#' Distances greater than 1 are capped at 1 (\eqn{d_{ij} = \min(d_{ij}, 1)}{d_ij = min(d_ij, 1)})
+#' before computing \eqn{Q}{Q}, so that \eqn{Q \le S}{Q <= S} and the redundancy is never negative:
+#' it lies between 0 and \eqn{S}{S}, or between 0 and 1 when normalized.
 #'
 #' @references
 #' \itemize{
 #' \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
 #' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 #' }
-#' @seealso [redundancy()] for the standard implementation using full matrices,
-#'   [multiplicity.distance.by_blocks()] for distance-based multiplicity by blocks,
-#'   [raoQuadratic()] for Rao's quadratic entropy
+#' @seealso [raoQuadratic()], [average.redundancy()]
 #' @export
 #'
 #' @examples
-#' # Example: Compute redundancy from a distance table
-#' ids <- c("elem1", "elem2", "elem3", "elem4")
-#' ab <- c(10, 15, 20, 25)
+#' abund <- matrix(c(2, 1, 0, 1, 1, 1), nrow = 2, byrow = TRUE,
+#'                 dimnames = list(c("S1", "S2"), c("a", "b", "c")))
+#' diss <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.4, 0.9, 0.6))
+#' redundancy(abund, diss)
+#' redundancy(abund, diss, normalize = TRUE)
 #'
-#' # Distance table: only within-unit pairs (other pairs assumed = 1)
-#' diss_frame <- data.frame(
-#'   ID1 = c("elem1", "elem3"),
-#'   ID2 = c("elem2", "elem4"),
-#'   Distance = c(0.3, 0.4),
-#'   stringsAsFactors = FALSE
-#' )
-#'
-#' redundancy.by_blocks(ids, ab, diss_frame)
-#'
-redundancy.by_blocks <- function(ids, ab, diss_frame) {
-  # Validate inputs
-  if (length(ids) == 0) {
-    return(0)
-  }
-  if (!is.numeric(ab)) {
-    stop("Abundance vector must be numeric")
-  }
-  if (length(ids) != length(ab)) {
-    stop("`ids` and `ab` must have the same length")
-  }
-  if (any(is.na(ab))) {
-    stop("Input contains NA values")
-  }
-  if (any(ab < 0)) {
-    stop("Abundances must be non-negative")
-  }
+redundancy <- function(
+  abund,
+  diss,
+  normalize = FALSE,
+  chunk_size = 1e6,
+  check_large_distance_file = FALSE,
+  header = TRUE
+) {
+  .check_flag(normalize, "normalize")
+  ab <- .parse_abund(abund)
+  src <- .diss_source(
+    diss, ab$subunits, chunk_size, check_large_distance_file, "all",
+    header = header, need = .present_subunits(ab)
+  )
+  .redundancy_core(ab, src, normalize)
+}
 
-  total_ab <- sum(ab)
-  if (total_ab == 0) {
-    stop("Total abundance cannot be zero")
-  }
 
-  # Edge case
-  if (length(ab) == 1) {
-    return(0)
-  }
+.redundancy_core <- function(ab, src, normalize = FALSE) {
+  .consume_pairs(src, list(.redundancy_acc(ab, normalize)), ab$subunits)[[1]]
+}
 
-  p <- as.vector(ab / total_ab)
 
-  # Simpson's diversity (q = 2): D = 1 - sum p_i^2
-  d <- 1 - sum(p^2)
+# Accumulates Rao's quadratic entropy with the distances capped at 1
+.redundancy_acc <- function(ab, normalize = FALSE) {
+  P <- .relative(ab)
+  Q <- numeric(nrow(P))
+  list(
+    scope = "all",
+    update = function(pairs) {
+      pairs$d <- pmin(pairs$d, 1)
+      Q <<- Q + .rao_q(P, pairs)
+    },
+    finish = function() {
+      # Simpson's diversity (q = 2): D = 1 - sum p_i^2
+      d <- 1 - as.numeric(Matrix::rowSums(P^2))
 
-  # Rao's quadratic entropy (unlisted pairs are at distance 1)
-  q <- raoQuadratic.by_blocks(ids, ab, diss_frame, sigma = 1)
+      # Functional redundancy
+      re <- if (normalize) (d - Q) / d else d - Q
 
-  # Functional redundancy
-  res <- d - q
-
-  res
+      # A single present subunit has no redundancy. Counted, since d is only
+      # approximately 0 in floating point (e.g. 49 * (1 / 49) != 1)
+      re[as.numeric(Matrix::rowSums(ab$A > 0)) <= 1] <- 0
+      .by_sample(re, ab)
+    }
+  )
 }
 
 
 #' Metagenomic Alpha-Diversity Index (MAD) (Finn 2024)
 #'
-#' Computes the Metagenomic Alpha-Diversity Index (MAD), a metric that measures the
-#' average dissimilarity of elements (e.g., protein-encoding genes) within clusters
+#' Computes the Metagenomic Alpha-Diversity Index (MAD) of every sample, a metric that measures
+#' the average dissimilarity of elements (e.g., protein-encoding genes) within clusters
 #' relative to cluster representatives. Unlike multiplicity, MAD does not account for
 #' element abundances and decreases as the number of elements per cluster increases.
 #'
-#' @param clust Vector or factor of cluster memberships for each element (e.g., gene).
-#'   Must have the same length as the number of rows/columns in `diss`.
-#' @param diss Numeric square matrix of pairwise dissimilarities among elements.
-#'   Should be scaled to the range \[0, 1\], where 0 indicates identical elements
-#'   and 1 indicates maximally different elements.
-#' @param representatives Optional named vector mapping cluster names to the index
-#'   (position) of the representative element for each cluster. If `NULL` (default),
-#'   the first element in each cluster is used as the representative.
+#' @inheritParams raoQuadratic
+#' @param diss Data frame with three columns (taken by position): the identifiers of two subunits
+#'   and the dissimilarity between them, scaled to the range \[0, 1\], or the path to a file with
+#'   them (see [distance-files]). The distance between every representative and every other
+#'   subunit of its cluster present in a sample must be listed. Only these pairs are kept while
+#'   reading, so missing pairs and pairs listed again with a different distance are always
+#'   detected, also in files (there is no need for `check_large_distance_file`).
+#' @param clust Vector or factor of cluster memberships for each subunit. If named, names are
+#'   subunit identifiers; otherwise it follows the columns of `abund`. A data frame is also accepted, with two columns (subunit identifiers, units) or one
+#'   column of units (named by its row names, if set).
+#' @param representatives Optional named vector mapping cluster names to the identifier of the
+#'   representative subunit of each cluster. Numeric identifiers are matched as numbers, so a name
+#'   `"1e+05"` matches the cluster `100000`. If `NULL` (default), the first subunit (in the column
+#'   order of `abund`) of each cluster present in the sample is used as the representative.
 #'
-#' @return Numeric scalar, the Metagenomic Alpha-Diversity Index (MAD). Higher values
-#'   indicate greater average dissimilarity within clusters.
+#' @return Named numeric vector with the Metagenomic Alpha-Diversity Index (MAD) of every sample.
+#'   Higher values indicate greater average dissimilarity within clusters. Samples with zero total
+#'   abundance get `NA`.
 #'
 #' @details
+#' Abundances are only used to decide which subunits are present (nonzero abundance) in every
+#' sample: the index of a sample is computed over its present subunits and clusters. A given
+#' representative is used as the reference of its cluster even when it is absent from a sample.
+#'
 #' Note: Unlike multiplicity indices, MAD does not incorporate element abundances and
 #' decreases as cluster size increases, which may not reflect biological complexity.
+#'
+#' Note on duplicated pairs: an in-memory `diss` is validated as a whole, so a pair listed again
+#' with a different distance is an error even when MAD does not use that pair. When `diss` is a
+#' file, only the pairs MAD uses (representative and subunit of its cluster) are checked for
+#' conflicting duplicates, and the others are ignored. In both cases every distance must be a
+#' valid (non-negative, not NA) number.
 #'
 #' @references
 #' \itemize{
@@ -327,69 +319,164 @@ redundancy.by_blocks <- function(ids, ab, diss_frame) {
 #'
 #' @examples
 #' # Example: Compute MAD for gene clusters
-#' clust <- c(1, 1, 2, 2, 2, 3)
-#' diss <- matrix(c(
-#'   0.0, 0.2, 0.8, 0.9, 0.9, 0.9,
-#'   0.2, 0.0, 0.8, 0.9, 0.9, 0.9,
-#'   0.8, 0.8, 0.0, 0.1, 0.15, 0.9,
-#'   0.9, 0.9, 0.1, 0.0, 0.12, 0.9,
-#'   0.9, 0.9, 0.15, 0.12, 0.0, 0.9,
-#'   0.9, 0.9, 0.9, 0.9, 0.9, 0.0
-#' ), nrow = 6, byrow = TRUE)
+#' clust <- c(g1 = 1, g2 = 1, g3 = 2, g4 = 2, g5 = 2, g6 = 3)
+#' diss <- data.frame(
+#'   ID1 = c("g1", "g3", "g3", "g4"),
+#'   ID2 = c("g2", "g4", "g5", "g5"),
+#'   Distance = c(0.2, 0.1, 0.15, 0.12)
+#' )
+#' abund <- matrix(
+#'   c(1, 1, 1, 1, 1, 1,
+#'     1, 0, 0, 1, 1, 1),
+#'   nrow = 2, byrow = TRUE,
+#'   dimnames = list(c("S1", "S2"), names(clust))
+#' )
 #'
-#' # Use default (first element as representative)
-#' metagenomic.alpha.index(clust, diss)
+#' # Use default (first present element as representative)
+#' metagenomic.alpha.index(abund, diss, clust)
 #'
 #' # Specify representatives explicitly
-#' reps <- c("1" = 1, "2" = 3, "3" = 6)
-#' metagenomic.alpha.index(clust, diss, representatives = reps)
+#' reps <- c("1" = "g1", "2" = "g3", "3" = "g6")
+#' metagenomic.alpha.index(abund, diss, clust, representatives = reps)
 #'
-metagenomic.alpha.index <- function(clust, diss, representatives = NULL) {
-  if (!is.matrix(diss)) {
-    stop("Dissimilarity input must be a matrix")
+metagenomic.alpha.index <- function(
+  abund,
+  diss,
+  clust,
+  representatives = NULL,
+  chunk_size = 1e6,
+  header = TRUE
+) {
+  ab <- .parse_abund(abund)
+  cl <- .parse_clust(clust, ab$subunits)
+  rep_of_unit <- .mad_representatives(representatives, ab, cl)
+  src <- .diss_source(diss, ab$subunits, chunk_size, scope = "none", cl = cl, header = header)
+  .metagenomic.alpha.index_core(ab, src, cl, rep_of_unit)
+}
+
+
+.metagenomic.alpha.index_core <- function(ab, src, cl, rep_of_unit) {
+  .consume_pairs(src, list(.metagenomic.alpha.index_acc(ab, cl, rep_of_unit)), ab$subunits, cl)[[1]]
+}
+
+
+# Representative subunit (column index) of every unit, or NULL to use the first
+# present subunit of the unit in every sample
+.mad_representatives <- function(representatives, ab, cl) {
+  if (is.null(representatives)) {
+    return(NULL)
   }
-  if (length(clust) != nrow(diss) || nrow(diss) != ncol(diss)) {
-    stop("Cluster memberships length must match square dissimilarity matrix dimensions")
+  n_units <- length(cl$unit_ids)
+  if (is.null(names(representatives))) {
+    stop("`representatives` must be a named vector (names are cluster identifiers)")
   }
-  if (any(is.na(clust)) || any(is.na(diss))) {
-    stop("Input contains NA values")
+  pos <- .match_names(cl$unit_ids, names(representatives))
+  if (anyNA(pos)) {
+    stop(paste0(
+      "Missing representatives for clusters: ",
+      paste(cl$unit_ids[is.na(pos)], collapse = ", ")
+    ))
+  }
+  rep_ids <- .as_ids(representatives[pos])
+  rep_of_unit <- .match_names(rep_ids, ab$subunits)
+  if (anyNA(rep_of_unit)) {
+    stop(paste0(
+      "Representatives must be subunits of `abund`: ",
+      paste(rep_ids[is.na(rep_of_unit)], collapse = ", ")
+    ))
+  }
+  wrong <- cl$unit_of[rep_of_unit] != seq_len(n_units)
+  if (any(wrong)) {
+    stop(paste0(
+      "Representatives must belong to their cluster: ",
+      paste(rep_ids[wrong], collapse = ", ")
+    ))
+  }
+  rep_of_unit
+}
+
+
+# Looks up, while the pairs are read, the distance between every present subunit
+# and the representative of its cluster in its sample. Only these pairs are kept,
+# so missing and conflicting pairs are found exactly, also in files
+.metagenomic.alpha.index_acc <- function(ab, cl, rep_of_unit) {
+  n_units <- length(cl$unit_ids)
+
+  # Present subunits of every sample
+  nz <- .nonzero(ab$A)
+  s <- nz$i
+  m <- nz$j
+  u <- cl$unit_of[m]
+  su <- (s - 1) * as.numeric(n_units) + u
+
+  # Representative of every present subunit's cluster in its sample
+  if (is.null(rep_of_unit)) {
+    o <- order(su, m)
+    first <- !duplicated(su[o])
+    rep <- m[o][first][match(su, su[o][first])]
+  } else {
+    rep <- rep_of_unit[u]
   }
 
-  # Cluster names
-  cluster_names <- unique(clust)
+  # Needed pairs (representative, subunit), as keys of the pair i < j
+  n <- as.numeric(length(ab$subunits))
+  other <- rep != m
+  query <- pmin(rep, m)[other] + (pmax(rep, m)[other] - 1) * n
+  needed <- unique(query)
+  found <- rep(NA_real_, length(needed))
 
-  # Validate representatives
-  if (!is.null(representatives)) {
-    if (!is.numeric(representatives)) {
-      stop("`representatives` must be a numeric vector (indices)")
+  update <- function(pairs) {
+    pos <- match(pairs$i + (pairs$j - 1) * n, needed)
+    hit <- !is.na(pos)
+    if (!any(hit)) {
+      return(invisible(NULL))
     }
-    if (any(representatives < 1) || any(representatives > length(clust))) {
+    pos <- pos[hit]
+    d <- pairs$d[hit]
+    # A pair listed again must have the same distance
+    prev <- c(found[pos], d[match(pos, pos)])
+    conflict <- !is.na(prev) & abs(prev - c(d, d)) > sqrt(.Machine$double.eps)
+    if (any(conflict)) {
+      k <- pos[(which(conflict)[1] - 1) %% length(pos) + 1]
+      i <- (needed[k] - 1) %% n + 1
+      j <- (needed[k] - 1) %/% n + 1
       stop(paste0(
-        "Representative indices must be between 1 and ",
-        length(clust),
-        "."
+        "`diss` lists conflicting distances for the same pair: ",
+        ab$subunits[i], "-", ab$subunits[j]
       ))
     }
-    if (!all(cluster_names %in% names(representatives))) {
-      missing <- cluster_names[!(cluster_names %in% names(representatives))]
+    found[pos] <<- d
+    invisible(NULL)
+  }
+
+  finish <- function() {
+    # Distance to the representative (zero for the representative itself)
+    d <- numeric(length(m))
+    d_other <- found[match(query, needed)]
+    if (anyNA(d_other)) {
+      k <- which(other)[which(is.na(d_other))[1]]
       stop(paste0(
-        "Missing representatives for clusters: ",
-        paste(missing, collapse = ", ")
+        "Missing distances in `diss` between representatives and subunits of their cluster (e.g. ",
+        ab$subunits[rep[k]], "-", ab$subunits[m[k]], ")"
       ))
     }
-  }
+    d[other] <- d_other
 
-  # Summand function
-  summand <- function(cluster_name) {
-    ids <- which(clust == cluster_name)
-    rep <- ids[1]
-    if (!is.null(representatives)) {
-      rep <- representatives[[cluster_name]]
+    # Per sample: sum over present clusters of (1 + mean distance), over present subunits
+    groups <- unique(su)
+    g <- match(su, groups)
+    mean_d <- as.vector(rowsum(d, g, reorder = FALSE)) / tabulate(g)
+    sample_of_group <- s[match(groups, su)]
+    n_samples <- length(ab$samples)
+    total <- numeric(n_samples)
+    if (length(groups) > 0) {
+      by_sample <- rowsum(1 + mean_d, sample_of_group)
+      total[as.integer(rownames(by_sample))] <- by_sample[, 1]
     }
+    n_present <- tabulate(s, n_samples)
 
-    1 + mean(diss[rep, ids])
+    .by_sample(total / n_present, ab)
   }
 
-  # Sum and divide
-  sum(sapply(cluster_names, summand)) / length(clust)
+  list(scope = "none", update = update, finish = finish)
 }

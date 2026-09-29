@@ -38,7 +38,8 @@ reference:
     contents:
       - multiplicity.inventory
       - multiplicity.distance
-      - multiplicity.distance.by_blocks
+      - relative.multiplicity
+      - relative.multiplicity.ref_div
 
   - title: "Diversity and redundancy"
     desc: "Diversity, redundancy, and related indices:"
@@ -47,15 +48,19 @@ reference:
       - diversity.functional
       - diversity.functional.traditional
       - redundancy
-      - redundancy.by_blocks
+      - average.redundancy
       - raoQuadratic
 
   - title: "Distance and support utilities"
     desc: "Helper functions:"
     contents:
-      - dist_quadratic_form
-      - cluster_distance_matrix
-      - convert_to_dist_indices
+      - unit_distances
+
+  - title: "Large distance files"
+    desc: "Reading the distances from files in chunks, and checking those files:"
+    contents:
+      - distance-files
+      - check_distance_file
 
   - title: "Visualisation"
     desc: "Function for visualizing abundances and distance structures:"

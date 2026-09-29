@@ -8,24 +8,33 @@ divermeta(
   abund,
   diss = NULL,
   indices = c("multiplicity_inventory"),
-  clusters = NULL,
+  clust = NULL,
   q = 1,
   sig = 1,
   method = "sigma",
-  normalize = FALSE
+  diss_clust = NULL,
+  normalize = FALSE,
+  chunk_size = 1e+06,
+  check_large_distance_file = FALSE,
+  header = TRUE
 )
 }
 \arguments{
-\item{abund}{Numeric matrix or data.frame of abundances with samples in columns
-and features in rows.}
+\item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
+and subunits in columns. Column names are the subunit identifiers.}
 
-\item{diss}{Optional numeric dissimilarity matrix or \code{dist} object among features; square with
-row/column names matching \code{rownames(abund)} when present.}
+\item{diss}{Optional data frame with three columns (taken by position): the identifiers of two
+subunits and the dissimilarity between them, or the path to a file with them (see
+\link{distance-files}). Every pair of subunits present in at least one sample must be listed
+(see \code{\link[=multiplicity.distance]{multiplicity.distance()}} for the pairs needed with \code{method = "sigma"}); pairs with a
+subunit that has zero abundance in every sample may be missing, with a warning. A file is
+read only once for all the requested indices.}
 
 \item{indices}{Character vector of index names to compute (see list above).}
 
-\item{clusters}{Optional vector/factor of cluster memberships for each feature
-(row of \code{abund}).}
+\item{clust}{Optional vector/factor of cluster memberships for each subunit. If named, names
+are subunit identifiers; otherwise it follows the columns of \code{abund}. A data frame is also accepted, with two columns (subunit identifiers, units) or one
+column of units (named by its row names, if set).}
 
 \item{q}{Numeric order for Hill-number based indices (used by \code{FD_q} and
 \code{multiplicity_inventory}). Default \code{1}.}
@@ -35,21 +44,40 @@ row/column names matching \code{rownames(abund)} when present.}
 
 \item{method}{Character string specifying the linkage method for
 aggregating distances between clusters. One of: "average", "min",
-"max", or "sigma". Sigma sets all distances between clusters to be
+"max", "sigma" or "custom". Sigma sets all distances between clusters to be
 of value \code{sig}. Default is "sigma".}
+
+\item{diss_clust}{Optional three-column table of distances between clusters, used by
+\code{multiplicity_distance} when \code{method} is "custom".}
 
 \item{normalize}{Logical indicating whether index values should be normalized to [0, 1]
 by dividing each column by its maximum value. Useful for comparing indices with
 different scales. Default \code{FALSE}.}
+
+\item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
+values use less memory. Ignored when \code{diss} is in memory.}
+
+\item{check_large_distance_file}{Logical (default \code{FALSE}). If \code{TRUE} and \code{diss} is a file, the
+file is fully checked with \code{\link[=check_distance_file]{check_distance_file()}} before computing the index: every needed
+pair must be listed exactly once, with a valid distance. This reads the file once more and
+uses temporary disk space. If \code{FALSE}, only the number of rows is checked and a warning is
+given. Ignored when \code{diss} is in memory, which is always fully checked. See
+\link{distance-files}.}
+
+\item{header}{Logical (default \code{TRUE}). Whether a distance file starts with a header line (with
+several files, every one of them). With \code{TRUE}, a first line that looks like data (a number as
+third field) is an error; use \code{FALSE} for files without a header. Ignored when \code{diss} is in
+memory. See \link{distance-files}.}
 }
 \value{
-data.frame with one row per sample and one column per requested index.
-Empty samples (all zero abundances) return \code{NA} for all indices.
+data.frame with one row per sample: a first column \code{Sample} with the sample identifiers
+(the row names of \code{abund}, or the row numbers when it has none), then one column per requested
+index. Empty samples (all zero abundances) return \code{NA} for all indices.
 }
 \description{
 Estimate several diversity and multiplicity indices for many samples at once.
-Abundances are provided with samples in columns and features (species/OTUs/genes)
-in rows. If supplied, the dissimilarity matrix must correspond to feature names.
+Abundances are provided with samples in rows and subunits (species/OTUs/genes)
+in columns. Dissimilarities are provided as a three-column table of pairs of subunits.
 }
 \details{
 Indices available (use these labels in \code{indices}):
@@ -67,47 +95,40 @@ Notes:
 \item Indices that use dissimilarities (\code{multiplicity_distance}, \code{raoQ}, \code{FD_sigma},
 \code{FD_q}, \code{redundancy}) require \code{diss}.
 \item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance})
-require \code{clusters} (same length/order as feature rows).
+require \code{clust}.
+\item Every entry of \code{indices} gives one column, named after the index (aliases such as
+\code{"M_inventory"} are renamed to \code{"multiplicity_inventory"}). An index requested more than once,
+by the same label or through an alias, gives one identical column per request, and the
+repeated columns get unique names from \code{\link[=data.frame]{data.frame()}} (e.g. \code{raoQ} and \code{raoQ.1}).
 }
 }
 \examples{
 
-# Abundance matrix: rows = features, columns = samples
-species <- c("s1", "s2", "s3", "s4")
-samples <- c("Sample1", "Sample2", "Sample3")
+# Abundance table: rows = samples, columns = subunits
 abund <- matrix(
   c(
-    10, 5,  0, # s1
-    0,  8, 12, # s2
-    4,  3,  7, # s3
-    6,  0,  9 # s4
+    10, 0, 4, 6, # Sample1
+    5,  8, 3, 0, # Sample2
+    0, 12, 7, 9  # Sample3
   ),
-  nrow = length(species),
-  ncol = length(samples),
+  nrow = 3,
   byrow = TRUE,
-  dimnames = list(species, samples)
+  dimnames = list(c("Sample1", "Sample2", "Sample3"), c("s1", "s2", "s3", "s4"))
 )
 
-# Dissimilarity matrix among features (0-1), names must match abund rownames
-diss <- matrix(
-  c(
-    0.0, 0.2, 0.7, 1.0,
-    0.2, 0.0, 0.6, 0.9,
-    0.7, 0.6, 0.0, 0.4,
-    1.0, 0.9, 0.4, 0.0
-  ),
-  nrow = length(species),
-  ncol = length(species),
-  byrow = TRUE,
-  dimnames = list(species, species)
+# Dissimilarities among subunits (0-1), one row per pair
+diss <- data.frame(
+  ID1 = c("s1", "s1", "s1", "s2", "s2", "s3"),
+  ID2 = c("s2", "s3", "s4", "s3", "s4", "s4"),
+  Distance = c(0.2, 0.7, 1.0, 0.6, 0.9, 0.4)
 )
 
-# Clusters per feature (used by multiplicity_* indices)
-clusters <- c(s1 = "A", s2 = "A", s3 = "B", s4 = "B")
+# Clusters per subunit (used by multiplicity_* indices)
+clust <- c(s1 = "A", s2 = "A", s3 = "B", s4 = "B")
 
 ## Run divermeta
 divermeta(abund,
-  clusters = clusters,
+  clust = clust,
   diss = diss,
   q = 1,
   sig = 0.8,

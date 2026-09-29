@@ -1,82 +1,32 @@
 # Tests for distance-based multiplicity
 
-# Basic
-# ----------------------------
-# n units with max distance and equal abundance
-# functional diversity should be n
-# Both work
-
-test_that("Basic", {
-  sig <- 0.5
-  n <- 10
-  ab <- rep(1, n)
-  diss <- matrix(sig, nrow = n, ncol = n)
-  diag(diss) <- 0
-
-  expect_equal(round(diversity.functional.traditional(ab, diss), 3), n)
-  expect_equal(diversity.functional(ab, diss, sig), n)
-})
-
-
 # Deterministic numeric checks (two-species and sigma capping)
 # -----------------------------------------------------------
 test_that("Two-species case: sigma capping works correctly", {
   # Two species with unequal abundances, distance above sigma
-  ab <- c(2, 1)
+  ab <- one_row(c(2, 1))
   d <- 0.7
   sig <- 0.5
 
-  diss <- matrix(c(0, d, d, 0), nrow = 2, ncol = 2)
+  diss <- data.frame(ID1 = "1", ID2 = "2", Distance = d)
 
   # diversity.functional must cap to sigma; equivalent to using min(d, sig)
-  diss_capped <- matrix(c(0, sig, sig, 0), nrow = 2, ncol = 2)
+  diss_capped <- data.frame(ID1 = "1", ID2 = "2", Distance = sig)
   expect_equal(diversity.functional(ab, diss, sig), diversity.functional(ab, diss_capped, sig))
 
   # multiplicity.distance closed form for 2 species
   # raoQ_before = 2 * p1 * p2 * min(d, sig); raoQ_after with two clusters at distance sig: 2 * p1 * p2 * sig
-  p <- ab / sum(ab)
+  p <- c(2, 1) / 3
   Q_before <- 2 * p[1] * p[2] * sig
   Q_after <- 2 * p[1] * p[2] * sig
 
-  # After clustering matrix uses inter-cluster distance = sig
-  ab_clust <- ab
-  diss_clust <- diss_capped
-
-  expect_equal(
-    multiplicity.distance(ab = ab, diss = diss, clust = c(1, 2), method = "sigma", sig = sig),
-    (sig - Q_after) / (sig - Q_before)
-  )
+  for (method in c("sigma", "min", "max", "average")) {
+    expect_equal(
+      unname(multiplicity.distance(ab, diss, clust = c(1, 2), method = method, sig = sig)),
+      (sig - Q_after) / (sig - Q_before)
+    )
+  }
 })
-
-
-
-# Doubling property
-# ----------------------------
-# Tests that distance-based functional diversity satisfies the doubling property:
-# when combining three identical groups with maximum inter-group distances,
-# the diversity should be three times the individual group diversity.
-test_that("Distance-based functional diversity satisfies doubling property", {
-  set.seed(42)
-  sig <- 0.9
-  n <- 10
-  ab_unit <- runif(n, 100, 1000)
-  diss_unit <- random_matrix <- matrix(runif(n * n, min = 0.3, max = 0.6), nrow = n, ncol = n)
-  diag(diss_unit) <- 0
-  
-  div <- diversity.functional(ab_unit, diss_unit, sig)
-
-  # Assemblage
-  diss <- matrix(sig, nrow = 3 * n, ncol = 3 * n)
-  diss[1:n, 1:n] <- diss_unit
-  diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
-  diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
-
-  ab <- c(ab_unit, ab_unit, ab_unit)
-
-  expect_equal(diversity.functional(ab, diss, sig) / diversity.functional(ab_unit, diss_unit, sig), 3)
-})
-
-
 
 
 
@@ -87,30 +37,24 @@ test_that("Distance-based functional diversity satisfies doubling property", {
 # of identical units should equal the diversity of representative units.
 # Multiplicity should be 1 (no diversity lost).
 test_that("Clustering identical units: multiplicity equals 1", {
+  set.seed(42)
   sig <- 1
   n <- 10
   ab_unit <- runif(n, 100, 1000)
   diss_unit <- matrix(0, nrow = n, ncol = n)
 
-  div_trad <- diversity.functional.traditional(ab_unit, diss_unit)
-  div <- diversity.functional(ab_unit, diss_unit, sig)
-
   # Assemblage
-  diss <- matrix(sig, nrow = 3 * n, ncol = 3 * n)
-  diss[1:n, 1:n] <- diss_unit
-  diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
-  diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
-
-  ab <- c(ab_unit, ab_unit, ab_unit)
+  diss <- mat_to_table(block_matrix(list(diss_unit, diss_unit, diss_unit), sig))
+  ab <- one_row(c(ab_unit, ab_unit, ab_unit))
+  clust <- rep(1:3, each = n)
 
   # Equivalent (Clusteres)
-  ab_clust <- c(sum(ab_unit), sum(ab_unit), sum(ab_unit))
-  diss_clust <- matrix(sig, ncol = 3, nrow = 3)
-  diag(diss_clust) <- 0
+  ab_clust <- one_row(c(sum(ab_unit), sum(ab_unit), sum(ab_unit)))
+  diss_clust <- mat_to_table(max_diss(3, sig))
 
-  
-  expect_false((diversity.functional.traditional(ab, diss) / diversity.functional.traditional(ab_clust, diss_clust)) == 1)
-  expect_equal(diversity.functional(ab, diss, sig) / diversity.functional(ab_clust, diss_clust, sig), 1)
+
+  expect_equal(unname(diversity.functional(ab, diss, sig) / diversity.functional(ab_clust, diss_clust, sig)), 1)
+  expect_equal(unname(multiplicity.distance(ab, diss, clust, sig = sig)), 1)
 })
 
 
@@ -133,45 +77,35 @@ test_that("Distance-based multiplicity equals ratio of functional diversities", 
     clust <- c(rep(1, n), rep(2, n), rep(3, n))
 
     ab_unit <- runif(n, min_abundance, max_abundance)
-    diss_unit <- matrix(runif(n * n, min = min_intra_distance, max = max_intra_distance), nrow = n, ncol = n)
-    diag(diss_unit) <- 0
-
-    div <- diversity.functional(ab_unit, diss_unit, sig)
+    diss_unit <- rand_diss(n, min = min_intra_distance, max = max_intra_distance)
 
     # Assemblage
-    diss <- matrix(sig, nrow = 3 * n, ncol = 3 * n)
-    diss[1:n, 1:n] <- diss_unit
-    diss[(n + 1):(2 * n), (n + 1):(2 * n)] <- diss_unit
-    diss[(2 * n + 1):(3 * n), (2 * n + 1):(3 * n)] <- diss_unit
-
-    ab <- c(ab_unit, ab_unit, ab_unit)
+    diss <- mat_to_table(block_matrix(list(diss_unit, diss_unit, diss_unit), sig))
+    ab <- one_row(c(ab_unit, ab_unit, ab_unit))
 
     # Equivalent (Clusteres)
-    ab_clust <- c(sum(ab_unit), sum(ab_unit), sum(ab_unit))
-    diss_clust <- matrix(sig, ncol = 3, nrow = 3)
-    diag(diss_clust) <- 0
+    ab_clust <- one_row(c(sum(ab_unit), sum(ab_unit), sum(ab_unit)))
+    diss_clust <- mat_to_table(max_diss(3, sig))
 
     ratio <- diversity.functional(ab, diss, sig) / diversity.functional(ab_clust, diss_clust, sig)
-    m <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "sigma", sig = sig)
+    m <- multiplicity.distance(ab, diss, clust = clust, method = "sigma", sig = sig)
 
-    expect_equal(round(ratio, 5), round(m, 5))
+    expect_equal(round(unname(ratio), 5), round(unname(m), 5))
   }
 })
 
 # Implementation equivalence
 # --------------------------------------------------
-# Tests that the by_blocks implementation produces identical results to the
-# standard implementation using full distance matrices.
-test_that("by_blocks implementation equals standard implementation", {
+# Tests that the sigma method, which only needs the distances inside clusters,
+# equals the legacy implementation with full distance matrices.
+test_that("sigma method with pairs inside clusters equals legacy implementation", {
   # Four elements in two clusters (1-2, 3-4)
   ids <- c("a", "b", "c", "d")
   ab <- c(2, 3, 5, 7)
   clust <- c(1, 1, 2, 2)
   sig <- 0.8
 
-  # Within-cluster distances (symmetric); between clusters implicitly = sig for by_blocks
-  # Build diss_frame with unique pairs only
-  # Only include within-cluster unique pairs; cross-cluster assumed to be sigma internally
+  # Within-cluster distances only
   df <- data.frame(
     ID1 = c("b", "d"),
     ID2 = c("a", "c"),
@@ -179,8 +113,7 @@ test_that("by_blocks implementation equals standard implementation", {
     stringsAsFactors = FALSE
   )
 
-  # by_blocks computation
-  mb <- multiplicity.distance.by_blocks(ids = ids, ab = ab, diss_frame = df, clust = clust, sigma = sig)
+  mb <- multiplicity.distance(one_row(ab, ids), df, clust, sig = sig)
 
   # Manual full matrices: within clusters as above, between clusters = sig
   diss <- matrix(sig, nrow = 4, ncol = 4, dimnames = list(ids, ids))
@@ -188,20 +121,78 @@ test_that("by_blocks implementation equals standard implementation", {
   diss["a", "b"] <- diss["b", "a"] <- 0.2
   diss["c", "d"] <- diss["d", "c"] <- 0.15
 
-  ab_clust <- tapply(ab, clust, sum)
-  diss_clust <- matrix(sig, nrow = 2, ncol = 2)
-  diag(diss_clust) <- 0
+  mm <- legacy$multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "sigma", sig = sig)
 
-  mm <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "sigma", sig = sig)
+  expect_equal(unname(mb), mm, tolerance = 1e-12)
 
-  expect_equal(mb, mm, tolerance = 1e-12)
+  # Listing the pairs between clusters too does not change it
+  expect_equal(multiplicity.distance(one_row(ab, ids), mat_to_table(diss), clust, sig = sig), mb)
+
+  # A missing pair inside a cluster is an error
+  expect_error(
+    multiplicity.distance(one_row(ab, ids), df[1, ], clust, sig = sig),
+    "Missing distances.*unit: 2"
+  )
+})
+
+# Distances between clusters
+# --------------------------------------------------
+# Tests that the sigma method sets the distances between elements of different
+# clusters to sigma, even when they are listed in the table.
+test_that("sigma method sets distances between clusters to sigma", {
+  ids <- c("a", "b", "c", "d")
+  ab <- one_row(c(2, 3, 5, 7), ids)
+  clust <- c(1, 1, 2, 2)
+  sig <- 0.8
+
+  df_within <- data.frame(
+    ID1 = c("a", "c"),
+    ID2 = c("b", "d"),
+    Distance = c(0.2, 0.15),
+    stringsAsFactors = FALSE
+  )
+  # Same pairs plus two pairs across clusters closer than sigma
+  df_cross <- rbind(
+    df_within,
+    data.frame(ID1 = c("a", "b"), ID2 = c("c", "d"), Distance = c(0.1, 0.3))
+  )
+
+  mb_within <- multiplicity.distance(ab, df_within, clust, sig = sig)
+  mb_cross <- multiplicity.distance(ab, df_cross, clust, sig = sig)
+  expect_equal(mb_cross, mb_within)
+
+  # Full matrix with every distance between clusters equal to sigma
+  diss <- matrix(sig, nrow = 4, ncol = 4, dimnames = list(ids, ids))
+  diag(diss) <- 0
+  diss["a", "b"] <- diss["b", "a"] <- 0.2
+  diss["c", "d"] <- diss["d", "c"] <- 0.15
+  expect_equal(
+    unname(mb_cross),
+    legacy$multiplicity.distance(c(2, 3, 5, 7), diss, clust, method = "sigma", sig = sig),
+    tolerance = 1e-12
+  )
+
+  # The legacy implementation uses the distances between clusters: different value
+  diss["a", "c"] <- diss["c", "a"] <- 0.1
+  diss["b", "d"] <- diss["d", "b"] <- 0.3
+  expect_false(isTRUE(all.equal(
+    unname(mb_cross),
+    legacy$multiplicity.distance(c(2, 3, 5, 7), diss, clust, method = "sigma", sig = sig)
+  )))
+
+  # A pair across clusters listed in both orientations is ignored, not rejected
+  df_twice <- rbind(df_cross, data.frame(ID1 = "c", ID2 = "a", Distance = 0.1))
+  expect_equal(
+    multiplicity.distance(ab, df_twice, clust, sig = sig),
+    mb_within
+  )
 })
 
 # Block equivalence for multiple clusters
 # ----------------------------------------
-# Tests that the by_blocks implementation produces identical results to the
-# standard implementation for complex multi-cluster scenarios.
-test_that("by_blocks equals standard implementation for multiple clusters", {
+# Tests that the sigma method produces identical results to the legacy
+# implementation for complex multi-cluster scenarios.
+test_that("sigma method equals legacy implementation for multiple clusters", {
   set.seed(42)
 
   for (w_ in 1:10)
@@ -210,64 +201,35 @@ test_that("by_blocks equals standard implementation for multiple clusters", {
     sigma <- 0.3
 
     # Example matrices
-    A <- matrix(runif(total**2, 0.1, sigma), ncol = total, nrow = total)
-    B <- matrix(runif(total**2, 0.1, sigma), ncol = total, nrow = total)
-    C <- matrix(runif(total**2, 0.1, sigma), ncol = total, nrow = total)
-    D <- matrix(runif(total**2, 0.1, sigma), ncol = total, nrow = total)
+    blocks <- lapply(1:4, function(i) rand_diss(total, 0.1, sigma))
 
-
-    A <- (A + t(A)) / 2
-    B <- (B + t(B)) / 2
-    C <- (C + t(C)) / 2
-    D <- (D + t(D)) / 2
-
-    clust  <- c(rep(1, total), rep(2, total), rep(3, total), rep(4, total))
-
-
-    # Assign row and column names
-    dfs <- c()
-    i <- 0
+    dfs <- list()
     clust <- c()
-    blocks <- list(A, B, C, D)
-    for (M in blocks)
+    for (i in seq_along(blocks))
     {
-      i <- i + 1
       clust <- c(clust, rep(i, total))
-      rownames(M) <- colnames(M) <- (1 + (i - 1) * total):(i * total)
-      df_M <- as.data.frame(as.table(M))
-      colnames(df_M) <- c("ID1", "ID2", "Distance")
-      df_M[["ID1"]] <- as.numeric(df_M[["ID1"]]) + (i - 1) * total
-      df_M[["ID2"]] <- as.numeric(df_M[["ID2"]]) + (i - 1) * total
-      df_M <- df_M[df_M$ID1 > df_M$ID2, ]
-      dfs[[i]] <- df_M
+      dfs[[i]] <- mat_to_table(blocks[[i]], (1 + (i - 1) * total):(i * total))
     }
 
     ids <- 1:(total * length(blocks))
-    ab <- runif(total * length(blocks), 1, 100)
-    ab_clust <- tapply(ab, clust, sum)
+    abund <- matrix(
+      runif(3 * total * length(blocks), 1, 100),
+      nrow = 3,
+      dimnames = list(NULL, ids)
+    )
     diss_frame <- do.call(rbind, dfs)
 
-
-
     # Create block diagonal matrix
-    diss <- matrix(sigma, nrow = total * length(blocks), ncol = total * length(blocks))
+    diss <- block_matrix(blocks, sigma)
 
-    offset <- 0
-    for (M in blocks) {
-      diss[(1:total) + offset, (1:total) + offset] <- M
-      offset <- offset + total
-    }
+    diss_clust <- max_diss(length(blocks), sigma)
 
-    diag(diss) <- 0
+    new <- multiplicity.distance(abund, diss_frame, clust, sig = sigma)
+    classic <- apply(abund, 1, function(ab) {
+      legacy$multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "custom", sig = sigma, clust_ids_order = c(1, 2, 3, 4), diss_clust = diss_clust)
+    })
 
-
-    diss_clust <- matrix(sigma, ncol = length(blocks), nrow = length(blocks))
-    diag(diss_clust) <- 0
-
-    byBlocks <- multiplicity.distance.by_blocks(ids, ab, diss_frame, clust, sigma)
-    classic <- multiplicity.distance(ab = ab, diss = diss, clust = clust, method = "custom", sig = sigma, clust_ids_order = c(1,2,3,4), diss_clust = diss_clust)
-
-    expect_equal(byBlocks - classic, 0)
+    expect_equal(unname(new), unname(classic))
   }
 })
 
@@ -277,25 +239,294 @@ test_that("Distance-based multiplicity is the same using a specific link method 
   for (i in seq_len(10))
   {
     n <- 25
-    ab <- runif(n, min = 1, max = 100)
-    clust <- sample(c("e", "d", "c", "b", "a"), n, replace = TRUE)
-    clust_ids_order <- sample(c("e", "d", "c", "b", "a"))
-    diss <- matrix(runif(n*n, min = 0.3, max = 1), ncol = n, nrow = n)
-    diss <- (diss + t(diss))/2
-    diag(diss) <- 0
+    ids <- paste0("f", seq_len(n))
+    abund <- matrix(runif(4 * n, min = 1, max = 100), nrow = 4, dimnames = list(NULL, ids))
+    clust <- stats::setNames(sample(c("e", "d", "c", "b", "a"), n, replace = TRUE), ids)
+    diss <- rand_diss(n, min = 0.3, max = 1)
+    tab <- mat_to_table(diss, ids)
     sig <- 0.7
 
-    for(method in c("sigma", "min", "average", "max"))
+    for(method in c("min", "average", "max"))
     {
 
-      diss_clust <- cluster_distance_matrix(diss = diss,clust = clust,clust_ids_order = clust_ids_order, method = method, sig = sig)
+      diss_clust <- unit_distances(tab, clust, method = method, sig = sig)
+      diss_clust <- diss_clust[sample(nrow(diss_clust)), ]
 
-      m1 <- multiplicity.distance(ab = ab,diss = diss,clust = clust,method = method, sig = sig)
-      m2 <- multiplicity.distance(ab = ab,diss = diss,clust = clust, method = "custom", sig = sig, clust_ids_order = clust_ids_order, diss_clust = diss_clust)
+      m1 <- multiplicity.distance(abund, tab, clust, method = method, sig = sig)
+      m2 <- multiplicity.distance(abund, tab, clust, method = "custom", sig = sig, diss_clust = diss_clust)
 
       expect_equal(m1, m2)
 
     }
+
+    # The sigma method also sets the distances between subunits of different
+    # clusters to sigma, while custom uses them: they agree only when those
+    # distances are at least sigma
+    diss_clust <- unit_distances(tab, clust, method = "sigma", sig = sig)
+    m_sigma <- multiplicity.distance(abund, tab, clust, method = "sigma", sig = sig)
+    expect_false(isTRUE(all.equal(
+      m_sigma,
+      multiplicity.distance(abund, tab, clust, method = "custom", sig = sig, diss_clust = diss_clust)
+    )))
+
+    far <- diss
+    far[outer(clust, clust, "!=")] <- sig + 0.1
+    tab_far <- mat_to_table(far, ids)
+    expect_equal(
+      multiplicity.distance(abund, tab_far, clust, method = "sigma", sig = sig),
+      multiplicity.distance(abund, tab_far, clust, method = "custom", sig = sig, diss_clust = diss_clust)
+    )
+    expect_equal(multiplicity.distance(abund, tab_far, clust, method = "sigma", sig = sig), m_sigma)
 }
 
+})
+
+
+test_that("min, max and average methods equal the legacy implementation", {
+  set.seed(42)
+  for (i in seq_len(5)) {
+    n <- 30
+    ids <- paste0("f", seq_len(n))
+    # Character cluster ids (legacy fails with numeric ids that are not 1..k)
+    clust <- sample(c("e", "d", "c", "b", "a"), n, replace = TRUE)
+    diss <- rand_diss(n, min = 0.1, max = 1.2)
+    abund <- matrix(
+      runif(6 * n, min = 1, max = 100) * (runif(6 * n) > 0.3),
+      nrow = 6,
+      dimnames = list(NULL, ids)
+    )
+    tab <- mat_to_table(diss, ids)
+
+    for (sig in c(0.4, 0.8, 1.5)) {
+      for (method in c("min", "max", "average")) {
+        new <- multiplicity.distance(abund, tab, clust, method = method, sig = sig)
+        # Legacy is given a dist object: it gives wrong cluster distances for full matrices
+        classic <- apply(abund, 1, function(ab) {
+          legacy$multiplicity.distance(ab, stats::as.dist(diss), clust, method = method, sig = sig)
+        })
+        expect_equal(unname(new), unname(classic))
+        expect_equal(
+          multiplicity.distance(Matrix::Matrix(abund, sparse = TRUE), tab, clust, method = method, sig = sig),
+          new
+        )
+      }
+    }
+  }
+})
+
+
+test_that("Custom cluster distances equal the legacy implementation", {
+  set.seed(7)
+  n <- 20
+  ids <- paste0("f", seq_len(n))
+  clust <- sample(rep(c("A", "B", "C", "D"), length.out = n))
+  diss <- rand_diss(n, min = 0.1, max = 1)
+  abund <- matrix(runif(5 * n, 1, 100), nrow = 5, dimnames = list(NULL, ids))
+  clust_ids <- c("A", "B", "C", "D")
+  diss_clust <- rand_diss(4, min = 0.2, max = 1.2)
+
+  new <- multiplicity.distance(
+    abund, mat_to_table(diss, ids), clust,
+    method = "custom", sig = 0.9, diss_clust = mat_to_table(diss_clust, clust_ids)
+  )
+  classic <- apply(abund, 1, function(ab) {
+    legacy$multiplicity.distance(
+      ab, diss, clust,
+      method = "custom", sig = 0.9, clust_ids_order = clust_ids, diss_clust = diss_clust
+    )
+  })
+  expect_equal(unname(new), unname(classic))
+})
+
+
+test_that("Distance-based multiplicity input validation", {
+  ids <- c("a", "b", "c", "d")
+  abund <- one_row(c(2, 3, 5, 7), ids)
+  clust <- c(1, 1, 2, 2)
+  diss <- matrix(0.9, 4, 4)
+  diag(diss) <- 0
+  tab <- mat_to_table(diss, ids)
+
+  expect_error(multiplicity.distance(abund, tab, clust, sig = 0), "positive")
+  expect_error(multiplicity.distance(abund, tab, clust, sig = c(1, 2)), "positive")
+  expect_error(multiplicity.distance(abund, tab, clust, method = "median"), "not supported")
+  expect_error(multiplicity.distance(abund, tab, clust, method = "custom"), "diss_clust cannot be NULL")
+  expect_error(multiplicity.distance(abund, tab, c(1, 1, 2)), "same number of subunits")
+
+  # Methods other than sigma need every pair
+  expect_error(multiplicity.distance(abund, tab[-2, ], clust, method = "average"), "Missing distances")
+  expect_error(multiplicity.distance(abund, tab[-2, ], clust, method = "custom", diss_clust = data.frame(1, 2, 0.5)), "Missing distances")
+
+  # Custom cluster distances need every pair of clusters
+  expect_error(
+    multiplicity.distance(one_row(1:3, c("a", "b", "c")), mat_to_table(max_diss(3), c("a", "b", "c")), c(1, 2, 3),
+      method = "custom", diss_clust = data.frame(1, 2, 0.5)
+    ),
+    "Missing distances in `diss_clust`"
+  )
+
+  # Empty samples give NA
+  expect_true(is.na(multiplicity.distance(one_row(c(0, 0, 0, 0), ids), tab, clust)))
+})
+
+
+test_that("Test cluster distances (unit_distances)", {
+    set.seed(42)
+    for (n_clust in 2:10) {
+        # Constructs Matrix
+        diss_clust <- matrix(
+            runif(min = 0.3, max = 1, n_clust * n_clust),
+            nrow = n_clust,
+            ncol = n_clust
+        )
+
+        # Converts to distance
+        diss_clust <- (diss_clust + t(diss_clust)) / 2
+        diag(diss_clust) <- 0
+        diss_clust <- round(diss_clust, 2)
+
+        clust_ids_order <- seq_len(n_clust)
+
+        # Generates the cluster ids
+        clust <- c()
+        for (i in clust_ids_order) {
+            clust <- c(clust, rep(i, runif(1, min = 1, max = 10)))
+        }
+
+        n_elem <- length(clust)
+        n_clust <- length(clust_ids_order)
+        ids <- paste0("e", seq_len(n_elem))
+        named_clust <- stats::setNames(clust, ids)
+
+        # Generates the distance
+        diss_avg <- matrix(0, nrow = n_elem, ncol = n_elem)
+        diss_max <- matrix(0, nrow = n_elem, ncol = n_elem)
+        diss_min <- matrix(2, nrow = n_elem, ncol = n_elem)
+        diag(diss_min) <- 0
+
+        for (i in seq_len(n_clust - 1)) {
+            for (j in (i + 1):n_clust) {
+                # Average
+                diss_avg[which(i == clust), which(j == clust)] <- diss_clust[
+                    i,
+                    j
+                ]
+                diss_avg[which(j == clust), which(i == clust)] <- diss_clust[
+                    i,
+                    j
+                ]
+
+                # Distorts
+                if (sum(i == clust) > 1 && sum(j == clust) > 1) {
+                    noise <- runif(1, min = 0.1, max = 0.3)
+                    diss_avg[
+                        which(i == clust)[1],
+                        which(j == clust)[1]
+                    ] <- diss_clust[i, j] - noise
+                    diss_avg[
+                        which(j == clust)[1],
+                        which(i == clust)[1]
+                    ] <- diss_clust[i, j] - noise
+                    diss_avg[
+                        which(i == clust)[2],
+                        which(j == clust)[2]
+                    ] <- diss_clust[i, j] + noise
+                    diss_avg[
+                        which(j == clust)[2],
+                        which(i == clust)[2]
+                    ] <- diss_clust[i, j] + noise
+                }
+
+                # Max
+                diss_max[
+                    which(i == clust)[1],
+                    which(j == clust)[1]
+                ] <- diss_clust[
+                    i,
+                    j
+                ]
+                diss_max[
+                    which(j == clust)[1],
+                    which(i == clust)[1]
+                ] <- diss_clust[
+                    i,
+                    j
+                ]
+
+                # Min
+                diss_min[
+                    which(i == clust)[1],
+                    which(j == clust)[1]
+                ] <- diss_clust[
+                    i,
+                    j
+                ]
+                diss_min[
+                    which(j == clust)[1],
+                    which(i == clust)[1]
+                ] <- diss_clust[
+                    i,
+                    j
+                ]
+            }
+        }
+
+        expected <- mat_to_table(diss_clust, as.character(clust_ids_order))
+        as_matrix <- function(tab) {
+            m <- matrix(0, n_clust, n_clust)
+            m[cbind(as.integer(tab$ID1), as.integer(tab$ID2))] <- tab$Distance
+            m[cbind(as.integer(tab$ID2), as.integer(tab$ID1))] <- tab$Distance
+            m
+        }
+
+        for (method in c("average", "min", "max")) {
+            diss <- switch(method, average = diss_avg, min = diss_min, max = diss_max)
+            res <- unit_distances(mat_to_table(diss, ids), named_clust, method = method)
+            expect_equal(as_matrix(res), diss_clust)
+
+            # Same as the legacy implementation (given a dist object)
+            expect_equal(
+                as_matrix(res),
+                unname(as.matrix(legacy$cluster_distance_matrix(stats::as.dist(diss), clust, clust_ids_order, method = method)))
+            )
+        }
+
+        res <- unit_distances(mat_to_table(diss_avg, ids), named_clust, method = "sigma", sig = 0.7)
+        expect_equal(as_matrix(res), max_diss(n_clust, 0.7))
+    }
+
+    # Validation
+    clust <- c(a = 1, b = 1, c = 2)
+    tab <- data.frame(ID1 = c("a", "a", "b"), ID2 = c("b", "c", "c"), Distance = c(0.1, 0.5, 0.7))
+    expect_error(unit_distances(tab, unname(clust)), "named")
+    expect_error(unit_distances(tab[1:2, ], clust, method = "average"), "Missing distances")
+    expect_error(unit_distances(tab, clust, method = "median"), "not supported")
+    expect_equal(unit_distances(tab, clust, method = "average")$Distance, 0.6)
+})
+
+
+test_that("sigma method caps the distances inside clusters (closed form)", {
+  # Two clusters: {a, b} and {c}. With d(a, b) >= sigma every pair is at sigma,
+  # so multiplicity is the ratio of inverse Simpson indices after / before
+  ids <- c("a", "b", "c")
+  ab <- one_row(c(2, 3, 5), ids)
+  clust <- c(1, 1, 2)
+  sig <- 0.5
+  p <- c(2, 3, 5) / 10
+  p_clust <- c(5, 5) / 10
+  expected <- sum(p_clust^2) / sum(p^2)
+
+  for (d in c(0.5, 0.7, 3)) {
+    diss <- data.frame(ID1 = "a", ID2 = "b", Distance = d)
+    expect_equal(unname(multiplicity.distance(ab, diss, clust, sig = sig)), expected, info = d)
+  }
+
+  # Below sigma the distance counts: Q_before = sig (1 - sum p^2) + 2 p_a p_b (d - sig)
+  d <- 0.2
+  q_before <- sig * (1 - sum(p^2)) + 2 * p[1] * p[2] * (d - sig)
+  q_after <- sig * (1 - sum(p_clust^2))
+  expect_equal(
+    unname(multiplicity.distance(ab, data.frame(ID1 = "a", ID2 = "b", Distance = d), clust, sig = sig)),
+    (sig - q_after) / (sig - q_before)
+  )
 })

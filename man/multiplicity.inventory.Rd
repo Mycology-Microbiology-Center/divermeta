@@ -4,14 +4,16 @@
 \alias{multiplicity.inventory}
 \title{Inventory multiplicity}
 \usage{
-multiplicity.inventory(ab, clust, q = 1)
+multiplicity.inventory(abund, clust, q = 1)
 }
 \arguments{
-\item{ab}{Numeric vector of element (subunit) abundances. Elements with zero abundance
-are automatically removed before computation.}
+\item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
+and subunits in columns. Column names are the subunit identifiers.}
 
-\item{clust}{Vector or factor of cluster memberships for each element of \code{ab}.
-Must have the same length as \code{ab}}
+\item{clust}{Vector or factor of cluster memberships for each subunit. If named, names are
+subunit identifiers and every column of \code{abund} must be listed; otherwise it must follow the
+columns of \code{abund}. A data frame is also accepted, with two columns (subunit identifiers, units) or one
+column of units (named by its row names, if set).}
 
 \item{q}{Numeric order of the Hill number (default \code{1}). Controls abundance weighting:
 \describe{
@@ -22,46 +24,35 @@ Must have the same length as \code{ab}}
 Must be non-negative.}
 }
 \value{
-Numeric scalar, the inventory multiplicity \eqn{^{q}M}{M^q}. This value can be
-interpreted as the effective number of equally abundant elements per cluster. A value of 1
-indicates each cluster contains essentially one element (no diversity lost), while higher
-values indicate greater intra-cluster diversity.
+Named numeric vector with the inventory multiplicity \eqn{^{q}M}{M^q} of every sample.
+This value can be interpreted as the effective number of equally abundant elements per cluster.
+A value of 1 indicates each cluster contains essentially one element (no diversity lost), while
+higher values indicate greater intra-cluster diversity. Samples with zero total abundance get \code{NA}.
 }
 \description{
 Computes inventory multiplicity \eqn{^{q}M}{M^q}, the within-cluster diversity component
-under Hill-number partitioning. It summarizes the average diversity inside
+under Hill-number partitioning, for every sample. It summarizes the average diversity inside
 clusters given element abundances and their cluster memberships. Use \code{q}
 to control abundance weighting (e.g., \code{q = 0} richness-like, \code{q = 1}
 Shannon-type).
 }
+\details{
+Subunits with zero abundance in a sample are ignored for that sample.
+}
 \examples{
-# Example 1: High multiplicity (many diverse elements per cluster)
-# Three clusters, each with 3 equally abundant elements
-ab <- rep(10, 9)
-clust <- c(rep(1, 3), rep(2, 3), rep(3, 3))
-multiplicity.inventory(ab, clust)
-# Result: 3 (each cluster has effective diversity of 3)
+# Three clusters with three subunits each (a, b, c)
+clust <- c(a1 = "a", a2 = "a", a3 = "a", b1 = "b", b2 = "b", b3 = "b",
+           c1 = "c", c2 = "c", c3 = "c")
+abund <- rbind(
+  High = rep(10, 9),                     # every subunit equally abundant
+  Low = c(10, 0, 0, 20, 0, 0, 30, 0, 0), # one subunit per cluster
+  Uneven = c(10, 5, 2, 8, 8, 8, 20, 1, 0)
+)
+colnames(abund) <- names(clust)
 
-# Example 2: Low multiplicity (one element per cluster)
-# Three clusters, each with one element
-ab <- c(10, 20, 30)
-clust <- c(1, 2, 3)
-multiplicity.inventory(ab, clust)
-# Result: 1 (no diversity lost, each cluster is a single element)
-
-# Example 3: Unequal abundances within clusters
-ab <- c(10, 5, 2,  # cluster 1: unequal abundances
-        8, 8, 8,    # cluster 2: equal abundances
-        20, 1)      # cluster 3: very unequal abundances
-clust <- c(rep(1, 3), rep(2, 3), rep(3, 2))
-multiplicity.inventory(ab, clust, q = 1)
-
-# Example 4: Using different q values
-ab <- rep(1:12)
-clust <- c(rep(1, 4), rep(2, 4), rep(3, 4))
-multiplicity.inventory(ab, clust, q = 0)  # Richness-like
-multiplicity.inventory(ab, clust, q = 1)  # Shannon-type (default)
-multiplicity.inventory(ab, clust, q = 2)  # Simpson-type
+multiplicity.inventory(abund, clust)          # High: 3, Low: 1
+multiplicity.inventory(abund, clust, q = 0)  # Richness-like
+multiplicity.inventory(abund, clust, q = 2)  # Simpson-type
 
 }
 \references{

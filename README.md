@@ -66,23 +66,24 @@ diversity indices across all samples. Here’s a minimal example:
 ``` r
 library(divermeta)
 
-# Abundance matrix: rows = features, columns = samples
+# Abundance table: rows = samples, columns = features
 abund <- matrix(
-  c(10, 5,  8, 12,  6, 3,  4, 9),
-  nrow = 4,
-  ncol = 2,
+  c(10, 5, 8, 12,
+     6, 3, 4,  9),
+  nrow = 2,
+  byrow = TRUE,
   dimnames = list(
-    c("gene1", "gene2", "gene3", "gene4"),
-    c("Sample_A", "Sample_B")
+    c("Sample_A", "Sample_B"),
+    c("gene1", "gene2", "gene3", "gene4")
   )
 )
 
 # Assign features to clusters
-clusters <- c(gene1 = "Group_A", gene2 = "Group_A", 
-              gene3 = "Group_B", gene4 = "Group_B")
+clust <- c(gene1 = "Group_A", gene2 = "Group_A", 
+           gene3 = "Group_B", gene4 = "Group_B")
 
 # Compute inventory multiplicity
-divermeta(abund, clusters = clusters, indices = "multiplicity_inventory")
+divermeta(abund, clust = clust, indices = "multiplicity_inventory")
 #>     Sample multiplicity_inventory
 #> 1 Sample_A               1.929710
 #> 2 Sample_B               1.868481
