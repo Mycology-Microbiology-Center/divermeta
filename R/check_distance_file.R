@@ -15,9 +15,11 @@
 #' @param scope Which pairs of subunits must be listed: "all" (default) every pair, as needed by
 #'   [raoQuadratic()], [diversity.functional()], [diversity.functional.traditional()],
 #'   [redundancy()] and [multiplicity.distance()] with a linkage method; "within" the pairs of
-#'   subunits of the same unit, as needed by [multiplicity.distance()] with `method = "sigma"` and
-#'   [relative.multiplicity()]; "between" the pairs of subunits of different units, as needed by
-#'   [unit_distances()]. Rows of pairs outside the scope are ignored.
+#'   subunits of the same unit, as needed by [multiplicity.distance()] with `method = "sigma"`,
+#'   [relative.multiplicity()], [relative.multiplicity.ref_div()] and [average.redundancy()];
+#'   "between" the pairs of subunits of different units, as needed by [unit_distances()].
+#'   [divermeta()] needs "all" when any of the requested indices does, and "within" otherwise.
+#'   Rows of pairs outside the scope are ignored.
 #' @param chunk_size Number of rows read at a time (default `1e6`).
 #' @param max_pairs_in_memory Maximum number of pairs expected in memory at a time (default
 #'   `1e7`, about 160 MB). Lower values use less memory and more temporary files.

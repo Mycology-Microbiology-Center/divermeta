@@ -66,15 +66,27 @@ average.redundancy <- function(
   .check_flag(include_absent, "include_absent")
 
   units <- .rm_prepare(abund, diss, clust, NULL, chunk_size, check_large_distance_file, header)
-  acc <- .ar_unit_redundancy_acc(units$A, units$cl, normalize)
-  res <- .consume_pairs(units$src, list(acc), colnames(units$A), units$cl)[[1]]
-
-  .average_units(res$re, res$N > 0, units$ab, include_absent)
+  acc <- .average.redundancy_acc(units$ab, units$cl, normalize, include_absent)
+  .consume_pairs(units$src, list(acc), units$ab$subunits, units$cl)[[1]]
 }
 
 
 # Internal helpers
 # ----------------------------
+
+# Accumulates the average redundancy of every sample over the pairs read. `ab`
+# includes the subunits only listed in `clust` (see .extend_abund)
+.average.redundancy_acc <- function(ab, cl, normalize, include_absent) {
+  units_acc <- .ar_unit_redundancy_acc(ab$A, cl, normalize)
+
+  finish <- function() {
+    res <- units_acc$finish()
+    .average_units(res$re, res$N > 0, ab, include_absent)
+  }
+
+  list(scope = "within", update = units_acc$update, finish = finish)
+}
+
 
 # Redundancy of every unit (columns) in every row of A, reading the pairs from
 # `src`. With N = sum a, S2 = sum a^2 and

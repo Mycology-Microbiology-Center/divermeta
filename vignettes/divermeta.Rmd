@@ -28,6 +28,7 @@ The core function of the package is `divermeta()`, which computes multiple indic
 - inventory multiplicity: `"multiplicity_inventory"`
 - distance‑based multiplicity (σ‑capped): `"multiplicity_distance"`
 - optional companions: `"raoQ"`, `"FD_sigma"`, `"FD_q"`, `"redundancy"`
+- averages over the clusters: relative multiplicity `"relative_multiplicity"` and average redundancy `"average_redundancy"`
 
 Additionally, the package provides `metagenomic.alpha.index()` (MAD) as a standalone function for computing the Metagenomic Alpha-Diversity Index (see below).
 
@@ -293,7 +294,7 @@ write.csv(rbind(diss[-2, ], diss[5, ]), bad_file, row.names = FALSE)
 check_distance_file(bad_file, ids = colnames(abund))
 ```
 
-`scope` sets which pairs are needed: `"all"` (default) for `raoQuadratic()`, `diversity.functional()`, `diversity.functional.traditional()`, `redundancy()` and `multiplicity.distance()` with a linkage method; `"within"` (the pairs inside clusters, which needs `clust`) for `multiplicity.distance()` with `method = "sigma"` and `relative.multiplicity()`; `"between"` (the pairs of features of different clusters, which needs `clust`) for `unit_distances()`. Rows outside the scope are ignored, by the check and by the indices, even when their distance is NA, infinite or negative. For instance, the pairs inside clusters of the bad file are fine:
+`scope` sets which pairs are needed: `"all"` (default) for `raoQuadratic()`, `diversity.functional()`, `diversity.functional.traditional()`, `redundancy()` and `multiplicity.distance()` with a linkage method; `"within"` (the pairs inside clusters, which needs `clust`) for `multiplicity.distance()` with `method = "sigma"`, `relative.multiplicity()`, `relative.multiplicity.ref_div()` and `average.redundancy()`; `"between"` (the pairs of features of different clusters, which needs `clust`) for `unit_distances()`. `divermeta()` needs `"all"` when any of the requested indices does, and `"within"` otherwise. Rows outside the scope are ignored, by the check and by the indices, even when their distance is NA, infinite or negative. For instance, the pairs inside clusters of the bad file are fine:
 
 ```{r}
 check_distance_file(bad_file, ids = colnames(abund), clust = clust, scope = "within")
@@ -306,7 +307,7 @@ See `?"distance-files"` and `?check_distance_file` for the details.
 ## Practical tips
 
 - Ensure `clust` is aligned to `colnames(abund)`; a named vector is the most robust.
-- Provide `diss` as a three-column table (id_1, id_2, distance), scaled to 0-1. Every pair of features present in at least one sample must be listed (with `method = "sigma"`, distance-based multiplicity only needs the pairs inside clusters); pairs with a feature that has zero abundance in every sample may be missing, with a warning. `FD_sigma` and distance-based multiplicity cap distances at `sig`, and `redundancy` caps them at 1; `raoQ` and `FD_q` use them as given.
+- Provide `diss` as a three-column table (id_1, id_2, distance), scaled to 0-1. Every pair of features present in at least one sample must be listed (with `method = "sigma"`, distance-based multiplicity only needs the pairs inside clusters, as relative multiplicity and average redundancy do); pairs with a feature that has zero abundance in every sample may be missing, with a warning. `FD_sigma` and distance-based multiplicity cap distances at `sig`, and `redundancy` caps them at 1; `raoQ` and `FD_q` use them as given.
 - For large studies, pass `diss` as a file path and set `check_large_distance_file = TRUE` (or run `check_distance_file()` once) so that missing or duplicated pairs cannot silently change the results.
 - Choose `q` to emphasize common vs. rare subunits in inventory multiplicity and `FD_q`.
 

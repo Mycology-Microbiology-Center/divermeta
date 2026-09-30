@@ -122,47 +122,16 @@ relative.multiplicity <- function(
   units <- .rm_prepare(
     abund, diss, clust, sigma, chunk_size, check_large_distance_file, header, need_all
   )
-  n_units <- length(units$cl$unit_ids)
-
-  # Reference abundances of every subunit
-  if (assume_homogeneous_abundance) {
-    ref <- rep(1, length(units$cl$unit_of))
-  } else {
-    ref <- as.numeric(Matrix::colSums(units$A))
-  }
-  ref <- matrix(ref, nrow = 1)
-
-  # Units that never occur have no reference. They are absent from every sample,
-  # so dropping them only changes the result when absent units are included
-  G <- .unit_indicator(units$cl$unit_of, n_units)
-  keep <- as.numeric(as.matrix(ref %*% G)) > 0
-  if (!any(keep)) {
+  acc <- .relative.multiplicity_acc(
+    units$ab, units$cl, units$sigma, cap_at_one, include_absent,
+    assume_max_reference_distance, assume_homogeneous_abundance
+  )
+  if (acc$empty) {
     # Every sample is empty: the distances are not read
     units$src$close()
-    return(.by_sample(rep(NA_real_, nrow(units$ab$A)), units$ab))
+    return(acc$finish())
   }
-  if (include_absent && !all(keep)) {
-    warning(paste0(
-      "Units with zero abundance across all samples have no reference and are dropped: ",
-      paste(units$cl$unit_ids[!keep], collapse = ", ")
-    ))
-  }
-
-  # Reference diversities, computed once per unit
-  if (assume_max_reference_distance) {
-    # All pairs at distance sigma: delta D_sigma is the inverse Simpson index
-    N <- as.numeric(as.matrix(ref %*% G))
-    S2 <- as.numeric(as.matrix(ref^2 %*% G))
-    ref_div <- N^2 / S2
-    div <- .rm_unit_diversities(units$A, units$src, units$cl, units$sigma)
-  } else {
-    # The reference is one more row, accumulated in the same read as the samples
-    div <- .rm_unit_diversities(rbind(units$A, ref), units$src, units$cl, units$sigma)
-    ref_div <- as.numeric(div[nrow(div), ])
-    div <- div[-nrow(div), , drop = FALSE]
-  }
-
-  .rm_average_ratios(div[, keep, drop = FALSE], ref_div[keep], units$ab, cap_at_one, include_absent)
+  .consume_pairs(units$src, list(acc), units$ab$subunits, units$cl)[[1]]
 }
 
 
@@ -239,23 +208,10 @@ relative.multiplicity.ref_div <- function(
 # abundance in every sample are only required with `need_all`
 .rm_prepare <- function(abund, diss, clust, sigma, chunk_size, check, header = TRUE,
                         need_all = FALSE) {
-  ab <- .parse_abund(abund)
   clust <- .as_clust_vector(clust)
+  ab <- .extend_abund(.parse_abund(abund), clust)
   A <- ab$A
   subunits <- ab$subunits
-
-  if (!is.null(names(clust))) {
-    extra <- setdiff(.as_ids(names(clust)), subunits)
-    if (length(extra) > 0) {
-      zeros <- matrix(0, nrow = nrow(A), ncol = length(extra))
-      if (inherits(A, "Matrix")) {
-        zeros <- Matrix::Matrix(zeros, sparse = TRUE)
-      }
-      A <- cbind(A, zeros)
-      subunits <- c(subunits, extra)
-      colnames(A) <- subunits
-    }
-  }
 
   # Unnamed per-unit values follow unique(clust) as given, before .parse_clust
   # reorders a named `clust` into the columns of `abund`
@@ -269,6 +225,64 @@ relative.multiplicity.ref_div <- function(
   src <- .diss_source(diss, subunits, chunk_size, check, "within", cl, header = header, need = need)
 
   list(ab = ab, A = A, cl = cl, sigma = sigma, src = src, input_order = input_order)
+}
+
+
+# Accumulates relative multiplicity of every sample over the pairs read. `ab`
+# includes the subunits only listed in `clust` (see .extend_abund) and `sigma`
+# has one value per unit. `empty` says that no unit has a reference (every
+# sample is empty), where the result is NA and the distances are not used
+.relative.multiplicity_acc <- function(ab, cl, sigma, cap_at_one, include_absent,
+                                       assume_max_reference_distance,
+                                       assume_homogeneous_abundance) {
+  A <- ab$A
+  n_units <- length(cl$unit_ids)
+
+  # Reference abundances of every subunit
+  if (assume_homogeneous_abundance) {
+    ref <- rep(1, length(cl$unit_of))
+  } else {
+    ref <- as.numeric(Matrix::colSums(A))
+  }
+  ref <- matrix(ref, nrow = 1)
+
+  # Units that never occur have no reference. They are absent from every sample,
+  # so dropping them only changes the result when absent units are included
+  G <- .unit_indicator(cl$unit_of, n_units)
+  keep <- as.numeric(as.matrix(ref %*% G)) > 0
+  empty <- !any(keep)
+  if (!empty && include_absent && !all(keep)) {
+    warning(paste0(
+      "Units with zero abundance across all samples have no reference and are dropped: ",
+      paste(cl$unit_ids[!keep], collapse = ", ")
+    ))
+  }
+
+  # Reference diversities, computed once per unit
+  if (assume_max_reference_distance) {
+    # All pairs at distance sigma: delta D_sigma is the inverse Simpson index
+    N <- as.numeric(as.matrix(ref %*% G))
+    S2 <- as.numeric(as.matrix(ref^2 %*% G))
+    ref_div <- N^2 / S2
+    units_acc <- .rm_unit_diversities_acc(A, cl, sigma)
+  } else {
+    # The reference is one more row, accumulated in the same read as the samples
+    units_acc <- .rm_unit_diversities_acc(rbind(A, ref), cl, sigma)
+  }
+
+  finish <- function() {
+    if (empty) {
+      return(.by_sample(rep(NA_real_, nrow(A)), ab))
+    }
+    div <- units_acc$finish()
+    if (!assume_max_reference_distance) {
+      ref_div <- as.numeric(div[nrow(div), ])
+      div <- div[-nrow(div), , drop = FALSE]
+    }
+    .rm_average_ratios(div[, keep, drop = FALSE], ref_div[keep], ab, cap_at_one, include_absent)
+  }
+
+  list(scope = "within", update = units_acc$update, finish = finish, empty = empty)
 }
 
 

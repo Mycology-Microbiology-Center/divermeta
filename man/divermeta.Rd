@@ -13,6 +13,10 @@ divermeta(
   sig = 1,
   method = "sigma",
   diss_clust = NULL,
+  include_absent = FALSE,
+  cap_at_one = FALSE,
+  assume_max_reference_distance = FALSE,
+  assume_homogeneous_abundance = FALSE,
   normalize = FALSE,
   chunk_size = 1e+06,
   check_large_distance_file = FALSE,
@@ -27,8 +31,10 @@ and subunits in columns. Column names are the subunit identifiers.}
 subunits and the dissimilarity between them, or the path to a file with them (see
 \link{distance-files}). Every pair of subunits present in at least one sample must be listed
 (see \code{\link[=multiplicity.distance]{multiplicity.distance()}} for the pairs needed with \code{method = "sigma"}); pairs with a
-subunit that has zero abundance in every sample may be missing, with a warning. A file is
-read only once for all the requested indices.}
+subunit that has zero abundance in every sample may be missing, with a warning, except when
+\code{relative_multiplicity} is requested with \code{assume_homogeneous_abundance = TRUE} and
+\code{assume_max_reference_distance = FALSE}, where every subunit counts in the reference. A file
+is read only once for all the requested indices.}
 
 \item{indices}{Character vector of index names to compute (see list above).}
 
@@ -40,7 +46,7 @@ column of units (named by its row names, if set).}
 \code{multiplicity_inventory}). Default \code{1}.}
 
 \item{sig}{Numeric cutoff \code{σ} for distance-based measures (used by
-\code{FD_sigma} and \code{multiplicity_distance}). Default \code{1}.}
+\code{FD_sigma}, \code{multiplicity_distance} and \code{relative_multiplicity}). Default \code{1}.}
 
 \item{method}{Character string specifying the linkage method for
 aggregating distances between clusters. One of: "average", "min",
@@ -49,6 +55,21 @@ of value \code{sig}. Default is "sigma".}
 
 \item{diss_clust}{Optional three-column table of distances between clusters, used by
 \code{multiplicity_distance} when \code{method} is "custom".}
+
+\item{include_absent}{Logical (default \code{FALSE}), used by \code{relative_multiplicity} and
+\code{average_redundancy}. If \code{FALSE}, each sample averages only the units present in it. If
+\code{TRUE}, every unit counts in the average, and units absent from the sample contribute 0.}
+
+\item{cap_at_one}{Logical (default \code{FALSE}), used by \code{relative_multiplicity}. If \code{TRUE}, each
+unit's ratio is capped at 1.}
+
+\item{assume_max_reference_distance}{Logical (default \code{FALSE}), used by
+\code{relative_multiplicity}. If \code{TRUE}, every pair of subunits in the reference of a unit is at
+distance \code{sig}, instead of their listed distance.}
+
+\item{assume_homogeneous_abundance}{Logical (default \code{FALSE}), used by
+\code{relative_multiplicity}. If \code{TRUE}, all subunits of a unit have the same abundance in its
+reference, instead of their abundances pooled across all samples.}
 
 \item{normalize}{Logical indicating whether index values should be normalized to [0, 1]
 by dividing each column by its maximum value. Useful for comparing indices with
@@ -88,14 +109,21 @@ Indices available (use these labels in \code{indices}):
 \item "FD_sigma": distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} (cutoff \code{sig})
 \item "FD_q": distance-based functional diversity \eqn{^{q}FD}{FD^q} (order \eqn{q}{q})
 \item "redundancy": functional redundancy \eqn{Re}{Re}
+\item "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff \code{sig})
+\item "average_redundancy": average redundancy \eqn{\overline{Re}}{mean Re}
 }
 
 Notes:
 \itemize{
 \item Indices that use dissimilarities (\code{multiplicity_distance}, \code{raoQ}, \code{FD_sigma},
-\code{FD_q}, \code{redundancy}) require \code{diss}.
-\item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance})
-require \code{clust}.
+\code{FD_q}, \code{redundancy}, \code{relative_multiplicity}, \code{average_redundancy}) require \code{diss}.
+\item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance},
+\code{relative_multiplicity}, \code{average_redundancy}) require \code{clust}.
+\item \code{relative_multiplicity} and \code{average_redundancy} are computed as in
+\code{\link[=relative.multiplicity]{relative.multiplicity()}} and \code{\link[=average.redundancy]{average.redundancy()}}, which also offer a cutoff per unit,
+known reference diversities (\code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}}) and the normalized
+redundancy. Subunits listed in a named \code{clust} that are not in \code{abund} have zero abundance
+in every sample: they count in the units of these two indices and do not change the others.
 \item Every entry of \code{indices} gives one column, named after the index (aliases such as
 \code{"M_inventory"} are renamed to \code{"multiplicity_inventory"}). An index requested more than once,
 by the same label or through an alias, gives one identical column per request, and the
@@ -135,8 +163,17 @@ divermeta(abund,
   indices = c("multiplicity_inventory", "multiplicity_distance", "raoQ", "redundancy")
 )
 
+## Indices that average over the clusters
+divermeta(abund,
+  clust = clust,
+  diss = diss,
+  sig = 0.8,
+  indices = c("relative_multiplicity", "average_redundancy")
+)
+
 }
 \seealso{
 \code{\link[=multiplicity.inventory]{multiplicity.inventory()}}, \code{\link[=multiplicity.distance]{multiplicity.distance()}}, \code{\link[=diversity.functional]{diversity.functional()}},
-\code{\link[=diversity.functional.traditional]{diversity.functional.traditional()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=redundancy]{redundancy()}}
+\code{\link[=diversity.functional.traditional]{diversity.functional.traditional()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=redundancy]{redundancy()}},
+\code{\link[=relative.multiplicity]{relative.multiplicity()}}, \code{\link[=average.redundancy]{average.redundancy()}}
 }

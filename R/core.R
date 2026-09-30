@@ -84,6 +84,29 @@
 }
 
 
+# Adds the subunits listed in a named `clust` (see .as_clust_vector) but not in
+# `abund`, with zero abundance in every sample. Used by the indices that average
+# over units, where those subunits count in the units and their references
+.extend_abund <- function(ab, clust) {
+  if (is.null(names(clust))) {
+    return(ab)
+  }
+  extra <- setdiff(.as_ids(names(clust)), ab$subunits)
+  if (length(extra) == 0) {
+    return(ab)
+  }
+
+  zeros <- matrix(0, nrow = nrow(ab$A), ncol = length(extra))
+  if (inherits(ab$A, "Matrix")) {
+    zeros <- Matrix::Matrix(zeros, sparse = TRUE)
+  }
+  ab$A <- cbind(ab$A, zeros)
+  ab$subunits <- c(ab$subunits, extra)
+  colnames(ab$A) <- ab$subunits
+  ab
+}
+
+
 # Clustering as a vector, named by subunit when the names are known. Accepts a
 # vector or factor, a one-column matrix or data frame (units, with the subunit
 # identifiers as row names, if set) or a two-column data frame (subunit

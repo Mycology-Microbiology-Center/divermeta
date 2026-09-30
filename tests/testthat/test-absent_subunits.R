@@ -61,7 +61,10 @@ absent_indices <- list(
   },
   AR = function(a, d, cl, ...) average.redundancy(a, d, cl, ...),
   divermeta = function(a, d, cl, ...) {
-    divermeta(a, d, c("raoQ", "FD_sigma", "redundancy", "multiplicity_distance"), cl, sig = 0.8, ...)
+    divermeta(
+      a, d, c("raoQ", "FD_sigma", "redundancy", "multiplicity_distance", "RM", "AR"), cl,
+      sig = 0.8, ...
+    )
   }
 )
 

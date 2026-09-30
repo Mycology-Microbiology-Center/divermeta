@@ -33,7 +33,8 @@
 #' negative distance is an error even in a pair it does not use.
 #'
 #' Pairs with a subunit that has zero abundance in every sample are not needed (except for the
-#' homogeneous reference of [relative.multiplicity()]): if some of them are missing, a warning is
+#' homogeneous reference of [relative.multiplicity()], also when requested through
+#' [divermeta()]): if some of them are missing, a warning is
 #' given and the index is computed without them. When they are listed, they count as any other
 #' row. When `diss` is a file:
 #' \itemize{

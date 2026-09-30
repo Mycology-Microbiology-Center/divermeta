@@ -5,7 +5,6 @@ No correctness problems were found in the indices themselves; every item below i
 
 - **[decision] MAD with a representative absent from the sample.** The mean distance of the cluster then leaves out the representative (its zero self-distance), while a present representative is included, as in the legacy implementation. Check against the definition in Finn (2024). 
 - **[Docs] Vignette explains the effect of `sig` backwards.** A smaller `sig` does increase distance-based multiplicity, but the text says this means "less diversity lost to clustering", while `multiplicity.distance` documents higher values as more diversity lost. [vignettes/divermeta.Rmd:227](vignettes/divermeta.Rmd#L227)
-- **[Docs] Scope lists are incomplete.** The lists of which functions need "all" or "within" pairs leave out `average.redundancy()`, `relative.multiplicity.ref_div()` and `divermeta()`. 
 - **[Check] `R CMD check` NOTEs from the visualisation functions.** Undefined global variables `value` and `mag`, and a help link to `ade4`, which is not a dependency. [R/visualize_dist.R:30](R/visualize_dist.R#L30)
 - **[Check] ggplot2 is used without checking it is installed.** It is only in Suggests. The `visualize_*` examples are now guarded with `@examplesIf`, but the vignette still calls them unconditionally, so it fails to build where ggplot2 is missing.
 - **[Site] The committed pkgdown site (`docs/`) is stale.** It has pages for removed functions (`cluster_distance_matrix`, `*.by_blocks`, `dist_quadratic_form`, `convert_to_dist_indices`) and none for the new ones.

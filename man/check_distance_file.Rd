@@ -29,9 +29,11 @@ identifiers, units) or one column of units. Only needed for \code{scope} "within
 \item{scope}{Which pairs of subunits must be listed: "all" (default) every pair, as needed by
 \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=diversity.functional]{diversity.functional()}}, \code{\link[=diversity.functional.traditional]{diversity.functional.traditional()}},
 \code{\link[=redundancy]{redundancy()}} and \code{\link[=multiplicity.distance]{multiplicity.distance()}} with a linkage method; "within" the pairs of
-subunits of the same unit, as needed by \code{\link[=multiplicity.distance]{multiplicity.distance()}} with \code{method = "sigma"} and
-\code{\link[=relative.multiplicity]{relative.multiplicity()}}; "between" the pairs of subunits of different units, as needed by
-\code{\link[=unit_distances]{unit_distances()}}. Rows of pairs outside the scope are ignored.}
+subunits of the same unit, as needed by \code{\link[=multiplicity.distance]{multiplicity.distance()}} with \code{method = "sigma"},
+\code{\link[=relative.multiplicity]{relative.multiplicity()}}, \code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}} and \code{\link[=average.redundancy]{average.redundancy()}};
+"between" the pairs of subunits of different units, as needed by \code{\link[=unit_distances]{unit_distances()}}.
+\code{\link[=divermeta]{divermeta()}} needs "all" when any of the requested indices does, and "within" otherwise.
+Rows of pairs outside the scope are ignored.}
 
 \item{chunk_size}{Number of rows read at a time (default \code{1e6}).}
 

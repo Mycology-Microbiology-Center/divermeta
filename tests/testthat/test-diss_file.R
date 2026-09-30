@@ -300,7 +300,7 @@ test_that("unit distances with sigma do not need the distances", {
 test_that("divermeta reads the file once for all indices", {
   st <- make_file_study()
   path <- write_diss(st$diss, "csv.gz")
-  indices <- c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq")
+  indices <- c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq", "RM", "AR")
 
   opened <- 0
   local_mocked_bindings(.open_diss_file = function(path) {
