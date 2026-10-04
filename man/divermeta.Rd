@@ -110,7 +110,7 @@ Indices available (use these labels in \code{indices}):
 \item "FD_q": distance-based functional diversity \eqn{^{q}FD}{FD^q} (order \eqn{q}{q})
 \item "redundancy": functional redundancy \eqn{Re}{Re}
 \item "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff \code{sig})
-\item "average_redundancy": average redundancy \eqn{\overline{Re}}{mean Re}
+\item "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
 }
 
 Notes:
@@ -120,9 +120,9 @@ Notes:
 \item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance},
 \code{relative_multiplicity}, \code{average_redundancy}) require \code{clust}.
 \item \code{relative_multiplicity} and \code{average_redundancy} are computed as in
-\code{\link[=relative.multiplicity]{relative.multiplicity()}} and \code{\link[=average.redundancy]{average.redundancy()}}, which also offer a cutoff per unit,
-known reference diversities (\code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}}) and the normalized
-redundancy. Subunits listed in a named \code{clust} that are not in \code{abund} have zero abundance
+\code{\link[=relative.multiplicity]{relative.multiplicity()}} and \code{\link[=average.redundancy]{average.redundancy()}} (with \code{normalize = TRUE}), which also
+offer a cutoff per unit, known reference diversities (\code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}}) and
+the unnormalized redundancy. Subunits listed in a named \code{clust} that are not in \code{abund} have zero abundance
 in every sample: they count in the units of these two indices and do not change the others.
 \item Every entry of \code{indices} gives one column, named after the index (aliases such as
 \code{"M_inventory"} are renamed to \code{"multiplicity_inventory"}). An index requested more than once,

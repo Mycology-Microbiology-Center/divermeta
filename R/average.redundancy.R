@@ -104,7 +104,7 @@ average.redundancy <- function(
     i <- pairs$i[within]
     j <- pairs$j[within]
     d <- pmin(pairs$d[within], 1)
-    acc <<- acc + .pair_sums(A, i, j, d, group = cl$unit_of[i], n_groups = n_units)
+    acc <<- acc + .pair_sums(A, i, j, d, col_group = cl$unit_of, n_groups = n_units)
   }
 
   finish <- function() {

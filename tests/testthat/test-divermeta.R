@@ -92,7 +92,7 @@ test_that("multiple indices and alias mapping; matches direct functions", {
   expect_equal(res$multiplicity_distance, unname(multiplicity.distance(fx$abund, fx$diss, fx$clust, method = "sigma", sig = sig)))
   expect_equal(res$FD_q, unname(diversity.functional.traditional(fx$abund, fx$diss, q = q)))
   expect_equal(res$relative_multiplicity, unname(relative.multiplicity(fx$abund, fx$diss, fx$clust, sigma = sig)))
-  expect_equal(res$average_redundancy, unname(average.redundancy(fx$abund, fx$diss, fx$clust)))
+  expect_equal(res$average_redundancy, unname(average.redundancy(fx$abund, fx$diss, fx$clust, normalize = TRUE)))
 
   res_norm <- divermeta(fx$abund,
     diss = fx$diss,
@@ -309,8 +309,8 @@ test_that("results do not depend on how the pairs are split into internal chunks
   }
   expected <- run()
 
-  # A few cells per internal chunk: many chunks of pairs for every read
-  local_mocked_bindings(.chunk_cells = 13)
+  # Little work per internal product: many chunks of pairs for every read
+  local_mocked_bindings(.chunk_work = 13, .chunk_pairs = 3)
   expect_equal(run(), expected)
 })
 
@@ -385,7 +385,7 @@ test_that("relative multiplicity and average redundancy match the direct functio
     flags <- as.list(rm_flags[k, ])
     info <- paste(names(flags)[unlist(flags)], collapse = ", ")
     rm <- do.call(relative.multiplicity, c(list(st$abund, st$diss, st$clust, sigma = sig), flags))
-    ar <- average.redundancy(st$abund, st$diss, st$clust, include_absent = flags$include_absent)
+    ar <- average.redundancy(st$abund, st$diss, st$clust, include_absent = flags$include_absent, normalize = TRUE)
 
     # Alone, where only the pairs inside the units are read
     res <- do.call(divermeta, c(
@@ -427,7 +427,7 @@ test_that("subunits only listed in clust count in relative multiplicity and aver
     info <- paste(names(flags)[unlist(flags)], collapse = ", ")
     run <- function(expr) if (flags$include_absent) suppressWarnings(expr) else expr
     rm <- run(do.call(relative.multiplicity, c(list(abund, st$diss, st$clust, sigma = sig), flags)))
-    ar <- average.redundancy(abund, st$diss, st$clust, include_absent = flags$include_absent)
+    ar <- average.redundancy(abund, st$diss, st$clust, include_absent = flags$include_absent, normalize = TRUE)
 
     res <- run(do.call(divermeta, c(
       list(abund, st$diss, c(others, unit_indices), st$clust, sig = sig),

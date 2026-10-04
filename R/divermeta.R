@@ -12,7 +12,7 @@
 #' - "FD_q": distance-based functional diversity \eqn{^{q}FD}{FD^q} (order \eqn{q}{q})
 #' - "redundancy": functional redundancy \eqn{Re}{Re}
 #' - "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff `sig`)
-#' - "average_redundancy": average redundancy \eqn{\overline{Re}}{mean Re}
+#' - "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
 #'
 #' Notes:
 #' - Indices that use dissimilarities (`multiplicity_distance`, `raoQ`, `FD_sigma`,
@@ -20,9 +20,9 @@
 #' - Indices that use clustering (`multiplicity_inventory`, `multiplicity_distance`,
 #'   `relative_multiplicity`, `average_redundancy`) require `clust`.
 #' - `relative_multiplicity` and `average_redundancy` are computed as in
-#'   [relative.multiplicity()] and [average.redundancy()], which also offer a cutoff per unit,
-#'   known reference diversities ([relative.multiplicity.ref_div()]) and the normalized
-#'   redundancy. Subunits listed in a named `clust` that are not in `abund` have zero abundance
+#'   [relative.multiplicity()] and [average.redundancy()] (with `normalize = TRUE`), which also
+#'   offer a cutoff per unit, known reference diversities ([relative.multiplicity.ref_div()]) and
+#'   the unnormalized redundancy. Subunits listed in a named `clust` that are not in `abund` have zero abundance
 #'   in every sample: they count in the units of these two indices and do not change the others.
 #' - Every entry of `indices` gives one column, named after the index (aliases such as
 #'   `"M_inventory"` are renamed to `"multiplicity_inventory"`). An index requested more than once,
@@ -226,7 +226,7 @@ divermeta <- function(
         assume_max_reference_distance, assume_homogeneous_abundance
       )
     },
-    average_redundancy = function() .average.redundancy_acc(ab, cl, FALSE, include_absent)
+    average_redundancy = function() .average.redundancy_acc(ab, cl, TRUE, include_absent)
   )
   with_diss <- unique(normalized_indices[normalized_indices %in% names(acc_map)])
   res_diss <- list()

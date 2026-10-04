@@ -307,7 +307,7 @@ relative.multiplicity.ref_div <- function(
     j <- pairs$j[within]
     g <- cl$unit_of[i]
     w <- pmin(pairs$d[within], sigma[g]) - sigma[g]
-    acc <<- acc + .pair_sums(A, i, j, w, group = g, n_groups = n_units)
+    acc <<- acc + .pair_sums(A, i, j, w, col_group = cl$unit_of, n_groups = n_units)
   }
 
   finish <- function() {

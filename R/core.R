@@ -7,8 +7,12 @@
 # The helpers below validate and index them once, and accumulate sums over the
 # pairs of the distance table chunk by chunk, so no distance matrix is built.
 
-# Number of cells (samples x pairs) processed at a time by .pair_sums
-.chunk_cells <- 1e7
+# Size of the sparse products of .pair_sums: at most .chunk_work nonzero
+# abundances of the pairs read (the sum over the pairs of the nonzeros of the
+# column of one subunit) and at most .chunk_pairs pairs per product. With 660
+# samples and the pairs read 5e6 at a time, the peak is about 0.7-0.9 GB
+.chunk_work <- 2e7
+.chunk_pairs <- 5e6
 
 # Orders q closer than this to 1 use the analytic limit at q = 1, since the
 # general formula loses precision there
@@ -27,6 +31,12 @@
 }
 
 
+# Any matrix (base or Matrix) as a sparse numeric dgCMatrix
+.as_dgc <- function(M) {
+  methods::as(methods::as(methods::as(M, "dMatrix"), "generalMatrix"), "CsparseMatrix")
+}
+
+
 # Validates the abundance table. Returns the abundances (base matrix or sparse
 # dgCMatrix), the sample and subunit identifiers and the total of every sample
 .parse_abund <- function(abund) {
@@ -41,7 +51,7 @@
     stop("`abund` must be numeric")
   }
   if (is_sparse) {
-    abund <- methods::as(methods::as(methods::as(abund, "dMatrix"), "generalMatrix"), "CsparseMatrix")
+    abund <- .as_dgc(abund)
     vals <- abund@x
   } else {
     vals <- abund
@@ -393,30 +403,72 @@
 
 
 # For every sample (row of X and Y), sum over the pairs k of X[, i_k] Y[, j_k] w_k.
-# With `group`, the sums are kept apart for every group of pairs (one column per
-# group). Pairs are read in chunks, so only a few columns are needed at a time
-.pair_sums <- function(X, i, j, w, Y = X, group = NULL, n_groups = 1L) {
+# With `col_group` (the group of every column), the sums are kept apart for
+# every group (one column per group); both subunits of every pair must be in the
+# same group.
+# With D the columns x columns matrix with D[i_k, j_k] = w_k (repeated pairs add
+# up), the sums are rowSums((X %*% D) * Y), one sparse product per chunk of
+# pairs. The product adds up the pairs that share j before the elementwise
+# product, so X and Y are swapped when the pairs share i more often (the
+# distance files are sorted by the first subunit)
+.pair_sums <- function(X, i, j, w, Y = X, col_group = NULL, n_groups = 1L) {
   n_rows <- nrow(X)
-  out <- matrix(0, nrow = n_rows, ncol = if (is.null(group)) 1L else n_groups)
+  out <- matrix(0, nrow = n_rows, ncol = if (is.null(col_group)) 1L else n_groups)
   m <- length(w)
   if (m == 0 || n_rows == 0) {
     return(out)
   }
+  if (!is.null(col_group) && any(col_group[i] != col_group[j])) {
+    stop("Internal error: pairs of subunits of different groups in .pair_sums")
+  }
 
-  chunk <- max(1L, floor(.chunk_cells / n_rows))
-  for (start in seq(1, m, by = chunk)) {
-    r <- start:min(m, start + chunk - 1)
-    prod <- X[, i[r], drop = FALSE] * Y[, j[r], drop = FALSE]
-    if (is.null(group)) {
-      out[, 1] <- out[, 1] + as.vector(as.matrix(prod %*% w[r]))
+  X <- .as_dgc(X)
+  Y <- .as_dgc(Y)
+  nnz_x <- diff(X@p)
+  nnz_y <- diff(Y@p)
+
+  # Pairs that add nothing: zero weight, or a subunit absent from every sample
+  keep <- w != 0 & nnz_x[i] > 0 & nnz_y[j] > 0
+  if (!all(keep)) {
+    i <- i[keep]
+    j <- j[keep]
+    w <- w[keep]
+    m <- length(w)
+    if (m == 0) {
+      return(out)
+    }
+  }
+
+  # The sum is the same with X, i and Y, j swapped
+  if (sum(!duplicated(i)) < sum(!duplicated(j))) {
+    tmp <- X
+    X <- Y
+    Y <- tmp
+    tmp <- i
+    i <- j
+    j <- tmp
+    nnz_x <- nnz_y
+  }
+
+  # Chunks end where the work (nonzeros of X[, i_k] read) passes a multiple of
+  # .chunk_work, and every .chunk_pairs pairs
+  work <- cumsum(as.numeric(nnz_x[i]))
+  n_splits <- ceiling(m / .chunk_pairs)
+  chunk <- floor(work / .chunk_work) * n_splits + (seq_len(m) - 1) %/% .chunk_pairs
+  ends <- c(which(diff(chunk) != 0), m)
+
+  n_cols <- ncol(X)
+  G <- if (!is.null(col_group)) .unit_indicator(col_group, n_groups)
+  start <- 1L
+  for (end in ends) {
+    r <- start:end
+    start <- end + 1L
+    D <- Matrix::sparseMatrix(i = i[r], j = j[r], x = w[r], dims = c(n_cols, n_cols))
+    Z <- (X %*% D) * Y
+    if (is.null(col_group)) {
+      out[, 1] <- out[, 1] + Matrix::rowSums(Z)
     } else {
-      W <- Matrix::sparseMatrix(
-        i = seq_along(r),
-        j = group[r],
-        x = w[r],
-        dims = c(length(r), n_groups)
-      )
-      out <- out + as.matrix(prod %*% W)
+      out <- out + as.matrix(Z %*% G)
     }
   }
   out
