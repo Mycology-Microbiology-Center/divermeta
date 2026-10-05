@@ -139,7 +139,7 @@ check_distance_file <- function(
   # Buckets: ranges of the first subunit i, with about max_pairs_in_memory
   # expected pairs each
   expected <- .expected_partners(scope, n, cl)
-  bucket_of <- pmax(1L, as.integer(ceiling(cumsum(expected) / max_pairs_in_memory)))
+  bucket_of <- pmax(1L, as.integer(ceiling(cumsum(as.numeric(expected)) / max_pairs_in_memory)))
   n_buckets <- if (n > 0) max(bucket_of) else 0L
 
   dir <- tempfile("divermeta_check_", tmpdir = tmp_dir)

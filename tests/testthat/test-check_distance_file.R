@@ -226,3 +226,17 @@ test_that("a row with an invalid distance is invalid, not also missing", {
     expect_equal(res$n_used, nrow(diss) - 1, info = bad_value)
   }
 })
+
+
+test_that("more than 2^31 expected pairs do not overflow the buckets", {
+  # n * (n - 1) / 2 > 2^31, too many pairs for an integer cumsum
+  n <- 65537
+  ids <- paste0("g", seq_len(n))
+  path <- write_diss(data.frame(ID1 = "g1", ID2 = "g2", Distance = 0.5), "csv")
+
+  res <- expect_no_warning(check_distance_file(path, ids))
+  expect_false(res$ok)
+  expect_equal(res$n_expected, n * (n - 1) / 2)
+  expect_equal(res$n_used, 1)
+  expect_equal(res$n_missing, n * (n - 1) / 2 - 1)
+})
