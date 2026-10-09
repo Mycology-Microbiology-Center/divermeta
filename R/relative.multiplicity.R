@@ -46,7 +46,7 @@
 #'   [distance-files].
 #'
 #' @return Named numeric vector with the relative multiplicity \eqn{RM}{RM} of every sample.
-#'   Samples with zero total abundance get `NA`.
+#'   Samples with zero total abundance get 0.
 #'
 #' @details
 #' Let \eqn{f}{f} be the composition of a unit in the sample, \eqn{N_f}{N_f} its total abundance
@@ -148,7 +148,7 @@ relative.multiplicity <- function(
 #'   with [diversity.functional()].
 #'
 #' @return Named numeric vector with the relative multiplicity \eqn{RM}{RM} of every sample.
-#'   Samples with zero total abundance get `NA`.
+#'   Samples with zero total abundance get 0.
 #'
 #' @details
 #' `sigma` is only used for the diversities of the samples. As in [relative.multiplicity()], only
@@ -231,7 +231,7 @@ relative.multiplicity.ref_div <- function(
 # Accumulates relative multiplicity of every sample over the pairs read. `ab`
 # includes the subunits only listed in `clust` (see .extend_abund) and `sigma`
 # has one value per unit. `empty` says that no unit has a reference (every
-# sample is empty), where the result is NA and the distances are not used
+# sample is empty), where the result is 0 and the distances are not used
 .relative.multiplicity_acc <- function(ab, cl, sigma, cap_at_one, include_absent,
                                        assume_max_reference_distance,
                                        assume_homogeneous_abundance) {
@@ -272,7 +272,7 @@ relative.multiplicity.ref_div <- function(
 
   finish <- function() {
     if (empty) {
-      return(.by_sample(rep(NA_real_, nrow(A)), ab))
+      return(.by_sample(rep(0, nrow(A)), ab))
     }
     div <- units_acc$finish()
     if (!assume_max_reference_distance) {
@@ -339,13 +339,14 @@ relative.multiplicity.ref_div <- function(
 
 # Averages the per-unit values `vals` of every sample over the units `present`
 # in it, unless include_absent, where absent units contribute 0 and count in
-# the average. Shared by relative multiplicity and average redundancy
+# the average. Samples without units present (empty samples) are 0. Shared by
+# relative multiplicity and average redundancy
 .average_units <- function(vals, present, ab, include_absent) {
   n_present <- rowSums(present)
   n_avg <- if (include_absent) ncol(vals) else n_present
 
   res <- rowSums(vals * present) / n_avg
-  res[n_present == 0] <- if (include_absent) 0 else NA_real_
+  res[n_present == 0] <- 0
   .by_sample(res, ab)
 }
 

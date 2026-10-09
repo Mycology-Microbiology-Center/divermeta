@@ -13,12 +13,15 @@
 #' - "redundancy": functional redundancy \eqn{Re}{Re}
 #' - "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff `sig`)
 #' - "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
+#' - "proportional_abundance": proportional abundance of the units (`percentile`, `cap_at_one`)
 #'
 #' Notes:
 #' - Indices that use dissimilarities (`multiplicity_distance`, `raoQ`, `FD_sigma`,
 #'   `FD_q`, `redundancy`, `relative_multiplicity`, `average_redundancy`) require `diss`.
 #' - Indices that use clustering (`multiplicity_inventory`, `multiplicity_distance`,
-#'   `relative_multiplicity`, `average_redundancy`) require `clust`.
+#'   `relative_multiplicity`, `average_redundancy`, `proportional_abundance`) require `clust`.
+#' - `proportional_abundance` is computed on the abundances of the units (the sum of their
+#'   subunits) as in [proportional.abundance()]; it does not require `diss`.
 #' - `relative_multiplicity` and `average_redundancy` are computed as in
 #'   [relative.multiplicity()] and [average.redundancy()] (with `normalize = TRUE`), which also
 #'   offer a cutoff per unit, known reference diversities ([relative.multiplicity.ref_div()]) and
@@ -56,8 +59,10 @@
 #' @param include_absent Logical (default `FALSE`), used by `relative_multiplicity` and
 #'   `average_redundancy`. If `FALSE`, each sample averages only the units present in it. If
 #'   `TRUE`, every unit counts in the average, and units absent from the sample contribute 0.
-#' @param cap_at_one Logical (default `FALSE`), used by `relative_multiplicity`. If `TRUE`, each
-#'   unit's ratio is capped at 1.
+#' @param percentile Numeric in (0, 100] (default `100`), used by `proportional_abundance`.
+#'   Percentile of the nonzero abundances of every unit across samples used as its reference level.
+#' @param cap_at_one Logical (default `FALSE`), used by `relative_multiplicity` and
+#'   `proportional_abundance`. If `TRUE`, each unit's ratio is capped at 1.
 #' @param assume_max_reference_distance Logical (default `FALSE`), used by
 #'   `relative_multiplicity`. If `TRUE`, every pair of subunits in the reference of a unit is at
 #'   distance `sig`, instead of their listed distance.
@@ -71,11 +76,11 @@
 #'
 #' @return data.frame with one row per sample: a first column `Sample` with the sample identifiers
 #'   (the row names of `abund`, or the row numbers when it has none), then one column per requested
-#'   index. Empty samples (all zero abundances) return `NA` for all indices.
+#'   index. Empty samples (all zero abundances) return 0 for all indices.
 #'
 #' @seealso [multiplicity.inventory()], [multiplicity.distance()], [diversity.functional()],
 #'   [diversity.functional.traditional()], [raoQuadratic()], [redundancy()],
-#'   [relative.multiplicity()], [average.redundancy()]
+#'   [relative.multiplicity()], [average.redundancy()], [proportional.abundance()]
 #'
 #' @examples
 #'
@@ -131,6 +136,7 @@ divermeta <- function(
     diss_clust = NULL,
     include_absent = FALSE,
     cap_at_one = FALSE,
+    percentile = 100,
     assume_max_reference_distance = FALSE,
     assume_homogeneous_abundance = FALSE,
     normalize = FALSE,
@@ -160,7 +166,9 @@ divermeta <- function(
     relative_multiplicity  = "relative_multiplicity",
     RM                     = "relative_multiplicity",
     average_redundancy     = "average_redundancy",
-    AR                     = "average_redundancy"
+    AR                     = "average_redundancy",
+    proportional_abundance = "proportional_abundance",
+    PA                     = "proportional_abundance"
   )
   normalized_indices <- vapply(indices, function(x) {
     if (!is.null(idx_map[[x]])) idx_map[[x]] else x
@@ -177,7 +185,7 @@ divermeta <- function(
   with_rm <- "relative_multiplicity" %in% normalized_indices
 
   needs_diss <- any(normalized_indices %in% c("raoQ", "FD_sigma", "FD_q", "redundancy", "multiplicity_distance", by_unit))
-  needs_clust <- any(normalized_indices %in% c("multiplicity_inventory", "multiplicity_distance", by_unit))
+  needs_clust <- any(normalized_indices %in% c("multiplicity_inventory", "multiplicity_distance", "proportional_abundance", by_unit))
 
   if (needs_diss && is.null(diss)) {
     stop("A dissimilarity table `diss` is required for the requested indices")
@@ -194,8 +202,14 @@ divermeta <- function(
   if (any(normalized_indices %in% by_unit)) {
     .check_flag(include_absent, "include_absent")
   }
-  if (with_rm) {
+  with_pa <- "proportional_abundance" %in% normalized_indices
+  if (with_pa) {
+    .check_percentile(percentile)
+  }
+  if (with_rm || with_pa) {
     .check_flag(cap_at_one, "cap_at_one")
+  }
+  if (with_rm) {
     .check_flag(assume_max_reference_distance, "assume_max_reference_distance")
     .check_flag(assume_homogeneous_abundance, "assume_homogeneous_abundance")
   }
@@ -250,6 +264,15 @@ divermeta <- function(
     if (idx == "multiplicity_inventory") {
       return(as.numeric(.multiplicity.inventory_core(ab, cl, q)))
     }
+    if (idx == "proportional_abundance") {
+      ab_units <- list(
+        A = ab$A %*% .unit_indicator(cl$unit_of, length(cl$unit_ids)),
+        samples = ab$samples,
+        subunits = cl$unit_ids,
+        N = ab$N
+      )
+      return(as.numeric(.proportional.abundance_core(ab_units, percentile, cap_at_one)))
+    }
     as.numeric(res_diss[[idx]])
   })
   names(res_list) <- normalized_indices
@@ -258,7 +281,7 @@ divermeta <- function(
 
   # Normalize if requested
   if (normalize) {
-    # Columns with only NA (every sample empty) have no maximum
+    # Columns with only NA (e.g. degenerate multiplicity_distance) have no maximum
     col_max <- apply(res, 2, function(x) if (all(is.na(x))) NA_real_ else max(x, na.rm = TRUE))
     # Only normalize columns with non-zero maximum
     nonzero_cols <- col_max != 0 & !is.na(col_max)

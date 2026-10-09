@@ -29,6 +29,7 @@ The core function of the package is `divermeta()`, which computes multiple indic
 - distance‑based multiplicity (σ‑capped): `"multiplicity_distance"`
 - optional companions: `"raoQ"`, `"FD_sigma"`, `"FD_q"`, `"redundancy"`
 - averages over the clusters: relative multiplicity `"relative_multiplicity"` and average redundancy `"average_redundancy"`
+- proportional abundance of the units: `"proportional_abundance"` (needs `clust`, not `diss`)
 
 Additionally, the package provides `metagenomic.alpha.index()` (MAD) as a standalone function for computing the Metagenomic Alpha-Diversity Index (see below).
 

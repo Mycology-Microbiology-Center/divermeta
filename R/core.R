@@ -482,10 +482,10 @@
 }
 
 
-# Result named by sample, with NA for empty samples
+# Result named by sample, with 0 for empty samples (zero total abundance)
 .by_sample <- function(x, ab) {
   x <- as.numeric(x)
-  x[ab$N <= 0] <- NA_real_
+  x[ab$N <= 0] <- 0
   names(x) <- ab$samples
   x
 }

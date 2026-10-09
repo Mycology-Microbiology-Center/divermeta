@@ -36,7 +36,7 @@ manual_ar <- function(study, normalize = FALSE, include_absent = FALSE) {
     }, numeric(1))
     present <- !is.na(per_unit)
     if (!any(present)) {
-      return(NA_real_)
+      return(0)
     }
     if (include_absent) {
       sum(per_unit[present]) / length(per_unit)
@@ -164,10 +164,10 @@ test_that("Absent units are ignored by default", {
   expect_equal(average.redundancy(study$abund, diss, clust), base)
   expect_equal(average.redundancy(study$abund, diss, clust, include_absent = TRUE), base * 3 / 5)
 
-  # An empty sample is NA, also with include_absent
+  # An empty sample is 0, also with include_absent
   empty <- study$abund * 0
-  expect_true(is.na(average.redundancy(empty, study$diss_frame, study$clust)))
-  expect_true(is.na(average.redundancy(empty, study$diss_frame, study$clust, include_absent = TRUE)))
+  expect_true(all(average.redundancy(empty, study$diss_frame, study$clust) == 0))
+  expect_true(all(average.redundancy(empty, study$diss_frame, study$clust, include_absent = TRUE) == 0))
 })
 
 

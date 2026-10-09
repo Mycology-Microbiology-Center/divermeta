@@ -15,6 +15,7 @@ divermeta(
   diss_clust = NULL,
   include_absent = FALSE,
   cap_at_one = FALSE,
+  percentile = 100,
   assume_max_reference_distance = FALSE,
   assume_homogeneous_abundance = FALSE,
   normalize = FALSE,
@@ -60,8 +61,11 @@ of value \code{sig}. Default is "sigma".}
 \code{average_redundancy}. If \code{FALSE}, each sample averages only the units present in it. If
 \code{TRUE}, every unit counts in the average, and units absent from the sample contribute 0.}
 
-\item{cap_at_one}{Logical (default \code{FALSE}), used by \code{relative_multiplicity}. If \code{TRUE}, each
-unit's ratio is capped at 1.}
+\item{cap_at_one}{Logical (default \code{FALSE}), used by \code{relative_multiplicity} and
+\code{proportional_abundance}. If \code{TRUE}, each unit's ratio is capped at 1.}
+
+\item{percentile}{Numeric in (0, 100] (default \code{100}), used by \code{proportional_abundance}.
+Percentile of the nonzero abundances of every unit across samples used as its reference level.}
 
 \item{assume_max_reference_distance}{Logical (default \code{FALSE}), used by
 \code{relative_multiplicity}. If \code{TRUE}, every pair of subunits in the reference of a unit is at
@@ -93,7 +97,7 @@ memory. See \link{distance-files}.}
 \value{
 data.frame with one row per sample: a first column \code{Sample} with the sample identifiers
 (the row names of \code{abund}, or the row numbers when it has none), then one column per requested
-index. Empty samples (all zero abundances) return \code{NA} for all indices.
+index. Empty samples (all zero abundances) return 0 for all indices.
 }
 \description{
 Estimate several diversity and multiplicity indices for many samples at once.
@@ -111,6 +115,7 @@ Indices available (use these labels in \code{indices}):
 \item "redundancy": functional redundancy \eqn{Re}{Re}
 \item "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff \code{sig})
 \item "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
+\item "proportional_abundance": proportional abundance of the units (\code{percentile}, \code{cap_at_one})
 }
 
 Notes:
@@ -118,7 +123,9 @@ Notes:
 \item Indices that use dissimilarities (\code{multiplicity_distance}, \code{raoQ}, \code{FD_sigma},
 \code{FD_q}, \code{redundancy}, \code{relative_multiplicity}, \code{average_redundancy}) require \code{diss}.
 \item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance},
-\code{relative_multiplicity}, \code{average_redundancy}) require \code{clust}.
+\code{relative_multiplicity}, \code{average_redundancy}, \code{proportional_abundance}) require \code{clust}.
+\item \code{proportional_abundance} is computed on the abundances of the units (the sum of their
+subunits) as in \code{\link[=proportional.abundance]{proportional.abundance()}}; it does not require \code{diss}.
 \item \code{relative_multiplicity} and \code{average_redundancy} are computed as in
 \code{\link[=relative.multiplicity]{relative.multiplicity()}} and \code{\link[=average.redundancy]{average.redundancy()}} (with \code{normalize = TRUE}), which also
 offer a cutoff per unit, known reference diversities (\code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}}) and
@@ -175,5 +182,5 @@ divermeta(abund,
 \seealso{
 \code{\link[=multiplicity.inventory]{multiplicity.inventory()}}, \code{\link[=multiplicity.distance]{multiplicity.distance()}}, \code{\link[=diversity.functional]{diversity.functional()}},
 \code{\link[=diversity.functional.traditional]{diversity.functional.traditional()}}, \code{\link[=raoQuadratic]{raoQuadratic()}}, \code{\link[=redundancy]{redundancy()}},
-\code{\link[=relative.multiplicity]{relative.multiplicity()}}, \code{\link[=average.redundancy]{average.redundancy()}}
+\code{\link[=relative.multiplicity]{relative.multiplicity()}}, \code{\link[=average.redundancy]{average.redundancy()}}, \code{\link[=proportional.abundance]{proportional.abundance()}}
 }

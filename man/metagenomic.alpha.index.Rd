@@ -44,7 +44,7 @@ memory. See \link{distance-files}.}
 \value{
 Named numeric vector with the Metagenomic Alpha-Diversity Index (MAD) of every sample.
 Higher values indicate greater average dissimilarity within clusters. Samples with zero total
-abundance get \code{NA}.
+abundance get 0.
 }
 \description{
 Computes the Metagenomic Alpha-Diversity Index (MAD) of every sample, a metric that measures

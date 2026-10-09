@@ -34,7 +34,8 @@
 #'   \eqn{\delta M_{\sigma}}{delta M_sigma} of every sample. This value represents the effective
 #'   number of functionally distinct elements per cluster. A value of 1 indicates minimal functional
 #'   diversity within clusters, while higher values indicate greater functional diversity lost
-#'   through clustering. Samples with zero total abundance get `NA`.
+#'   through clustering. Samples with zero total abundance get 0. Since the index is otherwise
+#'   always positive, 0 flags an empty sample rather than a multiplicity value.
 #'
 #' @details
 #' Distance-based multiplicity is the ratio of the distance-based functional diversities

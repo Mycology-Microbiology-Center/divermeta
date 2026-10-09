@@ -14,7 +14,7 @@
 #'   (see [redundancy()]).
 #'
 #' @return Named numeric vector with the average redundancy of every sample. Samples with zero
-#'   total abundance get `NA`.
+#'   total abundance get 0.
 #'
 #' @details
 #' Let \eqn{Re(f)}{Re(f)} be the functional redundancy of the composition \eqn{f}{f} of a unit in

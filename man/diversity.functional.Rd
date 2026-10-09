@@ -43,7 +43,8 @@ memory. See \link{distance-files}.}
 }
 \value{
 Named numeric vector with the distance-based functional diversity
-\eqn{\delta D_{\sigma}}{delta D_sigma} of every sample. Samples with zero total abundance get \code{NA}.
+\eqn{\delta D_{\sigma}}{delta D_sigma} of every sample. Samples with zero total abundance get 0. Since the
+index is otherwise at least 1, 0 flags an empty sample rather than a diversity value.
 }
 \description{
 Computes distance-based functional diversity \eqn{\delta D_{\sigma}}{delta D_sigma} following Chiu & Chao (2014)

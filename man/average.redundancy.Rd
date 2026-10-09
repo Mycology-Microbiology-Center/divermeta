@@ -58,7 +58,7 @@ memory. See \link{distance-files}.}
 }
 \value{
 Named numeric vector with the average redundancy of every sample. Samples with zero
-total abundance get \code{NA}.
+total abundance get 0.
 }
 \description{
 Computes the average redundancy \eqn{\overline{Re}}{mean Re} of every sample: the average,

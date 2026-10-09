@@ -111,12 +111,12 @@ test_that("diversity.functional.traditional is 1 when Q = 0", {
   for (q in c(0, 0.5, 1, 2)) {
     res <- diversity.functional.traditional(abund, diss, q)
     expect_equal(res[["S1"]], 1)
-    expect_true(is.na(res[["S3"]]))
+    expect_equal(res[["S3"]], 0)
     expect_equal(res[["S1"]], diversity.functional(abund, diss)[["S1"]])
 
     res <- diversity.functional.traditional(abund, zero, q)
     expect_equal(res[["S2"]], 1)
-    expect_true(is.na(res[["S3"]]))
+    expect_equal(res[["S3"]], 0)
   }
 })
 
@@ -216,8 +216,8 @@ test_that("redundancy input validation", {
   expect_error(redundancy(ab, matrix(1, 2, 3)), "Missing distances")
   expect_error(redundancy(one_row(c(-1, 2)), diss), "non-negative")
 
-  # Empty samples give NA
-  expect_true(is.na(redundancy(one_row(c(0, 0)), diss)))
+  # Empty samples give 0
+  expect_equal(unname(redundancy(one_row(c(0, 0)), diss)), 0)
 
   # A single subunit has no redundancy
   expect_equal(unname(redundancy(one_row(5, "a"), diss)), 0)
@@ -421,13 +421,13 @@ test_that("normalized redundancy edge cases", {
     expect_identical(unname(redundancy(single, zero)), 0, info = a)
   }
 
-  # Empty samples give NA
-  expect_true(is.na(redundancy(one_row(c(0, 0, 0), ids), zero, normalize = TRUE)))
+  # Empty samples give 0
+  expect_equal(unname(redundancy(one_row(c(0, 0, 0), ids), zero, normalize = TRUE)), 0)
 
   # Several samples at once
   abund <- rbind(S1 = c(1, 2, 3), S2 = c(0, 5, 0), S3 = c(0, 0, 0))
   colnames(abund) <- ids
-  expect_equal(unname(redundancy(abund, zero, normalize = TRUE)), c(1, 0, NA))
+  expect_equal(unname(redundancy(abund, zero, normalize = TRUE)), c(1, 0, 0))
 
   # Validation of the flag
   expect_error(redundancy(ab, zero, normalize = NA), "single TRUE or FALSE")
@@ -520,13 +520,13 @@ test_that("MAD equals the legacy implementation on the present subunits of every
   res <- metagenomic.alpha.index(abund, tab, clust)
   expected <- apply(abund, 1, function(ab) {
     if (sum(ab) == 0) {
-      return(NA_real_)
+      return(0)
     }
     present <- ab > 0
     legacy$metagenomic.alpha.index(clust[present], diss[present, present])
   })
   expect_equal(res, expected)
-  expect_true(is.na(res[["S5"]]))
+  expect_equal(res[["S5"]], 0)
 
   # Sparse abundances
   expect_equal(metagenomic.alpha.index(Matrix::Matrix(abund, sparse = TRUE), tab, clust), res)

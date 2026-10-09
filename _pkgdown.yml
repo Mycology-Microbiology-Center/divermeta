@@ -49,6 +49,7 @@ reference:
       - diversity.functional.traditional
       - redundancy
       - average.redundancy
+      - proportional.abundance
       - raoQuadratic
 
   - title: "Distance and support utilities"

@@ -198,7 +198,7 @@ test_that("Input validation works correctly", {
   expect_error(multiplicity.inventory(one_row(c(1, 2, 3)), c("1" = 1, "2" = 2)), "missing some subunits")
 
   # All zero abundances
-  expect_true(is.na(multiplicity.inventory(one_row(c(0, 0, 0)), c(1, 2, 3))))
+  expect_equal(unname(multiplicity.inventory(one_row(c(0, 0, 0)), c(1, 2, 3))), 0)
 })
 
 
@@ -218,7 +218,7 @@ test_that("Many samples equal the legacy implementation", {
   for (q in c(0, 0.5, 1, 2, 4)) {
     expected <- apply(abund, 1, function(ab) {
       if (sum(ab) == 0) {
-        return(NA_real_)
+        return(0)
       }
       legacy$multiplicity.inventory(ab, unname(clust), q)
     })

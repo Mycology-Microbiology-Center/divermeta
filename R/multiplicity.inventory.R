@@ -22,7 +22,8 @@
 #' @return Named numeric vector with the inventory multiplicity \eqn{^{q}M}{M^q} of every sample.
 #'   This value can be interpreted as the effective number of equally abundant elements per cluster.
 #'   A value of 1 indicates each cluster contains essentially one element (no diversity lost), while
-#'   higher values indicate greater intra-cluster diversity. Samples with zero total abundance get `NA`.
+#'   higher values indicate greater intra-cluster diversity. Samples with zero total abundance get 0.
+#'   Since the index is otherwise at least 1, 0 flags an empty sample rather than a diversity value.
 #'
 #' @details
 #' Subunits with zero abundance in a sample are ignored for that sample.

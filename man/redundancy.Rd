@@ -43,7 +43,7 @@ memory. See \link{distance-files}.}
 }
 \value{
 Named numeric vector with the functional redundancy \code{Re} of every sample. Samples
-with zero total abundance get \code{NA}.
+with zero total abundance get 0.
 }
 \description{
 Computes functional redundancy \eqn{Re}{Re}, a measure of the degree to which
@@ -75,6 +75,7 @@ redundancy(abund, diss, normalize = TRUE)
 \references{
 \itemize{
 \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
+\item Ricotta, C., de Bello, F., Moretti, M., Caccianiga, M., Cerabolini, B.E.L., & Pavoine, S. (2016). Measuring the functional redundancy of biological communities: a quantitative guide. Methods in Ecology and Evolution, 7(11), 1386–1395. \url{https://doi.org/10.1111/2041-210X.12604}
 \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 }
 }

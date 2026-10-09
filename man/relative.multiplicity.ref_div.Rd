@@ -70,7 +70,7 @@ memory. See \link{distance-files}.}
 }
 \value{
 Named numeric vector with the relative multiplicity \eqn{RM}{RM} of every sample.
-Samples with zero total abundance get \code{NA}.
+Samples with zero total abundance get 0.
 }
 \description{
 Computes relative multiplicity \eqn{RM}{RM} of every sample, as \code{\link[=relative.multiplicity]{relative.multiplicity()}}

@@ -7,7 +7,8 @@
 #' @param sig Numeric cutoff \eqn{\sigma}{sigma} at which two units are considered different (default `1`).
 #'
 #' @return Named numeric vector with the distance-based functional diversity
-#'   \eqn{\delta D_{\sigma}}{delta D_sigma} of every sample. Samples with zero total abundance get `NA`.
+#'   \eqn{\delta D_{\sigma}}{delta D_sigma} of every sample. Samples with zero total abundance get 0. Since the
+#'   index is otherwise at least 1, 0 flags an empty sample rather than a diversity value.
 #' @references
 #' \itemize{
 #' \item Chiu CH, Chao A (2014) Distance-based functional diversity measures and their decomposition: A framework based on Hill numbers. PLOS ONE 9(7). \doi{10.1371/journal.pone.0100014}. \url{https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0100014}
@@ -70,7 +71,8 @@ diversity.functional <- function(
 #' @param q Numeric order of the Hill number (non-negative, default `1`).
 #'
 #' @return Named numeric vector with the distance-based functional diversity \eqn{^{q}FD}{FD^q}
-#'   of every sample. Samples with zero total abundance get `NA`.
+#'   of every sample. Samples with zero total abundance get 0. Since the
+#'   index is otherwise at least 1, 0 flags an empty sample rather than a diversity value.
 #'
 #' @details
 #' Only the subunits present in a sample (nonzero abundance) contribute, also for \eqn{q = 0}{q = 0}.
@@ -186,7 +188,7 @@ diversity.functional.traditional <- function(
 #'   diversity \eqn{S}{S}, giving \eqn{(S - Q) / S = 1 - Q / S}{(S - Q) / S = 1 - Q / S}.
 #'
 #' @return Named numeric vector with the functional redundancy `Re` of every sample. Samples
-#'   with zero total abundance get `NA`.
+#'   with zero total abundance get 0.
 #'
 #' @details
 #' With relative abundances \eqn{p_i}{p_i}, Simpson's diversity is
@@ -204,6 +206,7 @@ diversity.functional.traditional <- function(
 #' @references
 #' \itemize{
 #' \item Ricotta C, Pavoine S (2025) What do functional diversity, redundancy, rarity, and originality actually measure? A theoretical guide for ecologists and conservationists. Ecological Complexity 61. \doi{10.1016/j.ecocom.2025.101116}. \url{https://www.sciencedirect.com/science/article/pii/S1476945X25000017}
+#' \item Ricotta, C., de Bello, F., Moretti, M., Caccianiga, M., Cerabolini, B.E.L., & Pavoine, S. (2016). Measuring the functional redundancy of biological communities: a quantitative guide. Methods in Ecology and Evolution, 7(11), 1386–1395. \url{https://doi.org/10.1111/2041-210X.12604} 
 #' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology 21. \doi{10.1016/0040-5809(82)90004-1}.
 #' }
 #' @seealso [raoQuadratic()], [average.redundancy()]
@@ -289,7 +292,7 @@ redundancy <- function(
 #'
 #' @return Named numeric vector with the Metagenomic Alpha-Diversity Index (MAD) of every sample.
 #'   Higher values indicate greater average dissimilarity within clusters. Samples with zero total
-#'   abundance get `NA`.
+#'   abundance get 0.
 #'
 #' @details
 #' Abundances are only used to decide which subunits are present (nonzero abundance) in every

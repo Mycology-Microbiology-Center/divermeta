@@ -39,8 +39,8 @@ test_that("raoQuadratic input validation", {
 
   expect_error(raoQuadratic(one_row(c(-1, 2)), diss), "non-negative")
 
-  # Empty samples give NA
-  expect_true(is.na(raoQuadratic(one_row(c(0, 0)), diss)))
+  # Empty samples give 0
+  expect_equal(unname(raoQuadratic(one_row(c(0, 0)), diss)), 0)
 
   # Malformed distance tables
   ab <- one_row(c(1, 2))

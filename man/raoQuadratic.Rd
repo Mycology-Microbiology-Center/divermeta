@@ -40,7 +40,7 @@ memory. See \link{distance-files}.}
 }
 \value{
 Named numeric vector with Rao quadratic entropy \eqn{Q}{Q} of every sample. Samples
-with zero total abundance get \code{NA}.
+with zero total abundance get 0.
 }
 \description{
 Computes Rao quadratic entropy \eqn{Q}{Q}, a diversity measure that accounts for

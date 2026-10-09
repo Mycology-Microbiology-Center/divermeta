@@ -25,7 +25,7 @@
 #'   memory. See [distance-files].
 #'
 #' @return Named numeric vector with Rao quadratic entropy \eqn{Q}{Q} of every sample. Samples
-#'   with zero total abundance get `NA`.
+#'   with zero total abundance get 0.
 #' @references
 #' \itemize{
 #' \item Rao CR (1982) Diversity and dissimilarity coefficients: A unified approach. Theoretical Population Biology, 21. \doi{10.1016/0040-5809(82)90004-1}.

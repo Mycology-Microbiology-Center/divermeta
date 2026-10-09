@@ -146,11 +146,11 @@ test_that("Absent units are ignored by default", {
     base * 3 / 5
   )
 
-  # No unit present: an empty sample is NA, also with include_absent
+  # No unit present: an empty sample is 0, also with include_absent
   ab_none <- lapply(sizes, function(n) rep(0, n))
   x <- single_sample(ab_none, diss)
-  expect_true(is.na(relative.multiplicity.ref_div(x$abund, x$diss, x$clust, c(2, 3, 4))))
-  expect_true(is.na(relative.multiplicity.ref_div(x$abund, x$diss, x$clust, c(2, 3, 4), include_absent = TRUE)))
+  expect_equal(unname(relative.multiplicity.ref_div(x$abund, x$diss, x$clust, c(2, 3, 4))), 0)
+  expect_equal(unname(relative.multiplicity.ref_div(x$abund, x$diss, x$clust, c(2, 3, 4), include_absent = TRUE)), 0)
 
   # Combined with cap_at_one
   n <- 5
@@ -346,10 +346,10 @@ test_that("Input validation", {
   expect_error(relative.multiplicity.ref_div(abund, diss, clust, c(1, 1), include_absent = NA), "include_absent")
   expect_error(relative.multiplicity(abund, diss, unname(clust)[1:4]), "same number of subunits")
   expect_error(relative.multiplicity(abund, diss[, 1:2], clust), "three columns")
-  # Every sample empty: all NA
+  # Every sample empty: all 0
   expect_equal(
     relative.multiplicity(matrix(0, 2, 5, dimnames = list(c("S1", "S2"), names(clust))), diss, clust),
-    c(S1 = NA_real_, S2 = NA_real_)
+    c(S1 = 0, S2 = 0)
   )
 })
 
@@ -608,11 +608,11 @@ test_that("Many samples edge cases", {
   set.seed(42)
   study <- make_study(c(4, 6, 3), n_samples = 4)
 
-  # Empty sample is NA
+  # Empty sample is 0
   abund <- study$abund
   abund["S2", ] <- 0
   res <- relative.multiplicity(abund, study$diss_frame, study$clust)
-  expect_true(is.na(res[["S2"]]))
+  expect_equal(res[["S2"]], 0)
   expect_false(any(is.na(res[c("S1", "S3", "S4")])))
 
   # A unit absent from a sample is ignored by default, and counts as zero with include_absent

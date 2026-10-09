@@ -365,8 +365,8 @@ test_that("Distance-based multiplicity input validation", {
     "Missing distances in `diss_clust`"
   )
 
-  # Empty samples give NA
-  expect_true(is.na(multiplicity.distance(one_row(c(0, 0, 0, 0), ids), tab, clust)))
+  # Empty samples give 0
+  expect_equal(unname(multiplicity.distance(one_row(c(0, 0, 0, 0), ids), tab, clust)), 0)
 })
 
 
