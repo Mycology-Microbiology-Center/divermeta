@@ -129,12 +129,12 @@ test_that("relative multiplicity from a file equals the in-memory one", {
 
   for (max_dist in c(FALSE, TRUE)) {
     for (homogeneous in c(FALSE, TRUE)) {
-      for (include_absent in c(FALSE, TRUE)) {
+      for (average_over in c("sample", "reference", "intersection", "union")) {
         expect_equal(
           unchecked(relative.multiplicity(
             st$abund, path, st$clust,
             sigma = 0.9,
-            include_absent = include_absent,
+            average_over = average_over,
             assume_max_reference_distance = max_dist,
             assume_homogeneous_abundance = homogeneous,
             chunk_size = 8
@@ -142,7 +142,7 @@ test_that("relative multiplicity from a file equals the in-memory one", {
           relative.multiplicity(
             st$abund, st$diss, st$clust,
             sigma = 0.9,
-            include_absent = include_absent,
+            average_over = average_over,
             assume_max_reference_distance = max_dist,
             assume_homogeneous_abundance = homogeneous
           )
@@ -178,27 +178,18 @@ test_that("average redundancy from a file equals the in-memory one", {
   path <- write_diss(st$diss, "tsv.gz")
 
   for (normalize in c(FALSE, TRUE)) {
-    for (include_absent in c(FALSE, TRUE)) {
-      expected <- average.redundancy(
-        st$abund, st$diss, st$clust,
-        normalize = normalize, include_absent = include_absent
-      )
-      expect_equal(
-        unchecked(average.redundancy(
-          st$abund, path, st$clust,
-          normalize = normalize, include_absent = include_absent, chunk_size = 8
-        )),
-        expected
-      )
-      expect_equal(
-        average.redundancy(
-          st$abund, path, st$clust,
-          normalize = normalize, include_absent = include_absent,
-          chunk_size = 8, check_large_distance_file = TRUE
-        ),
-        expected
-      )
-    }
+    expected <- average.redundancy(st$abund, st$diss, st$clust, normalize = normalize)
+    expect_equal(
+      unchecked(average.redundancy(st$abund, path, st$clust, normalize = normalize, chunk_size = 8)),
+      expected
+    )
+    expect_equal(
+      average.redundancy(
+        st$abund, path, st$clust,
+        normalize = normalize, chunk_size = 8, check_large_distance_file = TRUE
+      ),
+      expected
+    )
   }
 })
 

@@ -27,11 +27,15 @@
 #'   with one value per unit. If named, values are matched to units by name (numeric names are
 #'   matched as numbers, so `"1e+05"` matches the unit `100000`); otherwise they follow the order
 #'   of `unique(clust)`.
-#' @param cap_at_one Logical (default `FALSE`). If `TRUE`, each unit's ratio is capped at 1, for
-#'   the cases where the unit is more diverse in the sample than in its reference.
-#' @param include_absent Logical (default `FALSE`). If `FALSE`, each sample averages only the
-#'   units present in it. If `TRUE`, every unit counts in the average, and units absent from the
-#'   sample contribute 0.
+#' @param cap_at `NULL` (default) or a single positive number. If `NULL`, the ratios are not
+#'   capped. Otherwise, every unit's ratio higher than `cap_at` is set to `cap_at`, e.g.
+#'   `cap_at = 1` for the cases where the unit is more diverse in the sample than in its reference.
+#' @param average_over The units every sample averages over, one of `"sample"` (default, the
+#'   units present in the sample), `"reference"` (the units with a strictly positive reference
+#'   diversity), `"intersection"` (the units present in the sample with a strictly positive
+#'   reference diversity) or `"union"` (the units present in the sample or with a strictly
+#'   positive reference diversity). Absent units contribute 0, and a sample without units to
+#'   average over gets 0.
 #' @param assume_max_reference_distance Logical (default `FALSE`). If `FALSE`, the reference
 #'   distances of a unit are the distances among all its subunits. If `TRUE`, every pair of
 #'   subunits in the reference is at distance \eqn{\sigma}{sigma}.
@@ -54,12 +58,18 @@
 #' \deqn{RM = \frac{1}{\left|\{f : N_f > 0\}\right|} \sum_{f \,:\, N_f > 0} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/|{f : N_f > 0}|) sum_{f : N_f > 0} delta D_sigma(f) / delta D_sigma(f~),}
 #' with \eqn{\delta D_{\sigma}}{delta D_sigma} computed as in [diversity.functional()].
 #'
-#' Only units present in the sample are averaged: a unit with zero total abundance is ignored. With
-#' `include_absent = TRUE`, the average is instead taken over all \eqn{k}{k} units,
-#' \deqn{RM = \frac{1}{k} \sum_{f=1}^{k} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/k) sum_f delta D_sigma(f) / delta D_sigma(f~),}
-#' where absent units contribute 0; in that case, with the pooled reference abundances
-#' (`assume_homogeneous_abundance = FALSE`), a unit with zero abundance across the whole study has
-#' no reference and is dropped with a warning.
+#' By default (`average_over = "sample"`), only units present in the sample are averaged: a unit
+#' with zero total abundance is ignored. In general, the average is taken over a set of units
+#' \eqn{U}{U} set by `average_over`,
+#' \deqn{RM = \frac{1}{|U|} \sum_{f \in U} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/|U|) sum_{f in U} delta D_sigma(f) / delta D_sigma(f~),}
+#' where absent units contribute 0, and \eqn{RM = 0}{RM = 0} if \eqn{U}{U} is empty.
+#'
+#' Every unit that occurs in the study has a strictly positive reference diversity, so here
+#' `"intersection"` is the same as `"sample"` and `"union"` the same as `"reference"`. With the
+#' pooled reference abundances (`assume_homogeneous_abundance = FALSE`), a unit with zero abundance
+#' across the whole study has no reference and never counts; with
+#' `assume_homogeneous_abundance = TRUE`, it has a reference and counts as 0 with `"reference"`
+#' and `"union"`.
 #'
 #' With `assume_max_reference_distance = TRUE`, the reference diversity of a unit is the inverse
 #' Simpson index of its reference abundances; if `assume_homogeneous_abundance` is also `TRUE`, it
@@ -103,16 +113,16 @@ relative.multiplicity <- function(
   diss,
   clust,
   sigma = 1,
-  cap_at_one = FALSE,
-  include_absent = FALSE,
+  cap_at = NULL,
+  average_over = "sample",
   assume_max_reference_distance = FALSE,
   assume_homogeneous_abundance = FALSE,
   chunk_size = 1e6,
   check_large_distance_file = FALSE,
   header = TRUE
 ) {
-  .check_flag(cap_at_one, "cap_at_one")
-  .check_flag(include_absent, "include_absent")
+  .check_cap_at(cap_at)
+  .check_average_over(average_over)
   .check_flag(assume_max_reference_distance, "assume_max_reference_distance")
   .check_flag(assume_homogeneous_abundance, "assume_homogeneous_abundance")
 
@@ -123,7 +133,7 @@ relative.multiplicity <- function(
     abund, diss, clust, sigma, chunk_size, check_large_distance_file, header, need_all
   )
   acc <- .relative.multiplicity_acc(
-    units$ab, units$cl, units$sigma, cap_at_one, include_absent,
+    units$ab, units$cl, units$sigma, cap_at, average_over,
     assume_max_reference_distance, assume_homogeneous_abundance
   )
   if (acc$empty) {
@@ -142,18 +152,23 @@ relative.multiplicity <- function(
 #' every unit is already known (e.g. from an external database).
 #'
 #' @inheritParams relative.multiplicity
-#' @param ref_div Numeric vector of strictly positive reference diversities, one per unit. If named,
-#'   values are matched to units by name (extra names are ignored, and numeric names are matched as
-#'   numbers, as for `sigma`); otherwise they follow the order of `unique(clust)`. They should be computed with the same `sigma` as the one given here, e.g.
-#'   with [diversity.functional()].
+#' @param ref_div Numeric vector of reference diversities, one per unit. They must be strictly
+#'   positive, except with `cap_at`, where they may also be 0: the ratio of such a unit is `cap_at`
+#'   in the samples where it is present, and 0 where it is absent. Such units only count with
+#'   `average_over` `"sample"` or `"union"`, and only where they are present. If named, values are
+#'   matched to units by name (extra names are ignored, and numeric names are matched as numbers,
+#'   as for `sigma`); otherwise they follow the order of `unique(clust)`. They should be computed
+#'   with the same `sigma` as the one given here, e.g. with [diversity.functional()].
 #'
 #' @return Named numeric vector with the relative multiplicity \eqn{RM}{RM} of every sample.
 #'   Samples with zero total abundance get 0.
 #'
 #' @details
-#' `sigma` is only used for the diversities of the samples. As in [relative.multiplicity()], only
-#' the units present in a sample count in its average, unless `include_absent = TRUE`, where every
-#' unit in `clust` counts, including units with zero abundance in every sample.
+#' `sigma` is only used for the diversities of the samples. As in [relative.multiplicity()], the
+#' units every sample averages over are set by `average_over`; units with zero abundance in every
+#' sample count as 0 with `"reference"` and `"union"` if their reference diversity is strictly
+#' positive. With zero reference diversities, the options differ: e.g. a sample where only units
+#' with zero reference diversity are present gets 0 with `"reference"` and `"intersection"`.
 #'
 #' @seealso [relative.multiplicity()], [diversity.functional()]
 #'
@@ -176,26 +191,36 @@ relative.multiplicity <- function(
 #' # Reference diversities from an external database
 #' relative.multiplicity.ref_div(abund, diss, clust, ref_div = c(A = 2.5, B = 1.8))
 #'
+#' # Unit B without reference diversity: its ratio is cap_at where present
+#' relative.multiplicity.ref_div(abund, diss, clust, ref_div = c(A = 2.5, B = 0), cap_at = 1)
+#'
+#' # Only the units with a reference diversity count
+#' relative.multiplicity.ref_div(
+#'   abund, diss, clust, ref_div = c(A = 2.5, B = 0), cap_at = 1, average_over = "reference"
+#' )
+#'
 relative.multiplicity.ref_div <- function(
   abund,
   diss,
   clust,
   ref_div,
   sigma = 1,
-  cap_at_one = FALSE,
-  include_absent = FALSE,
+  cap_at = NULL,
+  average_over = "sample",
   chunk_size = 1e6,
   check_large_distance_file = FALSE,
   header = TRUE
 ) {
-  .check_flag(cap_at_one, "cap_at_one")
-  .check_flag(include_absent, "include_absent")
+  .check_cap_at(cap_at)
+  .check_average_over(average_over)
 
   units <- .rm_prepare(abund, diss, clust, sigma, chunk_size, check_large_distance_file, header)
-  ref_div <- .rm_check_ref_div(ref_div, units$cl$unit_ids, units$input_order)
+  ref_div <- .rm_check_ref_div(
+    ref_div, units$cl$unit_ids, units$input_order, allow_zero = !is.null(cap_at)
+  )
 
   div <- .rm_unit_diversities(units$A, units$src, units$cl, units$sigma)
-  .rm_average_ratios(div, ref_div, units$ab, cap_at_one, include_absent)
+  .rm_average_ratios(div, ref_div, units$ab, cap_at, average_over)
 }
 
 
@@ -232,7 +257,7 @@ relative.multiplicity.ref_div <- function(
 # includes the subunits only listed in `clust` (see .extend_abund) and `sigma`
 # has one value per unit. `empty` says that no unit has a reference (every
 # sample is empty), where the result is 0 and the distances are not used
-.relative.multiplicity_acc <- function(ab, cl, sigma, cap_at_one, include_absent,
+.relative.multiplicity_acc <- function(ab, cl, sigma, cap_at, average_over,
                                        assume_max_reference_distance,
                                        assume_homogeneous_abundance) {
   A <- ab$A
@@ -246,17 +271,11 @@ relative.multiplicity.ref_div <- function(
   }
   ref <- matrix(ref, nrow = 1)
 
-  # Units that never occur have no reference. They are absent from every sample,
-  # so dropping them only changes the result when absent units are included
+  # Units that never occur have no reference. They are absent from every sample
+  # and have no strictly positive reference, so they never count in an average
   G <- .unit_indicator(cl$unit_of, n_units)
   keep <- as.numeric(as.matrix(ref %*% G)) > 0
   empty <- !any(keep)
-  if (!empty && include_absent && !all(keep)) {
-    warning(paste0(
-      "Units with zero abundance across all samples have no reference and are dropped: ",
-      paste(cl$unit_ids[!keep], collapse = ", ")
-    ))
-  }
 
   # Reference diversities, computed once per unit
   if (assume_max_reference_distance) {
@@ -279,7 +298,7 @@ relative.multiplicity.ref_div <- function(
       ref_div <- as.numeric(div[nrow(div), ])
       div <- div[-nrow(div), , drop = FALSE]
     }
-    .rm_average_ratios(div[, keep, drop = FALSE], ref_div[keep], ab, cap_at_one, include_absent)
+    .rm_average_ratios(div[, keep, drop = FALSE], ref_div[keep], ab, cap_at, average_over)
   }
 
   list(scope = "within", update = units_acc$update, finish = finish, empty = empty)
@@ -324,46 +343,72 @@ relative.multiplicity.ref_div <- function(
 }
 
 
-# Averages the per-unit ratios of every sample. Only the units present in the
-# sample are averaged, unless include_absent, where absent units contribute 0
-# and count in the average
-.rm_average_ratios <- function(div, ref_div, ab, cap_at_one, include_absent) {
+# Averages the per-unit ratios of every sample over the units set by
+# average_over (see .check_average_over), where absent units contribute 0. A
+# zero reference (only allowed with cap_at) gives cap_at where the unit is present
+.rm_average_ratios <- function(div, ref_div, ab, cap_at, average_over) {
   ratios <- sweep(div, 2, ref_div, "/")
-  if (cap_at_one) {
-    ratios <- pmin(ratios, 1)
+  if (!is.null(cap_at)) {
+    ratios <- pmin(ratios, cap_at)
   }
+  # Absent units are 0, also with a zero reference (0 / 0)
+  ratios[div == 0] <- 0
 
-  .average_units(ratios, div > 0, ab, include_absent)
+  present <- div > 0
+  with_ref <- matrix(ref_div > 0, nrow(div), ncol(div), byrow = TRUE)
+  counted <- switch(average_over,
+    sample = present,
+    reference = with_ref,
+    intersection = present & with_ref,
+    union = present | with_ref
+  )
+  .average_units(ratios, counted, ab)
 }
 
 
-# Averages the per-unit values `vals` of every sample over the units `present`
-# in it, unless include_absent, where absent units contribute 0 and count in
-# the average. Samples without units present (empty samples) are 0. Shared by
+# Averages the per-unit values `vals` of every sample over the units `counted`
+# in it. Samples without units to count (e.g. empty samples) are 0. Shared by
 # relative multiplicity and average redundancy
-.average_units <- function(vals, present, ab, include_absent) {
-  n_present <- rowSums(present)
-  n_avg <- if (include_absent) ncol(vals) else n_present
-
-  res <- rowSums(vals * present) / n_avg
-  res[n_present == 0] <- 0
+.average_units <- function(vals, counted, ab) {
+  n_counted <- rowSums(counted)
+  res <- rowSums(vals * counted) / n_counted
+  res[n_counted == 0] <- 0
   .by_sample(res, ab)
 }
 
 
-# Returns one strictly positive value per unit, matched by name when possible.
-# Unnamed values follow `input_order`, the order of unique(clust)
-.rm_per_unit_values <- function(x, unit_ids, input_order, name) {
+.check_average_over <- function(average_over) {
+  options <- c("sample", "reference", "intersection", "union")
+  if (!is.character(average_over) || length(average_over) != 1 ||
+    !(average_over %in% options)) {
+    stop("`average_over` must be one of \"sample\", \"reference\", \"intersection\" or \"union\"")
+  }
+}
+
+
+# Returns one strictly positive value per unit (non-negative with allow_zero),
+# matched by name when possible. Unnamed values follow `input_order`, the order
+# of unique(clust). `what` names the units in the errors
+.rm_per_unit_values <- function(x, unit_ids, input_order, name, allow_zero = FALSE,
+                                zero_hint = "", what = "unit") {
   k <- length(unit_ids)
-  if (!is.numeric(x) || length(x) == 0 || any(!is.finite(x)) || any(x <= 0)) {
-    stop(paste0("`", name, "` must contain strictly positive finite numeric values"))
+  if (!is.numeric(x) || length(x) == 0 || any(!is.finite(x))) {
+    bad <- TRUE
+  } else {
+    bad <- if (allow_zero) any(x < 0) else any(x <= 0)
+  }
+  if (bad) {
+    if (allow_zero) {
+      stop(paste0("`", name, "` must contain non-negative finite numeric values"))
+    }
+    stop(paste0("`", name, "` must contain strictly positive finite numeric values", zero_hint))
   }
 
   if (!is.null(names(x))) {
     pos <- .match_names(unit_ids, names(x))
     if (anyNA(pos)) {
       stop(paste0(
-        "`", name, "` is named but missing values for units: ",
+        "`", name, "` is named but missing values for ", what, "s: ",
         paste(unit_ids[is.na(pos)], collapse = ", ")
       ))
     }
@@ -372,7 +417,8 @@ relative.multiplicity.ref_div <- function(
 
   if (length(x) != k) {
     stop(paste0(
-      "`", name, "` must have one value per unit. Units: ", k, ". Values: ", length(x)
+      "`", name, "` must have one value per ", what, ". Number of ", what, "s: ", k,
+      ". Values: ", length(x)
     ))
   }
 
@@ -391,6 +437,9 @@ relative.multiplicity.ref_div <- function(
 }
 
 
-.rm_check_ref_div <- function(ref_div, unit_ids, input_order) {
-  .rm_per_unit_values(ref_div, unit_ids, input_order, "ref_div")
+.rm_check_ref_div <- function(ref_div, unit_ids, input_order, allow_zero = FALSE) {
+  .rm_per_unit_values(
+    ref_div, unit_ids, input_order, "ref_div", allow_zero,
+    zero_hint = " (zero values are allowed only with `cap_at`)"
+  )
 }

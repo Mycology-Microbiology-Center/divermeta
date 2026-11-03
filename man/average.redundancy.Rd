@@ -9,7 +9,6 @@ average.redundancy(
   diss,
   clust,
   normalize = FALSE,
-  include_absent = FALSE,
   chunk_size = 1e+06,
   check_large_distance_file = FALSE,
   header = TRUE
@@ -36,10 +35,6 @@ column of units (named by its row names, if set).}
 \item{normalize}{Logical (default \code{FALSE}). If \code{TRUE}, the redundancy of every unit is divided
 by its Simpson's diversity \eqn{S}{S}, giving \eqn{1 - Q / S}{1 - Q / S}, before averaging
 (see \code{\link[=redundancy]{redundancy()}}).}
-
-\item{include_absent}{Logical (default \code{FALSE}). If \code{FALSE}, each sample averages only the
-units present in it. If \code{TRUE}, every unit counts in the average, and units absent from the
-sample contribute 0.}
 
 \item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
 values use less memory. Ignored when \code{diss} is in memory.}
@@ -77,9 +72,8 @@ with \eqn{Re(f) = S(f) - Q(f)}{Re(f) = S(f) - Q(f)}, or
 \eqn{Re(f) = 1 - Q(f) / S(f)}{Re(f) = 1 - Q(f) / S(f)} with \code{normalize = TRUE}.
 
 A unit with a single present subunit has no redundancy: it contributes 0 to the average, also
-when normalized. Only units present in the sample are averaged; with \code{include_absent = TRUE},
-the average is instead taken over all units, and absent units contribute 0. As in
-\code{\link[=redundancy]{redundancy()}}, distances greater than 1 are capped at 1, so the index is never negative.
+when normalized. Only units present in the sample are averaged. As in \code{\link[=redundancy]{redundancy()}},
+distances greater than 1 are capped at 1, so the index is never negative.
 }
 \examples{
 # Two units: A with subunits a1, a2, a3 and B with subunits b1, b2

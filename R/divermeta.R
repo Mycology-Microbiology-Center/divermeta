@@ -13,7 +13,7 @@
 #' - "redundancy": functional redundancy \eqn{Re}{Re}
 #' - "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff `sig`)
 #' - "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
-#' - "proportional_abundance": proportional abundance of the units (`percentile`, `cap_at_one`)
+#' - "proportional_abundance": proportional abundance of the units (`percentile`, `cap_at`)
 #'
 #' Notes:
 #' - Indices that use dissimilarities (`multiplicity_distance`, `raoQ`, `FD_sigma`,
@@ -21,7 +21,8 @@
 #' - Indices that use clustering (`multiplicity_inventory`, `multiplicity_distance`,
 #'   `relative_multiplicity`, `average_redundancy`, `proportional_abundance`) require `clust`.
 #' - `proportional_abundance` is computed on the abundances of the units (the sum of their
-#'   subunits) as in [proportional.abundance()]; it does not require `diss`.
+#'   subunits) as in [proportional.abundance()]; it does not require `diss`. Known reference
+#'   abundances are available in [proportional.abundance.ref_abu()].
 #' - `relative_multiplicity` and `average_redundancy` are computed as in
 #'   [relative.multiplicity()] and [average.redundancy()] (with `normalize = TRUE`), which also
 #'   offer a cutoff per unit, known reference diversities ([relative.multiplicity.ref_div()]) and
@@ -56,13 +57,16 @@
 #'    of value `sig`. Default is "sigma".
 #' @param diss_clust Optional three-column table of distances between clusters, used by
 #'   `multiplicity_distance` when `method` is "custom".
-#' @param include_absent Logical (default `FALSE`), used by `relative_multiplicity` and
-#'   `average_redundancy`. If `FALSE`, each sample averages only the units present in it. If
-#'   `TRUE`, every unit counts in the average, and units absent from the sample contribute 0.
+#' @param average_over The units every sample averages over, used by `relative_multiplicity`:
+#'   `"sample"` (default, the units present in the sample), `"reference"` (the units with a
+#'   strictly positive reference diversity), `"intersection"` or `"union"` of both. Absent units
+#'   contribute 0. See [relative.multiplicity()]. `average_redundancy` always averages only the
+#'   units present in each sample.
 #' @param percentile Numeric in (0, 100] (default `100`), used by `proportional_abundance`.
 #'   Percentile of the nonzero abundances of every unit across samples used as its reference level.
-#' @param cap_at_one Logical (default `FALSE`), used by `relative_multiplicity` and
-#'   `proportional_abundance`. If `TRUE`, each unit's ratio is capped at 1.
+#' @param cap_at `NULL` (default) or a single positive number, used by `relative_multiplicity`
+#'   and `proportional_abundance`. If set, each unit's ratio higher than `cap_at` is set to
+#'   `cap_at`.
 #' @param assume_max_reference_distance Logical (default `FALSE`), used by
 #'   `relative_multiplicity`. If `TRUE`, every pair of subunits in the reference of a unit is at
 #'   distance `sig`, instead of their listed distance.
@@ -134,8 +138,8 @@ divermeta <- function(
     sig = 1,
     method = "sigma",
     diss_clust = NULL,
-    include_absent = FALSE,
-    cap_at_one = FALSE,
+    average_over = "sample",
+    cap_at = NULL,
     percentile = 100,
     assume_max_reference_distance = FALSE,
     assume_homogeneous_abundance = FALSE,
@@ -199,15 +203,15 @@ divermeta <- function(
   if (any(normalized_indices %in% c("FD_sigma", "multiplicity_distance", "relative_multiplicity"))) {
     .check_sig(sig)
   }
-  if (any(normalized_indices %in% by_unit)) {
-    .check_flag(include_absent, "include_absent")
+  if (with_rm) {
+    .check_average_over(average_over)
   }
   with_pa <- "proportional_abundance" %in% normalized_indices
   if (with_pa) {
     .check_percentile(percentile)
   }
   if (with_rm || with_pa) {
-    .check_flag(cap_at_one, "cap_at_one")
+    .check_cap_at(cap_at)
   }
   if (with_rm) {
     .check_flag(assume_max_reference_distance, "assume_max_reference_distance")
@@ -236,11 +240,11 @@ divermeta <- function(
     },
     relative_multiplicity = function() {
       .relative.multiplicity_acc(
-        ab, cl, rep(sig, length(cl$unit_ids)), cap_at_one, include_absent,
+        ab, cl, rep(sig, length(cl$unit_ids)), cap_at, average_over,
         assume_max_reference_distance, assume_homogeneous_abundance
       )
     },
-    average_redundancy = function() .average.redundancy_acc(ab, cl, TRUE, include_absent)
+    average_redundancy = function() .average.redundancy_acc(ab, cl, TRUE)
   )
   with_diss <- unique(normalized_indices[normalized_indices %in% names(acc_map)])
   res_diss <- list()
@@ -271,7 +275,7 @@ divermeta <- function(
         subunits = cl$unit_ids,
         N = ab$N
       )
-      return(as.numeric(.proportional.abundance_core(ab_units, percentile, cap_at_one)))
+      return(as.numeric(.proportional.abundance_core(ab_units, percentile, cap_at)))
     }
     as.numeric(res_diss[[idx]])
   })

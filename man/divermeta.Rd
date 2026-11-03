@@ -13,8 +13,8 @@ divermeta(
   sig = 1,
   method = "sigma",
   diss_clust = NULL,
-  include_absent = FALSE,
-  cap_at_one = FALSE,
+  average_over = "sample",
+  cap_at = NULL,
   percentile = 100,
   assume_max_reference_distance = FALSE,
   assume_homogeneous_abundance = FALSE,
@@ -57,12 +57,15 @@ of value \code{sig}. Default is "sigma".}
 \item{diss_clust}{Optional three-column table of distances between clusters, used by
 \code{multiplicity_distance} when \code{method} is "custom".}
 
-\item{include_absent}{Logical (default \code{FALSE}), used by \code{relative_multiplicity} and
-\code{average_redundancy}. If \code{FALSE}, each sample averages only the units present in it. If
-\code{TRUE}, every unit counts in the average, and units absent from the sample contribute 0.}
+\item{average_over}{The units every sample averages over, used by \code{relative_multiplicity}:
+\code{"sample"} (default, the units present in the sample), \code{"reference"} (the units with a
+strictly positive reference diversity), \code{"intersection"} or \code{"union"} of both. Absent units
+contribute 0. See \code{\link[=relative.multiplicity]{relative.multiplicity()}}. \code{average_redundancy} always averages only the
+units present in each sample.}
 
-\item{cap_at_one}{Logical (default \code{FALSE}), used by \code{relative_multiplicity} and
-\code{proportional_abundance}. If \code{TRUE}, each unit's ratio is capped at 1.}
+\item{cap_at}{\code{NULL} (default) or a single positive number, used by \code{relative_multiplicity}
+and \code{proportional_abundance}. If set, each unit's ratio higher than \code{cap_at} is set to
+\code{cap_at}.}
 
 \item{percentile}{Numeric in (0, 100] (default \code{100}), used by \code{proportional_abundance}.
 Percentile of the nonzero abundances of every unit across samples used as its reference level.}
@@ -115,7 +118,7 @@ Indices available (use these labels in \code{indices}):
 \item "redundancy": functional redundancy \eqn{Re}{Re}
 \item "relative_multiplicity": relative multiplicity \eqn{RM}{RM} (cutoff \code{sig})
 \item "average_redundancy": average normalized redundancy \eqn{\overline{Re}}{mean Re}
-\item "proportional_abundance": proportional abundance of the units (\code{percentile}, \code{cap_at_one})
+\item "proportional_abundance": proportional abundance of the units (\code{percentile}, \code{cap_at})
 }
 
 Notes:
@@ -125,7 +128,8 @@ Notes:
 \item Indices that use clustering (\code{multiplicity_inventory}, \code{multiplicity_distance},
 \code{relative_multiplicity}, \code{average_redundancy}, \code{proportional_abundance}) require \code{clust}.
 \item \code{proportional_abundance} is computed on the abundances of the units (the sum of their
-subunits) as in \code{\link[=proportional.abundance]{proportional.abundance()}}; it does not require \code{diss}.
+subunits) as in \code{\link[=proportional.abundance]{proportional.abundance()}}; it does not require \code{diss}. Known reference
+abundances are available in \code{\link[=proportional.abundance.ref_abu]{proportional.abundance.ref_abu()}}.
 \item \code{relative_multiplicity} and \code{average_redundancy} are computed as in
 \code{\link[=relative.multiplicity]{relative.multiplicity()}} and \code{\link[=average.redundancy]{average.redundancy()}} (with \code{normalize = TRUE}), which also
 offer a cutoff per unit, known reference diversities (\code{\link[=relative.multiplicity.ref_div]{relative.multiplicity.ref_div()}}) and

@@ -10,8 +10,8 @@ relative.multiplicity.ref_div(
   clust,
   ref_div,
   sigma = 1,
-  cap_at_one = FALSE,
-  include_absent = FALSE,
+  cap_at = NULL,
+  average_over = "sample",
   chunk_size = 1e+06,
   check_large_distance_file = FALSE,
   header = TRUE
@@ -35,10 +35,13 @@ not in \code{abund} have zero abundance in every sample. Otherwise it must follo
 \code{abund}. A data frame is also accepted, with two columns (subunit identifiers, units) or one
 column of units (named by its row names, if set).}
 
-\item{ref_div}{Numeric vector of strictly positive reference diversities, one per unit. If named,
-values are matched to units by name (extra names are ignored, and numeric names are matched as
-numbers, as for \code{sigma}); otherwise they follow the order of \code{unique(clust)}. They should be computed with the same \code{sigma} as the one given here, e.g.
-with \code{\link[=diversity.functional]{diversity.functional()}}.}
+\item{ref_div}{Numeric vector of reference diversities, one per unit. They must be strictly
+positive, except with \code{cap_at}, where they may also be 0: the ratio of such a unit is \code{cap_at}
+in the samples where it is present, and 0 where it is absent. Such units only count with
+\code{average_over} \code{"sample"} or \code{"union"}, and only where they are present. If named, values are
+matched to units by name (extra names are ignored, and numeric names are matched as numbers,
+as for \code{sigma}); otherwise they follow the order of \code{unique(clust)}. They should be computed
+with the same \code{sigma} as the one given here, e.g. with \code{\link[=diversity.functional]{diversity.functional()}}.}
 
 \item{sigma}{Numeric cutoff \eqn{\sigma}{sigma} (default \code{1}) at which two subunits are
 considered maximally different. Either a single value or a vector of strictly positive values
@@ -46,12 +49,16 @@ with one value per unit. If named, values are matched to units by name (numeric 
 matched as numbers, so \code{"1e+05"} matches the unit \code{100000}); otherwise they follow the order
 of \code{unique(clust)}.}
 
-\item{cap_at_one}{Logical (default \code{FALSE}). If \code{TRUE}, each unit's ratio is capped at 1, for
-the cases where the unit is more diverse in the sample than in its reference.}
+\item{cap_at}{\code{NULL} (default) or a single positive number. If \code{NULL}, the ratios are not
+capped. Otherwise, every unit's ratio higher than \code{cap_at} is set to \code{cap_at}, e.g.
+\code{cap_at = 1} for the cases where the unit is more diverse in the sample than in its reference.}
 
-\item{include_absent}{Logical (default \code{FALSE}). If \code{FALSE}, each sample averages only the
-units present in it. If \code{TRUE}, every unit counts in the average, and units absent from the
-sample contribute 0.}
+\item{average_over}{The units every sample averages over, one of \code{"sample"} (default, the
+units present in the sample), \code{"reference"} (the units with a strictly positive reference
+diversity), \code{"intersection"} (the units present in the sample with a strictly positive
+reference diversity) or \code{"union"} (the units present in the sample or with a strictly
+positive reference diversity). Absent units contribute 0, and a sample without units to
+average over gets 0.}
 
 \item{chunk_size}{Number of rows of a distance file read at a time (default \code{1e6}). Lower
 values use less memory. Ignored when \code{diss} is in memory.}
@@ -78,9 +85,11 @@ does, when the reference diversity \eqn{\delta D_{\sigma}(\tilde{f})}{delta D_si
 every unit is already known (e.g. from an external database).
 }
 \details{
-\code{sigma} is only used for the diversities of the samples. As in \code{\link[=relative.multiplicity]{relative.multiplicity()}}, only
-the units present in a sample count in its average, unless \code{include_absent = TRUE}, where every
-unit in \code{clust} counts, including units with zero abundance in every sample.
+\code{sigma} is only used for the diversities of the samples. As in \code{\link[=relative.multiplicity]{relative.multiplicity()}}, the
+units every sample averages over are set by \code{average_over}; units with zero abundance in every
+sample count as 0 with \code{"reference"} and \code{"union"} if their reference diversity is strictly
+positive. With zero reference diversities, the options differ: e.g. a sample where only units
+with zero reference diversity are present gets 0 with \code{"reference"} and \code{"intersection"}.
 }
 \examples{
 clust <- c(a1 = "A", a2 = "A", a3 = "A", b1 = "B", b2 = "B")
@@ -98,6 +107,14 @@ abund <- matrix(
 
 # Reference diversities from an external database
 relative.multiplicity.ref_div(abund, diss, clust, ref_div = c(A = 2.5, B = 1.8))
+
+# Unit B without reference diversity: its ratio is cap_at where present
+relative.multiplicity.ref_div(abund, diss, clust, ref_div = c(A = 2.5, B = 0), cap_at = 1)
+
+# Only the units with a reference diversity count
+relative.multiplicity.ref_div(
+  abund, diss, clust, ref_div = c(A = 2.5, B = 0), cap_at = 1, average_over = "reference"
+)
 
 }
 \seealso{

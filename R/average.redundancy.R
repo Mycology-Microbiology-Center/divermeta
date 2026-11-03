@@ -25,9 +25,8 @@
 #' \eqn{Re(f) = 1 - Q(f) / S(f)}{Re(f) = 1 - Q(f) / S(f)} with `normalize = TRUE`.
 #'
 #' A unit with a single present subunit has no redundancy: it contributes 0 to the average, also
-#' when normalized. Only units present in the sample are averaged; with `include_absent = TRUE`,
-#' the average is instead taken over all units, and absent units contribute 0. As in
-#' [redundancy()], distances greater than 1 are capped at 1, so the index is never negative.
+#' when normalized. Only units present in the sample are averaged. As in [redundancy()],
+#' distances greater than 1 are capped at 1, so the index is never negative.
 #'
 #' @seealso [redundancy()], [relative.multiplicity()]
 #'
@@ -57,16 +56,14 @@ average.redundancy <- function(
   diss,
   clust,
   normalize = FALSE,
-  include_absent = FALSE,
   chunk_size = 1e6,
   check_large_distance_file = FALSE,
   header = TRUE
 ) {
   .check_flag(normalize, "normalize")
-  .check_flag(include_absent, "include_absent")
 
   units <- .rm_prepare(abund, diss, clust, NULL, chunk_size, check_large_distance_file, header)
-  acc <- .average.redundancy_acc(units$ab, units$cl, normalize, include_absent)
+  acc <- .average.redundancy_acc(units$ab, units$cl, normalize)
   .consume_pairs(units$src, list(acc), units$ab$subunits, units$cl)[[1]]
 }
 
@@ -74,14 +71,15 @@ average.redundancy <- function(
 # Internal helpers
 # ----------------------------
 
-# Accumulates the average redundancy of every sample over the pairs read. `ab`
-# includes the subunits only listed in `clust` (see .extend_abund)
-.average.redundancy_acc <- function(ab, cl, normalize, include_absent) {
+# Accumulates the average redundancy of every sample over the pairs read,
+# averaging only the units present in the sample. `ab` includes the subunits
+# only listed in `clust` (see .extend_abund)
+.average.redundancy_acc <- function(ab, cl, normalize) {
   units_acc <- .ar_unit_redundancy_acc(ab$A, cl, normalize)
 
   finish <- function() {
     res <- units_acc$finish()
-    .average_units(res$re, res$N > 0, ab, include_absent)
+    .average_units(res$re, res$N > 0, ab)
   }
 
   list(scope = "within", update = units_acc$update, finish = finish)

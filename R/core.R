@@ -512,6 +512,17 @@
 }
 
 
+# `cap_at` is NULL (no cap) or a single positive finite number
+.check_cap_at <- function(cap_at) {
+  if (is.null(cap_at)) {
+    return(invisible())
+  }
+  if (!is.numeric(cap_at) || length(cap_at) != 1 || !is.finite(cap_at) || cap_at <= 0) {
+    stop("`cap_at` must be NULL or a single positive finite number")
+  }
+}
+
+
 # Every pair of units at distance sig
 .sigma_unit_pairs <- function(n_units, sig) {
   if (n_units < 2) {

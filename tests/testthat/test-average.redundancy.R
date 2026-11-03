@@ -24,7 +24,7 @@ make_units <- function(sizes, n_samples, zero_prob = 0.4) {
 }
 
 # Average redundancy of every sample from redundancy() of every unit alone
-manual_ar <- function(study, normalize = FALSE, include_absent = FALSE) {
+manual_ar <- function(study, normalize = FALSE) {
   vapply(rownames(study$abund), function(s) {
     per_unit <- vapply(seq_along(study$sub_ids), function(u) {
       ids <- study$sub_ids[[u]]
@@ -38,11 +38,7 @@ manual_ar <- function(study, normalize = FALSE, include_absent = FALSE) {
     if (!any(present)) {
       return(0)
     }
-    if (include_absent) {
-      sum(per_unit[present]) / length(per_unit)
-    } else {
-      mean(per_unit[present])
-    }
+    mean(per_unit[present])
   }, numeric(1))
 }
 
@@ -55,17 +51,12 @@ test_that("Equals the average of the redundancy of every unit", {
   for (w_ in 1:8) {
     study <- make_units(sample(1:8, sample(2:5, 1), replace = TRUE), n_samples = 6)
     for (normalize in c(FALSE, TRUE)) {
-      for (include_absent in c(FALSE, TRUE)) {
-        expect_equal(
-          average.redundancy(
-            study$abund, study$diss_frame, study$clust,
-            normalize = normalize, include_absent = include_absent
-          ),
-          manual_ar(study, normalize, include_absent),
-          tolerance = 1e-12,
-          info = paste(w_, normalize, include_absent)
-        )
-      }
+      expect_equal(
+        average.redundancy(study$abund, study$diss_frame, study$clust, normalize = normalize),
+        manual_ar(study, normalize),
+        tolerance = 1e-12,
+        info = paste(w_, normalize)
+      )
     }
   }
 })
@@ -157,17 +148,12 @@ test_that("Absent units are ignored by default", {
   abund <- cbind(study$abund, x1 = 0, x2 = 0, y1 = 0)
   expect_equal(average.redundancy(abund, diss, clust), base)
 
-  # With include_absent they count as zero
-  expect_equal(average.redundancy(abund, diss, clust, include_absent = TRUE), base * 3 / 5)
-
   # Subunits named in clust but missing from abund have zero abundance
   expect_equal(average.redundancy(study$abund, diss, clust), base)
-  expect_equal(average.redundancy(study$abund, diss, clust, include_absent = TRUE), base * 3 / 5)
 
-  # An empty sample is 0, also with include_absent
+  # An empty sample is 0
   empty <- study$abund * 0
   expect_true(all(average.redundancy(empty, study$diss_frame, study$clust) == 0))
-  expect_true(all(average.redundancy(empty, study$diss_frame, study$clust, include_absent = TRUE) == 0))
 })
 
 
@@ -239,7 +225,7 @@ test_that("Input validation", {
 
   expect_error(average.redundancy(abund, diss, clust, normalize = NA), "single TRUE or FALSE")
   expect_error(average.redundancy(abund, diss, clust, normalize = "yes"), "single TRUE or FALSE")
-  expect_error(average.redundancy(abund, diss, clust, include_absent = 1), "single TRUE or FALSE")
+  expect_error(average.redundancy(abund, diss, clust, include_absent = TRUE), "unused argument")
   expect_error(average.redundancy(one_row(c(-1, 2, 3), names(clust)), diss, clust), "non-negative")
   expect_error(average.redundancy(abund, diss, clust[1:2]), "missing some subunits")
   expect_error(average.redundancy(abund, diss, unname(clust)[1:2]), "same number of subunits")

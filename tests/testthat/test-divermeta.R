@@ -220,15 +220,15 @@ test_that("named clust align regardless of order", {
 test_that("all-zero samples produce 0 for every index", {
   fx <- make_fixture()
 
-  for (include_absent in c(FALSE, TRUE)) {
+  for (average_over in c("sample", "reference", "intersection", "union")) {
     res <- divermeta(
       fx$abund, diss = fx$diss, indices = c(every_index, "PA"), clust = fx$clust, sig = 0.8,
-      include_absent = include_absent
+      average_over = average_over
     )
 
     # Third sample is all zeros
     for (ind in c(every_normalized, "proportional_abundance")) {
-      expect_identical(res[[ind]][3], 0, info = paste(ind, include_absent))
+      expect_identical(res[[ind]][3], 0, info = paste(ind, average_over))
     }
   }
 
@@ -386,13 +386,22 @@ make_unit_study <- function() {
   list(abund = abund, diss = mat_to_table(rand_diss(n, 0.05, 1.2), ids), clust = clust)
 }
 
-# Every combination of the flags of relative multiplicity
+# Every combination of the options of relative multiplicity. A missing cap_at
+# is left out of the arguments, so it takes its default (no cap)
 rm_flags <- expand.grid(
-  cap_at_one = c(FALSE, TRUE),
-  include_absent = c(FALSE, TRUE),
+  cap_at = c(NA, 0.8),
+  average_over = c("sample", "reference", "intersection", "union"),
   assume_max_reference_distance = c(FALSE, TRUE),
-  assume_homogeneous_abundance = c(FALSE, TRUE)
+  assume_homogeneous_abundance = c(FALSE, TRUE),
+  stringsAsFactors = FALSE
 )
+rm_options <- function(k) {
+  flags <- as.list(rm_flags[k, ])
+  if (is.na(flags$cap_at)) {
+    flags$cap_at <- NULL
+  }
+  flags
+}
 
 
 test_that("relative multiplicity and average redundancy match the direct functions", {
@@ -400,10 +409,10 @@ test_that("relative multiplicity and average redundancy match the direct functio
   sig <- 0.7
 
   for (k in seq_len(nrow(rm_flags))) {
-    flags <- as.list(rm_flags[k, ])
-    info <- paste(names(flags)[unlist(flags)], collapse = ", ")
+    flags <- rm_options(k)
+    info <- paste(names(flags), unlist(flags), sep = " = ", collapse = ", ")
     rm <- do.call(relative.multiplicity, c(list(st$abund, st$diss, st$clust, sigma = sig), flags))
-    ar <- average.redundancy(st$abund, st$diss, st$clust, include_absent = flags$include_absent, normalize = TRUE)
+    ar <- average.redundancy(st$abund, st$diss, st$clust, normalize = TRUE)
 
     # Alone, where only the pairs inside the units are read
     res <- do.call(divermeta, c(
@@ -441,16 +450,15 @@ test_that("subunits only listed in clust count in relative multiplicity and aver
   others <- c("M_inventory", "raoQ", "FD_sigma", "redundancy", "M_distance", "FDq")
 
   for (k in seq_len(nrow(rm_flags))) {
-    flags <- as.list(rm_flags[k, ])
-    info <- paste(names(flags)[unlist(flags)], collapse = ", ")
-    run <- function(expr) if (flags$include_absent) suppressWarnings(expr) else expr
-    rm <- run(do.call(relative.multiplicity, c(list(abund, st$diss, st$clust, sigma = sig), flags)))
-    ar <- average.redundancy(abund, st$diss, st$clust, include_absent = flags$include_absent, normalize = TRUE)
+    flags <- rm_options(k)
+    info <- paste(names(flags), unlist(flags), sep = " = ", collapse = ", ")
+    rm <- do.call(relative.multiplicity, c(list(abund, st$diss, st$clust, sigma = sig), flags))
+    ar <- average.redundancy(abund, st$diss, st$clust, normalize = TRUE)
 
-    res <- run(do.call(divermeta, c(
+    res <- do.call(divermeta, c(
       list(abund, st$diss, c(others, unit_indices), st$clust, sig = sig),
       flags
-    )))
+    ))
     expect_equal(res$relative_multiplicity, unname(rm), info = info)
     expect_equal(res$average_redundancy, unname(ar), info = info)
 
@@ -462,17 +470,14 @@ test_that("subunits only listed in clust count in relative multiplicity and aver
     )
   }
 
-  # The unit left out counts when absent units are included
-  expect_false(isTRUE(all.equal(
-    divermeta(abund, st$diss, "AR", st$clust, include_absent = TRUE)$average_redundancy,
-    divermeta(abund, st$diss, "AR", st$clust[colnames(abund)], include_absent = TRUE)$average_redundancy
-  )))
-
-  # Units with no reference are dropped with a warning, as in the direct function
-  expect_warning(
-    divermeta(abund, st$diss, "RM", st$clust, include_absent = TRUE),
-    "have no reference and are dropped: D"
+  # Average redundancy only averages the units present, whatever average_over
+  expect_equal(
+    divermeta(abund, st$diss, "AR", st$clust, average_over = "union")$average_redundancy,
+    divermeta(abund, st$diss, "AR", st$clust[colnames(abund)])$average_redundancy
   )
+
+  # Units with no reference never count, without a warning, as in the direct function
+  expect_no_warning(divermeta(abund, st$diss, "RM", st$clust, average_over = "union"))
 })
 
 
@@ -502,7 +507,7 @@ test_that("the homogeneous reference with listed distances needs every pair", {
 
 test_that("the flags of relative multiplicity and average redundancy are validated", {
   fx <- make_fixture()
-  flags <- c("include_absent", "cap_at_one", "assume_max_reference_distance", "assume_homogeneous_abundance")
+  flags <- c("assume_max_reference_distance", "assume_homogeneous_abundance")
   for (flag in flags) {
     args <- list(fx$abund, fx$diss, "RM", fx$clust)
     args[[flag]] <- "yes"
@@ -513,11 +518,26 @@ test_that("the flags of relative multiplicity and average redundancy are validat
     expect_no_error(do.call(divermeta, args))
   }
 
-  expect_error(
-    divermeta(fx$abund, fx$diss, "AR", fx$clust, include_absent = NA),
-    "`include_absent` must be a single TRUE or FALSE value"
-  )
-  expect_no_error(divermeta(fx$abund, fx$diss, "AR", fx$clust, cap_at_one = "yes"))
+  # average_over is only used by relative multiplicity
+  for (bad in list("all", NA, c("sample", "union"), 1, TRUE, NULL)) {
+    expect_error(
+      divermeta(fx$abund, fx$diss, "RM", fx$clust, average_over = bad),
+      "`average_over` must be one of \"sample\", \"reference\", \"intersection\" or \"union\"",
+      info = format(bad)
+    )
+    expect_no_error(divermeta(fx$abund, fx$diss, c("AR", "raoQ"), fx$clust, average_over = bad))
+  }
+  expect_identical(formals(divermeta)$average_over, "sample")
+  expect_error(divermeta(fx$abund, fx$diss, "RM", fx$clust, include_absent = TRUE), "unused argument")
+  for (bad in list("yes", TRUE, NA, 0, -1, Inf, c(1, 2))) {
+    expect_error(
+      divermeta(fx$abund, fx$diss, "RM", fx$clust, cap_at = bad),
+      "`cap_at` must be NULL or a single positive finite number",
+      info = format(bad)
+    )
+  }
+  # Not used by average redundancy
+  expect_no_error(divermeta(fx$abund, fx$diss, "AR", fx$clust, cap_at = "yes"))
   expect_error(divermeta(fx$abund, fx$diss, "RM", fx$clust, sig = 0), "positive")
   expect_error(divermeta(fx$abund, fx$diss, "RM", fx$clust, sig = c(1, 1)))
 })
@@ -545,23 +565,40 @@ test_that("proportional_abundance is computed on the units, without diss", {
 })
 
 
-test_that("proportional_abundance receives percentile and cap_at_one", {
+test_that("proportional_abundance receives percentile and cap_at", {
   fx <- make_fixture()
   units <- fixture_units(fx)
 
   for (percentile in c(100, 50, 10)) {
-    for (cap_at_one in c(FALSE, TRUE)) {
+    for (cap_at in list(NULL, 1, 0.5, 2)) {
       res <- divermeta(
         fx$abund,
-        indices = "PA", clust = fx$clust, percentile = percentile, cap_at_one = cap_at_one
+        indices = "PA", clust = fx$clust, percentile = percentile, cap_at = cap_at
       )
       expect_equal(
         res$proportional_abundance,
-        unname(proportional.abundance(units, percentile, cap_at_one)),
-        info = paste(percentile, cap_at_one)
+        unname(proportional.abundance(units, percentile, cap_at)),
+        info = paste(percentile, format(cap_at))
       )
     }
   }
+})
+
+
+test_that("cap_at reaches relative multiplicity and proportional abundance", {
+  fx <- make_fixture()
+  units <- fixture_units(fx)
+
+  res <- divermeta(fx$abund, fx$diss, c("RM", "PA"), fx$clust, sig = 0.8, percentile = 30, cap_at = 0.6)
+  expect_equal(
+    res$relative_multiplicity,
+    unname(relative.multiplicity(fx$abund, fx$diss, fx$clust, sigma = 0.8, cap_at = 0.6))
+  )
+  expect_equal(res$proportional_abundance, unname(proportional.abundance(units, 30, cap_at = 0.6)))
+  expect_false(isTRUE(all.equal(
+    res$relative_multiplicity,
+    divermeta(fx$abund, fx$diss, "RM", fx$clust, sig = 0.8)$relative_multiplicity
+  )))
 })
 
 
@@ -607,8 +644,8 @@ test_that("proportional_abundance input validation", {
     )
   }
   expect_error(
-    divermeta(fx$abund, indices = "PA", clust = fx$clust, cap_at_one = "yes"),
-    "`cap_at_one` must be a single TRUE or FALSE value"
+    divermeta(fx$abund, indices = "PA", clust = fx$clust, cap_at = "yes"),
+    "`cap_at` must be NULL or a single positive finite number"
   )
 
   # Not used by the other indices

@@ -9,8 +9,8 @@ relative.multiplicity(
   diss,
   clust,
   sigma = 1,
-  cap_at_one = FALSE,
-  include_absent = FALSE,
+  cap_at = NULL,
+  average_over = "sample",
   assume_max_reference_distance = FALSE,
   assume_homogeneous_abundance = FALSE,
   chunk_size = 1e+06,
@@ -42,12 +42,16 @@ with one value per unit. If named, values are matched to units by name (numeric 
 matched as numbers, so \code{"1e+05"} matches the unit \code{100000}); otherwise they follow the order
 of \code{unique(clust)}.}
 
-\item{cap_at_one}{Logical (default \code{FALSE}). If \code{TRUE}, each unit's ratio is capped at 1, for
-the cases where the unit is more diverse in the sample than in its reference.}
+\item{cap_at}{\code{NULL} (default) or a single positive number. If \code{NULL}, the ratios are not
+capped. Otherwise, every unit's ratio higher than \code{cap_at} is set to \code{cap_at}, e.g.
+\code{cap_at = 1} for the cases where the unit is more diverse in the sample than in its reference.}
 
-\item{include_absent}{Logical (default \code{FALSE}). If \code{FALSE}, each sample averages only the
-units present in it. If \code{TRUE}, every unit counts in the average, and units absent from the
-sample contribute 0.}
+\item{average_over}{The units every sample averages over, one of \code{"sample"} (default, the
+units present in the sample), \code{"reference"} (the units with a strictly positive reference
+diversity), \code{"intersection"} (the units present in the sample with a strictly positive
+reference diversity) or \code{"union"} (the units present in the sample or with a strictly
+positive reference diversity). Absent units contribute 0, and a sample without units to
+average over gets 0.}
 
 \item{assume_max_reference_distance}{Logical (default \code{FALSE}). If \code{FALSE}, the reference
 distances of a unit are the distances among all its subunits. If \code{TRUE}, every pair of
@@ -92,12 +96,18 @@ and \eqn{\tilde{f}}{f~} its reference composition. Then
 \deqn{RM = \frac{1}{\left|\{f : N_f > 0\}\right|} \sum_{f \,:\, N_f > 0} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/|{f : N_f > 0}|) sum_{f : N_f > 0} delta D_sigma(f) / delta D_sigma(f~),}
 with \eqn{\delta D_{\sigma}}{delta D_sigma} computed as in \code{\link[=diversity.functional]{diversity.functional()}}.
 
-Only units present in the sample are averaged: a unit with zero total abundance is ignored. With
-\code{include_absent = TRUE}, the average is instead taken over all \eqn{k}{k} units,
-\deqn{RM = \frac{1}{k} \sum_{f=1}^{k} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/k) sum_f delta D_sigma(f) / delta D_sigma(f~),}
-where absent units contribute 0; in that case, with the pooled reference abundances
-(\code{assume_homogeneous_abundance = FALSE}), a unit with zero abundance across the whole study has
-no reference and is dropped with a warning.
+By default (\code{average_over = "sample"}), only units present in the sample are averaged: a unit
+with zero total abundance is ignored. In general, the average is taken over a set of units
+\eqn{U}{U} set by \code{average_over},
+\deqn{RM = \frac{1}{|U|} \sum_{f \in U} \frac{\delta D_{\sigma}(f)}{\delta D_{\sigma}(\tilde{f})},}{RM = (1/|U|) sum_{f in U} delta D_sigma(f) / delta D_sigma(f~),}
+where absent units contribute 0, and \eqn{RM = 0}{RM = 0} if \eqn{U}{U} is empty.
+
+Every unit that occurs in the study has a strictly positive reference diversity, so here
+\code{"intersection"} is the same as \code{"sample"} and \code{"union"} the same as \code{"reference"}. With the
+pooled reference abundances (\code{assume_homogeneous_abundance = FALSE}), a unit with zero abundance
+across the whole study has no reference and never counts; with
+\code{assume_homogeneous_abundance = TRUE}, it has a reference and counts as 0 with \code{"reference"}
+and \code{"union"}.
 
 With \code{assume_max_reference_distance = TRUE}, the reference diversity of a unit is the inverse
 Simpson index of its reference abundances; if \code{assume_homogeneous_abundance} is also \code{TRUE}, it

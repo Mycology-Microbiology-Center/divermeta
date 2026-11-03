@@ -13,7 +13,7 @@ make_table <- function(n_samples, n_elements, zero_prob = 0.4) {
 }
 
 # Naive implementation: element by element and sample by sample
-manual_pa <- function(abund, percentile = 100, cap_at_one = FALSE) {
+manual_pa <- function(abund, percentile = 100, cap_at = NULL) {
   ref <- apply(abund, 2, function(x) {
     if (all(x == 0)) NA_real_ else unname(stats::quantile(x[x > 0], percentile / 100, type = 7))
   })
@@ -23,7 +23,7 @@ manual_pa <- function(abund, percentile = 100, cap_at_one = FALSE) {
     }
     present <- abund[i, ] > 0
     ratio <- abund[i, present] / ref[present]
-    if (cap_at_one) ratio <- pmin(ratio, 1)
+    if (!is.null(cap_at)) ratio <- pmin(ratio, cap_at)
     sum(ratio)
   }, numeric(1))
 }
@@ -71,7 +71,15 @@ test_that("Formula by hand with a lower percentile", {
 
   # Capped at one: the ratios above 1 become 1
   expected_cap <- c(S1 = 1 / 2.5 + 2 / 4, S2 = 2 / 2.5, S3 = 1 + 1, S4 = 1 + 1)
-  expect_equal(proportional.abundance(abund, percentile = 50, cap_at_one = TRUE), expected_cap)
+  expect_equal(proportional.abundance(abund, percentile = 50, cap_at = 1), expected_cap)
+
+  # Capped at another value: S3 = (1.2, 1.5) and S4 = (4, 1) become (1.2, 1.5) and (1.5, 1)
+  expected_cap <- c(S1 = 1 / 2.5 + 2 / 4, S2 = 2 / 2.5, S3 = 3 / 2.5 + 1.5, S4 = 1.5 + 1)
+  expect_equal(proportional.abundance(abund, percentile = 50, cap_at = 1.5), expected_cap)
+
+  # Below one, also the ratios under 1 are capped
+  expected_cap <- c(S1 = 0.4 + 0.5, S2 = 0.5, S3 = 0.5 + 0.5, S4 = 0.5 + 0.5)
+  expect_equal(proportional.abundance(abund, percentile = 50, cap_at = 0.5), expected_cap)
 })
 
 
@@ -80,12 +88,12 @@ test_that("Equals the naive implementation on random tables", {
   for (w_ in 1:10) {
     abund <- make_table(sample(2:12, 1), sample(1:9, 1))
     for (percentile in c(100, 95, 75, 50, 10, 0.5)) {
-      for (cap_at_one in c(FALSE, TRUE)) {
+      for (cap_at in list(NULL, 1, 0.5, 3)) {
         expect_equal(
-          unname(proportional.abundance(abund, percentile, cap_at_one)),
-          manual_pa(abund, percentile, cap_at_one),
+          unname(proportional.abundance(abund, percentile, cap_at)),
+          manual_pa(abund, percentile, cap_at),
           tolerance = 1e-12,
-          info = paste(w_, percentile, cap_at_one)
+          info = paste(w_, percentile, format(cap_at))
         )
       }
     }
@@ -105,12 +113,13 @@ test_that("Range of the values", {
   # Lower percentiles can exceed the number of elements present, unless capped
   low <- proportional.abundance(abund, percentile = 20)
   expect_true(any(low > n_present))
-  capped <- proportional.abundance(abund, percentile = 20, cap_at_one = TRUE)
+  capped <- proportional.abundance(abund, percentile = 20, cap_at = 1)
   expect_true(all(capped <= n_present + 1e-12))
   expect_true(all(capped <= low + 1e-12))
 
   # Capping does nothing with the maximum as reference
-  expect_equal(proportional.abundance(abund, cap_at_one = TRUE), res)
+  expect_equal(proportional.abundance(abund, cap_at = 1), res)
+  expect_equal(proportional.abundance(abund, cap_at = 7), res)
 })
 
 
@@ -236,7 +245,7 @@ test_that("Matrix, data.frame and sparse abundance formats give the same result"
 
 test_that("Does not depend on the elements being units or subunits", {
   # The function receives only the abundances and the percentile
-  expect_identical(names(formals(proportional.abundance)), c("abund", "percentile", "cap_at_one"))
+  expect_identical(names(formals(proportional.abundance)), c("abund", "percentile", "cap_at"))
 
   set.seed(4)
   abund <- make_table(6, 8)
@@ -255,13 +264,215 @@ test_that("Input validation", {
   expect_no_error(proportional.abundance(abund, percentile = 100))
   expect_no_error(proportional.abundance(abund, percentile = 1e-6))
 
-  expect_error(proportional.abundance(abund, cap_at_one = NA), "single TRUE or FALSE")
-  expect_error(proportional.abundance(abund, cap_at_one = "yes"), "single TRUE or FALSE")
-  expect_error(proportional.abundance(abund, cap_at_one = 1), "single TRUE or FALSE")
+  for (bad in list(NA, "yes", TRUE, 0, -1, Inf, NaN, c(1, 2), numeric(0))) {
+    expect_error(proportional.abundance(abund, cap_at = bad), "`cap_at` must be NULL", info = format(bad))
+  }
+  expect_no_error(proportional.abundance(abund, cap_at = NULL))
+  expect_no_error(proportional.abundance(abund, cap_at = 0.1))
 
   expect_error(proportional.abundance(one_row(c(-1, 2, 3), paste0("e", 1:3))), "non-negative")
   expect_error(proportional.abundance(one_row(c(NA, 2, 3), paste0("e", 1:3))), "NA")
   expect_error(proportional.abundance(one_row(c(Inf, 2, 3), paste0("e", 1:3))), "infinite")
   expect_error(proportional.abundance("a"), "must be a matrix")
   expect_error(proportional.abundance(matrix(1:6, 2)), "column names")
+})
+
+
+# Known reference abundances
+# ----------------------------
+
+# Naive implementation with given references: a present element with a zero
+# reference contributes cap_at
+manual_pa_ref <- function(abund, ref_abu, cap_at = NULL) {
+  vapply(seq_len(nrow(abund)), function(i) {
+    total <- 0
+    for (j in seq_len(ncol(abund))) {
+      x <- abund[i, j]
+      if (x == 0) next
+      ratio <- if (ref_abu[j] == 0) Inf else x / ref_abu[j]
+      if (!is.null(cap_at)) ratio <- min(ratio, cap_at)
+      total <- total + ratio
+    }
+    total
+  }, numeric(1))
+}
+
+pa_ref_table <- function() {
+  matrix(
+    c(
+      10, 0, 4,
+      5, 8, 2,
+      0, 2, 8
+    ),
+    nrow = 3, byrow = TRUE,
+    dimnames = list(c("S1", "S2", "S3"), c("e1", "e2", "e3"))
+  )
+}
+
+
+test_that("ref_abu: formula by hand", {
+  abund <- pa_ref_table()
+  ref_abu <- c(e1 = 5, e2 = 4, e3 = 8)
+
+  # Ratios: S1 = (2, -, 0.5), S2 = (1, 2, 0.25), S3 = (-, 0.5, 1)
+  expected <- c(S1 = 2 + 0.5, S2 = 1 + 2 + 0.25, S3 = 0.5 + 1)
+  expect_equal(proportional.abundance.ref_abu(abund, ref_abu), expected)
+
+  expected_cap <- c(S1 = 1 + 0.5, S2 = 1 + 1 + 0.25, S3 = 0.5 + 1)
+  expect_equal(proportional.abundance.ref_abu(abund, ref_abu, cap_at = 1), expected_cap)
+
+  expected_cap <- c(S1 = 0.5 + 0.5, S2 = 0.5 + 0.5 + 0.25, S3 = 0.5 + 0.5)
+  expect_equal(proportional.abundance.ref_abu(abund, ref_abu, cap_at = 0.5), expected_cap)
+})
+
+
+test_that("ref_abu: the percentiles as references give proportional.abundance", {
+  set.seed(31)
+  for (w_ in 1:8) {
+    abund <- make_table(sample(2:12, 1), sample(1:9, 1))
+    for (percentile in c(100, 50, 10)) {
+      # Elements absent from every sample contribute 0 with any reference
+      ref_abu <- apply(abund, 2, function(x) {
+        if (all(x == 0)) 1 else unname(stats::quantile(x[x > 0], percentile / 100, type = 7))
+      })
+      for (cap_at in list(NULL, 1, 0.5)) {
+        expect_equal(
+          proportional.abundance.ref_abu(abund, ref_abu, cap_at),
+          proportional.abundance(abund, percentile, cap_at),
+          tolerance = 1e-12,
+          info = paste(w_, percentile, format(cap_at))
+        )
+      }
+    }
+  }
+})
+
+
+test_that("ref_abu: equals the naive implementation on random tables", {
+  set.seed(32)
+  for (w_ in 1:10) {
+    abund <- make_table(sample(2:12, 1), sample(1:9, 1))
+    ref_abu <- runif(ncol(abund), 0.5, 120)
+    for (cap_at in list(NULL, 1, 0.5, 3)) {
+      expect_equal(
+        unname(proportional.abundance.ref_abu(abund, ref_abu, cap_at)),
+        manual_pa_ref(abund, ref_abu, cap_at),
+        tolerance = 1e-12,
+        info = paste(w_, format(cap_at))
+      )
+    }
+
+    # Some zero references, allowed with cap_at
+    ref_abu[sample(length(ref_abu), ceiling(length(ref_abu) / 2))] <- 0
+    for (cap_at in list(1, 0.5, 3)) {
+      res <- proportional.abundance.ref_abu(abund, ref_abu, cap_at)
+      expect_true(all(is.finite(res)))
+      expect_equal(unname(res), manual_pa_ref(abund, ref_abu, cap_at), tolerance = 1e-12,
+                   info = paste("zeros", w_, cap_at))
+    }
+  }
+})
+
+
+test_that("ref_abu: zero references give cap_at where the element is present", {
+  abund <- pa_ref_table()
+
+  # e2 has no reference: present in S2 and S3, absent from S1
+  ref_abu <- c(e1 = 5, e2 = 0, e3 = 8)
+  expect_equal(
+    proportional.abundance.ref_abu(abund, ref_abu, cap_at = 1.5),
+    c(S1 = 1.5 + 0.5, S2 = 1 + 1.5 + 0.25, S3 = 1.5 + 1)
+  )
+  expect_equal(
+    proportional.abundance.ref_abu(abund, ref_abu, cap_at = 0.4),
+    c(S1 = 0.4 + 0.4, S2 = 0.4 + 0.4 + 0.25, S3 = 0.4 + 0.4)
+  )
+
+  # Every reference zero: cap_at times the number of elements present
+  for (cap_at in c(0.3, 1, 2)) {
+    expect_equal(
+      proportional.abundance.ref_abu(abund, c(0, 0, 0), cap_at),
+      cap_at * rowSums(abund > 0)
+    )
+  }
+
+  # Empty samples are 0, also with zero references
+  empty <- rbind(abund, Z = 0)
+  res <- proportional.abundance.ref_abu(empty, ref_abu, cap_at = 1)
+  expect_equal(unname(res["Z"]), 0)
+  expect_false(anyNA(res))
+  expect_equal(unname(proportional.abundance.ref_abu(abund * 0, c(0, 0, 0), cap_at = 1)), rep(0, 3))
+})
+
+
+test_that("ref_abu: matching the references to the elements", {
+  abund <- pa_ref_table()
+  ref_abu <- c(e1 = 5, e2 = 4, e3 = 8)
+  base <- proportional.abundance.ref_abu(abund, ref_abu)
+
+  # Unnamed values follow the columns
+  expect_equal(proportional.abundance.ref_abu(abund, unname(ref_abu)), base)
+
+  # Named in any order, extra names ignored
+  expect_equal(proportional.abundance.ref_abu(abund, ref_abu[c(3, 1, 2)]), base)
+  expect_equal(proportional.abundance.ref_abu(abund, c(ref_abu, x9 = 0.001)), base)
+
+  # Columns in any order with named references
+  expect_equal(proportional.abundance.ref_abu(abund[, c(3, 1, 2)], ref_abu), base)
+
+  expect_error(proportional.abundance.ref_abu(abund, ref_abu[1:2]), "missing values for elements: e3")
+  expect_error(proportional.abundance.ref_abu(abund, c(5, 4)), "one value per element")
+  expect_error(proportional.abundance.ref_abu(abund, c(5, 4, 8, 1)), "one value per element")
+})
+
+
+test_that("ref_abu: formats, scale and absent elements", {
+  set.seed(33)
+  abund <- make_table(8, 6)
+  ref_abu <- runif(6, 1, 100)
+  base <- proportional.abundance.ref_abu(abund, ref_abu, cap_at = 2)
+
+  expect_equal(proportional.abundance.ref_abu(as.data.frame(abund), ref_abu, cap_at = 2), base)
+  expect_equal(
+    proportional.abundance.ref_abu(Matrix::Matrix(abund, sparse = TRUE), ref_abu, cap_at = 2),
+    base
+  )
+  expect_identical(names(base), rownames(abund))
+
+  # Same constant on the abundances and the references
+  expect_equal(proportional.abundance.ref_abu(abund * 7.3, ref_abu * 7.3, cap_at = 2), base)
+
+  # Elements absent from every sample contribute 0, with any reference
+  extended <- cbind(abund, x1 = 0, x2 = 0)
+  expect_equal(proportional.abundance.ref_abu(extended, c(ref_abu, 3, 0), cap_at = 2), base)
+})
+
+
+test_that("ref_abu: input validation", {
+  abund <- one_row(c(1, 2, 3), paste0("e", 1:3))
+  pa <- function(ref_abu, ...) proportional.abundance.ref_abu(abund, ref_abu, ...)
+
+  expect_identical(
+    names(formals(proportional.abundance.ref_abu)), c("abund", "ref_abu", "cap_at")
+  )
+
+  # Zero references only with cap_at
+  expect_error(pa(c(1, 0, 2)), "strictly positive.*allowed only with `cap_at`")
+  expect_no_error(pa(c(1, 0, 2), cap_at = 1))
+  expect_error(pa(c(1, -1, 2), cap_at = 1), "non-negative")
+  expect_error(pa(c(1, -1, 2)), "strictly positive")
+
+  for (bad in list(c(1, NA, 2), c(1, Inf, 2), c(1, NaN, 2), "a", numeric(0), NULL, TRUE)) {
+    expect_error(pa(bad), "`ref_abu` must contain", info = format(bad))
+    expect_error(pa(bad, cap_at = 1), "`ref_abu` must contain", info = format(bad))
+  }
+  expect_error(proportional.abundance.ref_abu(abund), "ref_abu")
+
+  for (bad in list(NA, "yes", TRUE, 0, -1, Inf, NaN, c(1, 2), numeric(0))) {
+    expect_error(pa(c(1, 2, 3), cap_at = bad), "`cap_at` must be NULL", info = format(bad))
+  }
+
+  expect_error(proportional.abundance.ref_abu(one_row(c(-1, 2, 3), paste0("e", 1:3)), c(1, 2, 3)), "non-negative")
+  expect_error(proportional.abundance.ref_abu("a", 1), "must be a matrix")
+  expect_error(proportional.abundance.ref_abu(matrix(1:6, 2), c(1, 2, 3)), "column names")
 })

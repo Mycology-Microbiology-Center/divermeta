@@ -4,7 +4,7 @@
 \alias{proportional.abundance}
 \title{Proportional abundance}
 \usage{
-proportional.abundance(abund, percentile = 100, cap_at_one = FALSE)
+proportional.abundance(abund, percentile = 100, cap_at = NULL)
 }
 \arguments{
 \item{abund}{Numeric matrix, data.frame or sparse \code{Matrix} of abundances with samples in rows
@@ -13,8 +13,9 @@ and elements (units or subunits) in columns. Column names are the element identi
 \item{percentile}{Single number in (0, 100] (default \code{100}, the maximum). Percentile of the
 nonzero abundances of every element across the samples used as its reference level.}
 
-\item{cap_at_one}{Logical (default \code{FALSE}). If \code{TRUE}, the ratio of every element is capped
-at 1. Only relevant when \code{percentile < 100}, where ratios can exceed 1.}
+\item{cap_at}{\code{NULL} (default) or a single positive number. If \code{NULL}, the ratios are not
+capped. Otherwise, every element's ratio higher than \code{cap_at} is set to \code{cap_at}. With
+\code{percentile = 100} every ratio is at most 1, so only a \code{cap_at} below 1 changes the result.}
 }
 \value{
 Named numeric vector with the proportional abundance of every sample. Samples with
@@ -35,8 +36,8 @@ Let \eqn{x_{ij}}{x_ij} be the abundance of element \eqn{j}{j} in sample \eqn{i}{
 \eqn{P_j}{P_j} the \code{percentile} (type 7 quantile, see \code{\link[stats:quantile]{stats::quantile()}}) of its nonzero
 abundances across samples. Then
 \deqn{PA_i = \sum_{j \,:\, x_{ij} > 0} \frac{x_{ij}}{P_j},}{PA_i = sum_{j : x_ij > 0} x_ij / P_j,}
-or, with \code{cap_at_one = TRUE},
-\deqn{PA_i = \sum_{j \,:\, x_{ij} > 0} \min\left(\frac{x_{ij}}{P_j}, 1\right).}{PA_i = sum_{j : x_ij > 0} min(x_ij / P_j, 1).}
+or, with a numeric \code{cap_at} \eqn{c}{c},
+\deqn{PA_i = \sum_{j \,:\, x_{ij} > 0} \min\left(\frac{x_{ij}}{P_j}, c\right).}{PA_i = sum_{j : x_ij > 0} min(x_ij / P_j, c).}
 
 With \code{percentile = 100}, \eqn{P_j}{P_j} is the maximum abundance of the element, every ratio is
 in (0, 1] and the index is at most the number of elements present. Elements absent from all
@@ -54,9 +55,10 @@ abund <- matrix(
 
 proportional.abundance(abund)
 proportional.abundance(abund, percentile = 50)
-proportional.abundance(abund, percentile = 50, cap_at_one = TRUE)
+proportional.abundance(abund, percentile = 50, cap_at = 1)
 
 }
 \seealso{
+\code{\link[=proportional.abundance.ref_abu]{proportional.abundance.ref_abu()}} when the reference abundances are known,
 \code{\link[=multiplicity.inventory]{multiplicity.inventory()}}, \code{\link[=relative.multiplicity]{relative.multiplicity()}}
 }
