@@ -50,6 +50,7 @@ reference:
       - redundancy
       - average.redundancy
       - proportional.abundance
+      - proportional.abundance.ref_abu
       - raoQuadratic
 
   - title: "Distance and support utilities"
