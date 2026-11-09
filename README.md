@@ -4,7 +4,6 @@
 # divermeta
 
 <!-- badges: start -->
-
 <!-- badges: end -->
 
 **divermeta** is an R package for quantifying the diversity hidden
@@ -99,7 +98,7 @@ For detailed examples, use cases, and technical documentation:
 - **[Function
   reference](https://mycology-microbiology-center.github.io/divermeta/reference/index.html)**:
   Complete documentation of all functions and parameters
-- **[Manuscript](https://github.com/Mycology-Microbiology-Center/divermeta)**:
+- **[Manuscript](https://onlinelibrary.wiley.com/doi/10.1002/edn3.70389)**:
   Theoretical background, mathematical foundations, and real-world
   applications
 
@@ -107,6 +106,7 @@ For detailed examples, use cases, and technical documentation:
 
 If you use **divermeta** in your research, please cite:
 
-> González-Casabianca F, Dulya O, Flores-Almaraz V, Tedersoo L,
-> Mikryukov V. Multiplicity quantifies intra-cluster diversity in
-> metagenomic analysis // in prep.
+> González-Casabianca, F., O. Dulya, V. Flores-Almaraz, L. Tedersoo, and
+> V. Mikryukov. 2026. “Multiplicity Quantifies Intra-Cluster Diversity
+> in Metagenomic Analysis.” Environmental DNA 8, no. 6: e70389.
+> <https://doi.org/10.1002/edn3.70389>.

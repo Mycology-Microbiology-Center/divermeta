@@ -6,6 +6,8 @@
 .quarto
 manuscript/*
 
+BREAKING_CHANGES.md
+
 
 // Custom
 commands.txt
