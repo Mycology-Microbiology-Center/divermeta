@@ -1,17 +1,17 @@
-# Visualize a distance matrix as a sized-tile plot
+# Visualize distances as a sized-tile plot
 
-Creates a compact visualization of a distance or dissimilarity matrix
-where each cell is drawn as a square whose area is proportional to the
-magnitude of the corresponding value. Labels are taken from the input
-when available and can be customized.
+Creates a compact visualization of the pairwise distances or
+dissimilarities between subunits, given as a three-column table as for
+the indices. They are drawn as a symmetric matrix where each cell is a
+square whose area is proportional to the distance.
 
 ## Usage
 
 ``` r
 visualize_dist(
   diss,
-  row.labels = NA,
-  col.labels = NA,
+  ids = NULL,
+  labels = NULL,
   clabel.row = 1,
   clabel.col = 1,
   csize = 1,
@@ -24,20 +24,21 @@ visualize_dist(
 
 - diss:
 
-  A distance object (class `dist`), numeric matrix, or `data.frame`
-  containing pairwise distances/dissimilarities.
+  Data frame with three columns (taken by position): the identifiers of
+  two subunits and the distance between them, in either orientation.
+  Only in-memory tables are accepted.
 
-- row.labels:
+- ids:
 
-  Optional character vector of row labels. If `NA` (default), labels are
-  taken from `diss` when available, otherwise sequential indices are
-  used.
+  Optional vector with the identifiers of the subunits to show, in the
+  order they are drawn. If `NULL` (default), every identifier in the
+  first two columns of `diss`, in order of first appearance. Rows with
+  other identifiers are ignored.
 
-- col.labels:
+- labels:
 
-  Optional character vector of column labels. If `NA` (default), labels
-  are taken from `diss` when available, otherwise sequential indices are
-  used.
+  Optional character vector with one label per subunit (in the order of
+  `ids`). If `NULL` (default), the identifiers are used.
 
 - clabel.row:
 
@@ -66,10 +67,12 @@ A `ggplot2` object representing the visualization.
 
 ## Details
 
-If `diss` is a `dist` object, labels are taken from the `Labels`
-attribute when present. Values are visualized by absolute magnitude;
-larger values produce larger squares. The first row is displayed at the
-top.
+The distance of a subunit to itself is 0, and pairs not listed in `diss`
+are left blank. Values are visualized by magnitude; larger values
+produce larger squares. The first subunit is displayed at the top.
+`diss` is validated as for the indices (numeric, finite, non-negative
+distances, and a pair listed again only with the same distance).
+Requires the `ggplot2` package.
 
 ## See also
 
@@ -78,9 +81,10 @@ top.
 ## Examples
 
 ``` r
-x <- 1:10
-names(x) <- LETTERS[1:10]
-diss <- stats::dist(x)
+diss <- data.frame(
+  ID1 = c("a", "a", "a", "b", "b", "c"),
+  ID2 = c("b", "c", "d", "c", "d", "d"),
+  Distance = c(0.2, 0.7, 1.0, 0.6, 0.9, 0.4)
+)
 visualize_dist(diss)
-
 ```

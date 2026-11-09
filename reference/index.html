@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">divermeta</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.3</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.0.6</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -73,10 +73,17 @@
 
         <dt>
 
-          <code><a href="multiplicity.distance.by_blocks.html">multiplicity.distance.by_blocks()</a></code>
+          <code><a href="relative.multiplicity.html">relative.multiplicity()</a></code>
 
         </dt>
-        <dd>Distance-based multiplicity by blocks</dd>
+        <dd>Relative multiplicity</dd>
+
+        <dt>
+
+          <code><a href="relative.multiplicity.ref_div.html">relative.multiplicity.ref_div()</a></code>
+
+        </dt>
+        <dd>Relative multiplicity from reference diversities</dd>
       </dl></div><div class="section level2">
       <h2 id="diversity-and-redundancy">Diversity and redundancy<a class="anchor" aria-label="anchor" href="#diversity-and-redundancy"></a></h2>
 
@@ -99,7 +106,7 @@
           <code><a href="diversity.functional.html">diversity.functional()</a></code>
 
         </dt>
-        <dd>Distance-based functional diversity (q = 1) (Chiu &amp; Chao 2014)</dd>
+        <dd>Distance-based functional diversity (Chiu &amp; Chao 2014)</dd>
 
         <dt>
 
@@ -117,10 +124,24 @@
 
         <dt>
 
-          <code><a href="redundancy.by_blocks.html">redundancy.by_blocks()</a></code>
+          <code><a href="average.redundancy.html">average.redundancy()</a></code>
 
         </dt>
-        <dd>Functional redundancy (Re) by blocks</dd>
+        <dd>Average redundancy</dd>
+
+        <dt>
+
+          <code><a href="proportional.abundance.html">proportional.abundance()</a></code>
+
+        </dt>
+        <dd>Proportional abundance</dd>
+
+        <dt>
+
+          <code><a href="proportional.abundance.ref_abu.html">proportional.abundance.ref_abu()</a></code>
+
+        </dt>
+        <dd>Proportional abundance with known reference abundances</dd>
 
         <dt>
 
@@ -140,24 +161,33 @@
 
       <dl><dt>
 
-          <code><a href="dist_quadratic_form.html">dist_quadratic_form()</a></code>
+          <code><a href="unit_distances.html">unit_distances()</a></code>
 
         </dt>
-        <dd>Quadratic Form for a Distance Object</dd>
+        <dd>Distances between units</dd>
+      </dl></div><div class="section level2">
+      <h2 id="large-distance-files">Large distance files<a class="anchor" aria-label="anchor" href="#large-distance-files"></a></h2>
+
+      <div class="section-desc"><p>Reading the distances from files in chunks, and checking those files:</p></div>
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="distance-files.html">distance-files</a></code>
+
+        </dt>
+        <dd>Distances from files</dd>
 
         <dt>
 
-          <code><a href="cluster_distance_matrix.html">cluster_distance_matrix()</a></code>
+          <code><a href="check_distance_file.html">check_distance_file()</a></code>
 
         </dt>
-        <dd>Compute Distance Matrix Between Clusters</dd>
-
-        <dt>
-
-          <code><a href="convert_to_dist_indices.html">convert_to_dist_indices()</a></code>
-
-        </dt>
-        <dd>Convert Matrix Indices to Distance Vector Position</dd>
+        <dd>Check a large distance file</dd>
       </dl></div><div class="section level2">
       <h2 id="visualisation">Visualisation<a class="anchor" aria-label="anchor" href="#visualisation"></a></h2>
 
@@ -173,14 +203,14 @@
           <code><a href="visualize_abundance.html">visualize_abundance()</a></code>
 
         </dt>
-        <dd>Visualize an abundance matrix as a sized-tile plot</dd>
+        <dd>Visualize an abundance table as a sized-tile plot</dd>
 
         <dt>
 
           <code><a href="visualize_dist.html">visualize_dist()</a></code>
 
         </dt>
-        <dd>Visualize a distance matrix as a sized-tile plot</dd>
+        <dd>Visualize distances as a sized-tile plot</dd>
       </dl></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

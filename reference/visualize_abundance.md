@@ -1,16 +1,17 @@
-# Visualize an abundance matrix as a sized-tile plot
+# Visualize an abundance table as a sized-tile plot
 
-Creates a compact visualization of an abundance matrix where each cell
-is drawn as a square whose area is proportional to the abundance value.
-Rows are features (OTUs, species, genes, etc.) and columns are samples.
+Creates a compact visualization of an abundance table where each cell is
+drawn as a square whose area is proportional to the abundance value. The
+plot follows the layout of the table: samples in rows and subunits
+(OTUs, species, genes, etc.) in columns.
 
 ## Usage
 
 ``` r
 visualize_abundance(
   abund,
-  feature.labels = NA,
-  sample.labels = NA,
+  sample.labels = NULL,
+  subunit.labels = NULL,
   clabel.row = 1,
   clabel.col = 1,
   csize = 1,
@@ -24,20 +25,20 @@ visualize_abundance(
 
 - abund:
 
-  A numeric matrix or `data.frame` with features in rows and samples in
-  columns.
-
-- feature.labels:
-
-  Optional character vector of row labels (features). If `NA` (default),
-  labels are taken from `rownames(abund)` when available, otherwise
-  sequential indices are used.
+  Numeric matrix, data.frame or sparse `Matrix` of abundances with
+  samples in rows and subunits in columns, as for the indices. Column
+  names are the subunit identifiers.
 
 - sample.labels:
 
-  Optional character vector of column labels (samples). If `NA`
-  (default), labels are taken from `colnames(abund)` when available,
-  otherwise sequential indices are used.
+  Optional character vector with one label per sample (row). If `NULL`
+  (default), the row names of `abund` are used, or the row numbers when
+  it has none.
+
+- subunit.labels:
+
+  Optional character vector with one label per subunit (column). If
+  `NULL` (default), the column names of `abund` are used.
 
 - clabel.row:
 
@@ -72,20 +73,18 @@ A `ggplot2` object representing the visualization.
 ## Details
 
 Values are visualized by magnitude; larger values produce larger
-squares. The first row (first feature) is displayed at the top. When
-`transform = "log1p"` or `"sqrt"`, non-negative guards are applied via
-`pmax(0, x)` prior to the transform. Legend tick labels are shown on the
-original (back-transformed) abundance scale for readability.
+squares. The first sample is displayed at the top. Legend tick labels
+are shown on the original (back-transformed) abundance scale for
+readability. Requires the `ggplot2` package.
 
 ## Examples
 
 ``` r
 set.seed(1)
-abund <- matrix(  
-  data = floor(rlnorm(n = 5 * 4, meanlog = 1, sdlog = 2.5)),
-  nrow = 5, ncol = 4)
-rownames(abund) <- paste0("feat", 1:5)
-colnames(abund) <- paste0("S", 1:4)
+abund <- matrix(
+  data = floor(rlnorm(n = 4 * 5, meanlog = 1, sdlog = 2.5)),
+  nrow = 4, ncol = 5,
+  dimnames = list(paste0("S", 1:4), paste0("f", 1:5))
+)
 visualize_abundance(abund)
-
 ```
